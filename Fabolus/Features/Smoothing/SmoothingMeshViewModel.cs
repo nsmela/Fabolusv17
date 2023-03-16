@@ -33,13 +33,11 @@ namespace Fabolus.Features.Smoothing
                 WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r, m) => { Receive(m); });
 
                 //updated display mesh if one existed before switching to this view
-                WeakReferenceMessenger.Default.Send<RequestBolusMessage>(new RequestBolusMessage(BolusStore.DISPLAY_BOLUS_LABEL));
+                WeakReferenceMessenger.Default.Send<RequestBolusMessage>();
         }
 
         #region Receive Messages
         private void Receive(BolusUpdatedMessage message) {
-            //for easy reading
-            var label = message.label;
             var bolus = message.bolus;
             if (bolus.Geometry == null) return;
 
@@ -48,7 +46,7 @@ namespace Fabolus.Features.Smoothing
             //building geometry model
             //coloring the model when it's been smoothed
             GeometryModel3D geometryModel;
-            if (label == BolusStore.SMOOTHED_BOLUS_LABEL) {
+            if (bolus.HasMesh(BolusModel.SMOOTHED_BOLUS_LABEL)) {
                 geometryModel = new GeometryModel3D(bolus.Geometry, _meshSkinMaterial);
                 geometryModel.BackMaterial = _meshSkinMaterial;
             }else  geometryModel = bolus.Model3D; 

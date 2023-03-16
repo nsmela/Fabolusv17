@@ -41,7 +41,7 @@ namespace Fabolus.Features.Import {
                 return;
             }
 
-            WeakReferenceMessenger.Default.Send(new AddNewBolusMessage(BolusStore.ORIGINAL_BOLUS_LABEL, mesh));
+            WeakReferenceMessenger.Default.Send(new AddNewBolusMessage(BolusModel.ORIGINAL_BOLUS_LABEL, mesh));
         }
 
         

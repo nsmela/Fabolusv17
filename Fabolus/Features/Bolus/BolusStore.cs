@@ -17,10 +17,8 @@ namespace Fabolus.Features.Bolus {
     public sealed record ClearBolusMessage();
 
     //utility
-    public sealed record BolusUpdatedMessage(string label, BolusModel bolus);
-    public sealed record RequestBolusMessage(string label);
-    public sealed class DoesBolusExistsMessage: RequestMessage<bool> {}
-    public sealed record SendBolusMessage(string label, BolusModel bolus);
+    public sealed record BolusUpdatedMessage(BolusModel bolus);
+    public sealed record RequestBolusMessage();
 
     //rotations
     public sealed record ApplyTransformMessage(Vector3D axis, double angle);
@@ -29,81 +27,61 @@ namespace Fabolus.Features.Bolus {
     #endregion
 
     public class BolusStore {
-        #region Bolus Types
-        public const string ORIGINAL_BOLUS_LABEL = "original"; //imported model
-        public const string SMOOTHED_BOLUS_LABEL = "smoothed"; //smoothed model
-        public const string DISPLAY_BOLUS_LABEL = "display"; //latest model
-        #endregion
-
-        private Dictionary<string, BolusModel> _boli;
+        private BolusModel _bolus;
 
         public BolusStore() {
-            _boli = new Dictionary<string, BolusModel>();
+            _bolus = new BolusModel();
 
             //registering received messages
             WeakReferenceMessenger.Default.Register<AddNewBolusMessage>(this, (r, m) => { Receive(m); });
             WeakReferenceMessenger.Default.Register<RemoveBolusMessage>(this, (r, m) => { Receive(m); });
             WeakReferenceMessenger.Default.Register<ClearBolusMessage>(this, (r, m) => { Receive(m); });
             WeakReferenceMessenger.Default.Register<RequestBolusMessage>(this, (r, m) => { Receive(m); });
-            WeakReferenceMessenger.Default.Register<DoesBolusExistsMessage>(this, (r, m) => { Receive(m); });
             WeakReferenceMessenger.Default.Register<ApplyTransformMessage>(this, (r,m) => { Receive(m); });
             WeakReferenceMessenger.Default.Register<ClearTransformsMessage>(this, (r,m)=> { Receive(m); });
         }
 
-        private void SendBolusUpdate(string label = DISPLAY_BOLUS_LABEL) {
-            if (label == DISPLAY_BOLUS_LABEL || label == "") {
-                if (_boli.ContainsKey(SMOOTHED_BOLUS_LABEL)) label = SMOOTHED_BOLUS_LABEL;
-                else if (_boli.ContainsKey(ORIGINAL_BOLUS_LABEL)) label = ORIGINAL_BOLUS_LABEL;
-            }
-
-            BolusModel bolus = new BolusModel();
-            if (_boli.ContainsKey(label))
-                bolus = _boli[label];
-
-            WeakReferenceMessenger.Default.Send(new BolusUpdatedMessage(label, bolus));
-        }
+        private void SendBolusUpdate() => WeakReferenceMessenger.Default.Send(new BolusUpdatedMessage(_bolus));
 
         //messages
         public void Receive(AddNewBolusMessage message) {
             var label = message.label;
             var mesh = message.mesh;
 
-            if (label == ORIGINAL_BOLUS_LABEL)
-                _boli.Clear();
+            _bolus.AddMesh(label, mesh);
 
-            if (_boli.ContainsKey(label)) 
-                _boli.Remove(label);
-            
-            _boli.Add(label, new BolusModel(mesh));
-            SendBolusUpdate(label);
+            SendBolusUpdate();
         }
 
         public void Receive(RemoveBolusMessage message) {
-            _boli.Remove(message.label);
-            SendBolusUpdate(DISPLAY_BOLUS_LABEL);
+            _bolus.RemoveMesh(message.label);
+            SendBolusUpdate();
         }
 
         public void Receive(ClearBolusMessage message) {
-            _boli.Clear();
+            _bolus = new BolusModel();
+            SendBolusUpdate();
         }
 
-        public void Receive(RequestBolusMessage message) {
-            var label = message.label;
-            SendBolusUpdate(label);
-        }
-
-        private void Receive(DoesBolusExistsMessage message) {
-            var result = _boli != null && _boli.Count> 0;
-
-            message.Reply(result);
-        }
+        public void Receive(RequestBolusMessage message) => SendBolusUpdate();
 
         private void Receive(ApplyTransformMessage message) {
+            var axis = new Vector3d {
+                x = message.axis.X,
+                y = message.axis.Y,
+                z = message.axis.Z
+            };
+            var angle = message.angle;
 
+            _bolus.AddTransform(axis, angle);
+            SendBolusUpdate();
         }
 
 
-        private void Receive(ClearTransformsMessage message) => _transforms = new Transform3DGroup();
+        private void Receive(ClearTransformsMessage message) {
+            _bolus.ClearTransforms();
+            SendBolusUpdate();
+        }
 
 
      }

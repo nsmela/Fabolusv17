@@ -26,7 +26,7 @@ namespace Fabolus.Features.Rotation {
             WeakReferenceMessenger.Default.Register<UpdatedTransformsMessage>(this, (r, m) => { Receive(m); });
 
             //updated display mesh if one existed before switching to this view
-            WeakReferenceMessenger.Default.Send<RequestBolusMessage>(new RequestBolusMessage(BolusStore.DISPLAY_BOLUS_LABEL));
+            WeakReferenceMessenger.Default.Send<RequestBolusMessage>(new RequestBolusMessage());
         }
 
         #region Receive Messages

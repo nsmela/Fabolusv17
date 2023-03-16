@@ -2,16 +2,11 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fabolus.Features.Bolus;
-using Fabolus.Features.Bolus.Tools;
 using Fabolus.Features.Common;
-using Fabolus.Features.Import;
 using Fabolus.Features.Smoothing.Tools;
 using g3;
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Fabolus.Features.Smoothing {
@@ -113,14 +108,14 @@ namespace Fabolus.Features.Smoothing {
 
         private BolusModel _bolus;
         public SmoothingViewModel() {
+            _bolus = new BolusModel();
+
             SmoothingMarchingCubesMode = true;
             SmoothSetting = 1;
-            WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r,m)=> {
-                if (m.label != BolusStore.ORIGINAL_BOLUS_LABEL) return;
-                _bolus = m.bolus; 
-            });
 
-            WeakReferenceMessenger.Default.Send(new RequestBolusMessage(BolusStore.ORIGINAL_BOLUS_LABEL));
+            WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r,m)=> { _bolus = m.bolus; });
+
+            WeakReferenceMessenger.Default.Send(new RequestBolusMessage());
         }
 
         private DMesh3 SmoothingByMarchingCubes() {
@@ -149,8 +144,7 @@ namespace Fabolus.Features.Smoothing {
         #region Commands
         [RelayCommand] 
         public async Task Smooth() {
-            var hasBolus = WeakReferenceMessenger.Default.Send<DoesBolusExistsMessage>().Response;
-            if (!hasBolus) return; //no bolus to smooth
+            if (_bolus.Mesh == null) return; //no bolus to smooth
 
             ClearSmoothed();//removes the old smoothed mesh
 
@@ -158,17 +152,20 @@ namespace Fabolus.Features.Smoothing {
             if (SmoothingMarchingCubesMode) mesh = await Task.Factory.StartNew(() => SmoothingByMarchingCubes());
             else mesh = await Task.Factory.StartNew(() => SmoothingByPoisson());
 
-            WeakReferenceMessenger.Default.Send(new AddNewBolusMessage(BolusStore.SMOOTHED_BOLUS_LABEL, mesh));
+            WeakReferenceMessenger.Default.Send(new AddNewBolusMessage(BolusModel.SMOOTHED_BOLUS_LABEL, mesh));
         }
 
         [RelayCommand]
         public void ClearSmoothed() {
-            WeakReferenceMessenger.Default.Send(new RemoveBolusMessage(BolusStore.SMOOTHED_BOLUS_LABEL));
+            WeakReferenceMessenger.Default.Send(new RemoveBolusMessage(BolusModel.SMOOTHED_BOLUS_LABEL));
         }
 
 
         #endregion
 
+        #region Private Methods
+
+        #endregion
 
     }
 }
