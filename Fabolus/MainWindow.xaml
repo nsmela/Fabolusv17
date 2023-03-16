@@ -1,0 +1,105 @@
+﻿<Window x:Class="Fabolus.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Fabolus"
+        xmlns:viewmodel="clr-namespace:Fabolus.Features.MainWindow"
+        mc:Ignorable="d"
+        Title="Fabolus" 
+        Height="600" 
+        Width="800"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.DataContext>
+        <viewmodel:MainViewModel />
+    </Window.DataContext>
+
+    <Grid>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="64" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="28" />
+        </Grid.RowDefinitions>
+
+        <!-- App State -->
+        <StackPanel Width="200" Orientation="Horizontal">
+            <Label Content="{Binding CurrentViewTitle}" 
+                        HorizontalAlignment="Left" 
+                        VerticalAlignment="Center"
+                        FontSize="24" 
+                        FontWeight="Bold"
+                        FontFamily="\Fonts\#Poppins" 
+                        Margin="10,0,0,0"/>
+        </StackPanel>
+        
+        <!-- View Mode Bar -->
+        <StackPanel Orientation="Horizontal"
+                    Grid.Row="0" Grid.Column="1" 
+                    Height="64">
+            <Button Content="file"
+                    Command="{Binding SwitchToImportViewCommand}"
+                    Width="64"/>
+            <Button Content="Smooth"
+                    Command="{Binding SwitchToSmoothingViewCommand}"
+                    Width="64"/>
+            <Button Content="Rotation"
+                    Command="{Binding SwitchToRotationViewCommand}"
+                    Width="64"/>
+        </StackPanel>
+        
+        <!-- Tools View  -->
+        <ContentControl Content="{Binding CurrentViewModel}"
+                        Grid.Row="1" Grid.Column="0" 
+                Margin="2,0,2,0" />
+
+        <!-- Information bar View -->
+        <StackPanel Grid.Row="2" Grid.ColumnSpan="2" 
+                    Margin="2">
+            <Label HorizontalAlignment="Right"
+                   Content="{Binding BolusVolume}" />
+        </StackPanel>
+
+        <!--  MeshView -->
+        <ContentControl Content="{Binding CurrentMeshView}" Grid.Column="1" Grid.Row="1" />
+
+        <!-- Mouse tool help -->
+        <StackPanel Orientation="Vertical" 
+                    Grid.Row="1" Grid.Column="1"
+                    HorizontalAlignment="Right" 
+                    VerticalAlignment="Bottom"
+                    Margin="0,0,10,70"
+                    Width="140" MinWidth="140" MaxWidth="200">
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch"  Height="40"  >
+                <Ellipse Width="32" Height="32">
+                    <Ellipse.Fill>
+                        <ImageBrush ImageSource="/Images/left-mouse-button-click-active.jpg" />
+                    </Ellipse.Fill>
+                </Ellipse>
+                <Label Content="{Binding LeftMouseLabel}" Panel.ZIndex="3" VerticalAlignment="Center" Margin="5,0,0,0" Background="White" Width="140"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch"  Height="40"  >
+                <Ellipse Width="32" Height="32">
+                    <Ellipse.Fill>
+                        <ImageBrush ImageSource="/Images/mouse-wheel-button-click-active.jpg" />
+                    </Ellipse.Fill>
+                </Ellipse>
+                <Label Content="{Binding RightMouseLabel}" Panel.ZIndex="3" VerticalAlignment="Center" Margin="5,0,0,0" Background="White" Width="140"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch"  Height="40"  >
+                <Ellipse Width="32" Height="32">
+                    <Ellipse.Fill>
+                        <ImageBrush ImageSource="/Images/right-mouse-button-click-active.jpg" />
+                    </Ellipse.Fill>
+                </Ellipse>
+                <Label Content="{Binding CentreMouseLabel}" Panel.ZIndex="3" VerticalAlignment="Center" Margin="5,0,0,0" Background="White" Width="140"/>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Window>
