@@ -20,7 +20,6 @@ namespace Fabolus.Features.MainWindow {
     public partial class MainViewModel: ViewModelBase {
 
         private BolusStore _bolusStore;
-        private TransformsStore _transformsStore;
 
         [ObservableProperty] private ViewModelBase? _currentViewModel;
         [ObservableProperty] private MeshViewModelBase _currentMeshView;
@@ -39,7 +38,6 @@ namespace Fabolus.Features.MainWindow {
 
         public MainViewModel() {
             _bolusStore= new BolusStore();
-            _transformsStore= new TransformsStore();
             NavigateTo(new ImportViewModel());
 
             //messages

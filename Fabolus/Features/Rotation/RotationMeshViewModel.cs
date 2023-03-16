@@ -23,7 +23,6 @@ namespace Fabolus.Features.Rotation {
             TransformsGroup = new Transform3DGroup();
 
             WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r, m) => { Receive(m); });
-            WeakReferenceMessenger.Default.Register<UpdatedTransformsMessage>(this, (r, m) => { Receive(m); });
 
             //updated display mesh if one existed before switching to this view
             WeakReferenceMessenger.Default.Send<RequestBolusMessage>(new RequestBolusMessage());
@@ -42,9 +41,6 @@ namespace Fabolus.Features.Rotation {
             DisplayMesh.Children.Add(geometryModel);
         }
 
-        private void Receive(UpdatedTransformsMessage message) {
-            RotationQuaternion = new Quaternion(message.x, message.y, message.z, message.w);
-        }
         #endregion
     }
 }

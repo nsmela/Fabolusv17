@@ -25,18 +25,12 @@ namespace Fabolus.Features.Rotation {
         partial void OnYAxisAngleChanged(float value) => SendTempRotation(new Vector3D(0, 1, 0), value);
         partial void OnZAxisAngleChanged(float value) => SendTempRotation(new Vector3D(0, 0, 1), value);
 
-        //to save a temp rotation as a permenant rotation when slider is let go
-        private void SendUpdatedRotation(Vector3 axis, float angle) {
-            WeakReferenceMessenger.Default.Send(new AddRotationMessage(axis, angle));
-        }
-
         //to save a temp roation while slider is active
         private void SendTempRotation(Vector3D axis, float angle) {
             if (_isLocked) return;
 
             _meshViewModel.RotationAxis = axis;
             _meshViewModel.RotationAngle = angle;
-            //WeakReferenceMessenger.Default.Send(new AddTempRotationMessage(axis, angle));
         }
 
         private void ResetValues() {
@@ -53,17 +47,13 @@ namespace Fabolus.Features.Rotation {
 
         #region Commands
         [RelayCommand]
-        private Task ClearRotation() {
+        private void ClearRotation() {
             ResetValues();
-
-            return Task.Factory.StartNew(() => {
-                WeakReferenceMessenger.Default.Send(new ClearTransformsMessage());
-            });
-
+            WeakReferenceMessenger.Default.Send(new ClearRotationsMessage());
         }
 
         [RelayCommand]
-        private Task SaveRotation() {
+        private void SaveRotation() {
             Vector3 axis = Vector3.Zero;
             float angle = 0;
 
@@ -84,10 +74,7 @@ namespace Fabolus.Features.Rotation {
             }
 
             ResetValues();
-            return Task.Factory.StartNew(() => {
-                WeakReferenceMessenger.Default.Send(new AddRotationMessage(axis, angle));
-            });
-
+            WeakReferenceMessenger.Default.Send(new ApplyRotationMessage(axis, angle));
         }
         #endregion
 

@@ -4,6 +4,7 @@ using g3;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
@@ -21,8 +22,8 @@ namespace Fabolus.Features.Bolus {
     public sealed record RequestBolusMessage();
 
     //rotations
-    public sealed record ApplyTransformMessage(Vector3D axis, double angle);
-    public sealed record ClearTransformsMessage();
+    public sealed record ApplyRotationMessage(Vector3 axis, double angle);
+    public sealed record ClearRotationsMessage();
 
     #endregion
 
@@ -37,8 +38,8 @@ namespace Fabolus.Features.Bolus {
             WeakReferenceMessenger.Default.Register<RemoveBolusMessage>(this, (r, m) => { Receive(m); });
             WeakReferenceMessenger.Default.Register<ClearBolusMessage>(this, (r, m) => { Receive(m); });
             WeakReferenceMessenger.Default.Register<RequestBolusMessage>(this, (r, m) => { Receive(m); });
-            WeakReferenceMessenger.Default.Register<ApplyTransformMessage>(this, (r,m) => { Receive(m); });
-            WeakReferenceMessenger.Default.Register<ClearTransformsMessage>(this, (r,m)=> { Receive(m); });
+            WeakReferenceMessenger.Default.Register<ApplyRotationMessage>(this, (r,m) => { Receive(m); });
+            WeakReferenceMessenger.Default.Register<ClearRotationsMessage>(this, (r,m)=> { Receive(m); });
         }
 
         private void SendBolusUpdate() => WeakReferenceMessenger.Default.Send(new BolusUpdatedMessage(_bolus));
@@ -65,7 +66,7 @@ namespace Fabolus.Features.Bolus {
 
         public void Receive(RequestBolusMessage message) => SendBolusUpdate();
 
-        private void Receive(ApplyTransformMessage message) {
+        private void Receive(ApplyRotationMessage message) {
             var axis = new Vector3d {
                 x = message.axis.X,
                 y = message.axis.Y,
@@ -78,7 +79,7 @@ namespace Fabolus.Features.Bolus {
         }
 
 
-        private void Receive(ClearTransformsMessage message) {
+        private void Receive(ClearRotationsMessage message) {
             _bolus.ClearTransforms();
             SendBolusUpdate();
         }

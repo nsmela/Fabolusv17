@@ -32,7 +32,8 @@ namespace Fabolus.Features.Bolus {
 
         public DMesh3 TransformedMesh {
             get {
-                var mesh = Mesh;
+                var mesh = new DMesh3();
+                mesh.Copy(Mesh);
                 foreach (var q in _transforms) MeshTransforms.Rotate(mesh, Vector3d.Zero, q);
                 return mesh;
             }
