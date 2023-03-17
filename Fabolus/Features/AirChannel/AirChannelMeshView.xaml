@@ -3,10 +3,46 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:Fabolus.Features.AirChannel"
+             xmlns:airchannel="clr-namespace:Fabolus.Features.AirChannel"
+             xmlns:common="clr-namespace:Fabolus.Features.Common"
+             d:DataContext="{d:DesignInstance Type=airchannel:AirChannelMeshViewModel}"
+             xmlns:helix="http://helix-toolkit.org/wpf"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
-            
+        <!-- used to access camera in ViewModel -->
+        <Grid.Resources>
+            <common:BindingProxy x:Key="proxy" Data="{Binding}" />
+        </Grid.Resources>
+
+        <!-- Mesh View -->
+        <helix:HelixViewport3D Grid.Row="1" Grid.Column="1" ZoomExtentsWhenLoaded="{Binding ZoomWhenLoaded}">
+
+            <!-- Scene Camera -->
+            <helix:HelixViewport3D.Camera>
+                <PerspectiveCamera 
+                        Position="{Binding Data.Camera.Position,Mode=TwoWay, Source={StaticResource proxy}}"
+                        LookDirection="{Binding Data.Camera.LookDirection,Mode=TwoWay, Source={StaticResource proxy}}"
+                        UpDirection="{Binding Data.Camera.UpDirection,Mode=TwoWay, Source={StaticResource proxy}}"
+                        FieldOfView="{Binding Data.Camera.FieldOfView,Mode=TwoWay, Source={StaticResource proxy}}"
+                        />
+            </helix:HelixViewport3D.Camera>
+
+            <!-- Scene lighting -->
+            <helix:DirectionalHeadLight Brightness="1"/>
+
+            <!-- Models -->
+            <helix:MeshGeometryVisual3D x:Name="MainMesh" Content="{Binding DisplayMesh}">
+
+            </helix:MeshGeometryVisual3D>
+
+            <!-- Visual tools for the mesh view -->
+            <helix:TubeVisual3D x:Name="xAxisLine" Path="-110,0,0,110,0,0" Diameter="0.8" ThetaDiv="20" IsPathClosed="True" Fill="Red"  />
+            <helix:TubeVisual3D x:Name="yAxisLine" Path="0,-115,0,0,115,0" Diameter="0.8" ThetaDiv="20" IsPathClosed="True" Fill="Green" />
+            <helix:TubeVisual3D x:Name="zAxisLine" Path="0,0,-100,0,0,100" Diameter="0.8" ThetaDiv="20" IsPathClosed="True" Fill="Blue" />
+            <helix:GridLinesVisual3D x:Name="gridLines" Width="230" Length="220" MinorDistance="5" MajorDistance="10" Thickness="0.2" />
+
+        </helix:HelixViewport3D>
+
     </Grid>
 </UserControl>

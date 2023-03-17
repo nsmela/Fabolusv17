@@ -33,7 +33,7 @@ namespace Fabolus.Features.Import {
                 return;
             }
 
-            var mesh = await Task.Factory.StartNew(() => StandardMeshReader.ReadMesh(filepath));
+            var mesh = new DMesh3(await Task.Factory.StartNew(() => StandardMeshReader.ReadMesh(filepath)), false, true);
 
             //if mesh isn't good
             if (mesh == null) {

@@ -1,18 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using Fabolus.Features.AirChannel;
 using Fabolus.Features.Bolus;
 using Fabolus.Features.Common;
 using Fabolus.Features.Import;
 using Fabolus.Features.Rotation;
 using Fabolus.Features.Smoothing;
-using g3;
 using HelixToolkit.Wpf;
-using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
 
@@ -67,6 +62,7 @@ namespace Fabolus.Features.MainWindow {
         [RelayCommand] public async Task SwitchToSmoothingView() => NavigateTo(new SmoothingViewModel());
         [RelayCommand] public async Task SwitchToImportView() => NavigateTo(new ImportViewModel());
         [RelayCommand] public async Task SwitchToRotationView() => NavigateTo(new RotationViewModel());
+        [RelayCommand] public async Task SwitchToAirChannelView() => NavigateTo(new AirChannelViewModel());
 
         #endregion
     }

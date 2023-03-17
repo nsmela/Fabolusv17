@@ -77,29 +77,6 @@ namespace Fabolus.Features.Rotation {
             WeakReferenceMessenger.Default.Send(new ApplyRotationMessage(axis, angle));
         }
         #endregion
-
-        /* 
-         Sliders first change the local transforms
-        When a slider is let go, the transform is then saved to the bolus store
-        then the bolus store's new transform is used
-         
-         */
-
-
-        /* 
-         // Create and apply a transformation that rotates the object.
-        RotateTransform3D myRotateTransform3D = new RotateTransform3D();
-        AxisAngleRotation3D myAxisAngleRotation3d = new AxisAngleRotation3D();
-        myAxisAngleRotation3d.Axis = new Vector3D(0,3,0);
-        myAxisAngleRotation3d.Angle = 40;
-        myRotateTransform3D.Rotation = myAxisAngleRotation3d;
-
-        // Add the rotation transform to a Transform3DGroup
-        Transform3DGroup myTransform3DGroup = new Transform3DGroup();
-        myTransform3DGroup.Children.Add(myRotateTransform3D);
-         
-         
-         */
     }
 
 }

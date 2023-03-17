@@ -1,4 +1,5 @@
 ﻿using g3;
+using HelixToolkit.Wpf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,10 +13,11 @@ namespace Fabolus.Features.Bolus.Tools
                 //compacting the DMesh to the indices are true
                 MeshGeometry3D mesh = new();
 
-                //calculate positions
+                //calculate positions and normals
                 var vertices = value.Vertices();
-                foreach (var vert in vertices)
+                foreach (var vert in vertices) {
                     mesh.Positions.Add(new Point3D(vert.x, vert.y, vert.z));
+                }
 
                 //calculate faces
                 var vID = value.VertexIndices().ToArray();
@@ -25,6 +27,8 @@ namespace Fabolus.Features.Bolus.Tools
                     mesh.TriangleIndices.Add(Array.IndexOf(vID, f.b));
                     mesh.TriangleIndices.Add(Array.IndexOf(vID, f.c));
                 }
+
+                mesh.Normals = MeshGeometryHelper.CalculateNormals(mesh);
 
                 return mesh;
             } else

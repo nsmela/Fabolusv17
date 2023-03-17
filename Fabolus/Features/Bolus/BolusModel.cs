@@ -1,12 +1,6 @@
 ﻿using Fabolus.Features.Bolus.Tools;
 using g3;
-using System;
-using System.CodeDom;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
@@ -21,17 +15,24 @@ namespace Fabolus.Features.Bolus {
 
         private Dictionary<string, DMesh3> _meshes;
 
+        //bolus mesh skin info to skip generating it every time
+        private Color _meshSkinColor = Colors.Gray;
+        private float _meshOpacity = 1.0f;
+        private DiffuseMaterial _meshSkinMaterial;
+
         #region Properties and Fields
         //the latest mesh
         public DMesh3 Mesh {
             get {
                 if (_meshes.ContainsKey(SMOOTHED_BOLUS_LABEL)) return _meshes[SMOOTHED_BOLUS_LABEL];
-                else return _meshes[ORIGINAL_BOLUS_LABEL];
+                if (_meshes.ContainsKey(ORIGINAL_BOLUS_LABEL)) return _meshes[ORIGINAL_BOLUS_LABEL];
+                return null;
             }
         }
 
         public DMesh3 TransformedMesh {
             get {
+                if (Mesh == null) return null;
                 var mesh = new DMesh3();
                 mesh.Copy(Mesh);
                 foreach (var q in _transforms) MeshTransforms.Rotate(mesh, Vector3d.Zero, q);
@@ -52,10 +53,13 @@ namespace Fabolus.Features.Bolus {
         public BolusModel() {
             _transforms = new List<Quaterniond>();
             _meshes = new Dictionary<string, DMesh3>();
+
+            SetModelColor(_meshSkinColor, _meshOpacity);
         }
         public BolusModel(DMesh3 mesh) {
             _transforms = new List<Quaterniond>();
             _meshes = new Dictionary<string, DMesh3>();
+            SetModelColor(_meshSkinColor, _meshOpacity);
 
             AddMesh(ORIGINAL_BOLUS_LABEL, mesh);
         }
@@ -87,11 +91,10 @@ namespace Fabolus.Features.Bolus {
         public bool HasMesh(string label) => _meshes.ContainsKey(label);
 
         public void SetModelColor(Color color, float opacity) {
-            var skin = new DiffuseMaterial(new SolidColorBrush(color));
-            skin.Brush.Opacity = opacity;
+            _meshSkinMaterial = new DiffuseMaterial(new SolidColorBrush(color));
+            _meshSkinMaterial.Brush.Opacity = opacity;
 
-            _model3D = new GeometryModel3D(Geometry, skin);
-            _model3D.BackMaterial = skin;
+            GenerateModel();
         }
 
         public void AddTransform(Vector3d axis, double angle) {
@@ -108,13 +111,15 @@ namespace Fabolus.Features.Bolus {
 
         #region Private Methods
         private void UpdateGeometry() {
-            _geometry = MeshConversion.DMeshToMeshGeometry(TransformedMesh);
-
-            var color = Colors.Gray;
-            var opacity = 1.0f;
-            SetModelColor(color, opacity);
+            var mesh = TransformedMesh;
+            _geometry = MeshConversion.DMeshToMeshGeometry(mesh);
+            GenerateModel();
         }
 
+        private void GenerateModel() {
+            _model3D = new GeometryModel3D(Geometry, _meshSkinMaterial);
+            _model3D.BackMaterial = _meshSkinMaterial;
+        }
         #endregion
     }
 }

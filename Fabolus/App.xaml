@@ -4,6 +4,7 @@
              xmlns:import="clr-namespace:Fabolus.Features.Import"
              xmlns:smooth="clr-namespace:Fabolus.Features.Smoothing"
              xmlns:rotation="clr-namespace:Fabolus.Features.Rotation"
+             xmlns:airchannel="clr-namespace:Fabolus.Features.AirChannel"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
@@ -28,6 +29,13 @@
             </DataTemplate>
             <DataTemplate DataType="{x:Type rotation:RotationMeshViewModel}">
                 <rotation:RotationMeshView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type airchannel:AirChannelViewModel}">
+                <airchannel:AirChannelView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type airchannel:AirChannelMeshViewModel}">
+                <airchannel:AirChannelMeshView/>
             </DataTemplate>
             
         </ResourceDictionary>

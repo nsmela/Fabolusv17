@@ -5,6 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Fabolus.Features.AirChannel {
-    internal class AirChannelStore {
+    public class AirChannelStore {
     }
 }

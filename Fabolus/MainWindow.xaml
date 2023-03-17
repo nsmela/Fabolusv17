@@ -51,6 +51,9 @@
             <Button Content="Rotation"
                     Command="{Binding SwitchToRotationViewCommand}"
                     Width="64"/>
+            <Button Content="Air Channels"
+                    Command="{Binding SwitchToAirChannelViewCommand}"
+                    Width="64"/>
         </StackPanel>
         
         <!-- Tools View  -->
