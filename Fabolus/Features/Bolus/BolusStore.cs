@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
+using Fabolus.Features.AirChannel;
 using g3;
 using System;
 using System.Collections.Generic;
@@ -25,6 +26,9 @@ namespace Fabolus.Features.Bolus {
     public sealed record ApplyRotationMessage(Vector3 axis, double angle);
     public sealed record ClearRotationsMessage();
 
+    //request messages
+    public class BolusRequestMessage : RequestMessage<BolusModel> { }
+
     #endregion
 
     public class BolusStore {
@@ -40,6 +44,9 @@ namespace Fabolus.Features.Bolus {
             WeakReferenceMessenger.Default.Register<RequestBolusMessage>(this, (r, m) => { Receive(m); });
             WeakReferenceMessenger.Default.Register<ApplyRotationMessage>(this, (r,m) => { Receive(m); });
             WeakReferenceMessenger.Default.Register<ClearRotationsMessage>(this, (r,m)=> { Receive(m); });
+
+            //request messages
+            WeakReferenceMessenger.Default.Register<BolusStore, BolusRequestMessage>(this, (r, m) => { m.Reply(r._bolus); });
         }
 
         private void SendBolusUpdate() => WeakReferenceMessenger.Default.Send(new BolusUpdatedMessage(_bolus));

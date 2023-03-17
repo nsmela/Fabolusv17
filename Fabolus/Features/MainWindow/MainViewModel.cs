@@ -14,7 +14,9 @@ using System.Windows.Media.Media3D;
 namespace Fabolus.Features.MainWindow {
     public partial class MainViewModel: ViewModelBase {
 
+        //stores
         private BolusStore _bolusStore;
+        private AirChannelStore _airChannelsStore;
 
         [ObservableProperty] private ViewModelBase? _currentViewModel;
         [ObservableProperty] private MeshViewModelBase _currentMeshView;
@@ -33,6 +35,7 @@ namespace Fabolus.Features.MainWindow {
 
         public MainViewModel() {
             _bolusStore= new BolusStore();
+            _airChannelsStore= new AirChannelStore();
             NavigateTo(new ImportViewModel());
 
             //messages

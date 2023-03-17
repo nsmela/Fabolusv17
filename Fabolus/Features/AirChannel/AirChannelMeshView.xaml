@@ -9,6 +9,8 @@
              xmlns:helix="http://helix-toolkit.org/wpf"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+
+    
     <Grid>
         <!-- used to access camera in ViewModel -->
         <Grid.Resources>
@@ -16,7 +18,11 @@
         </Grid.Resources>
 
         <!-- Mesh View -->
-        <helix:HelixViewport3D Grid.Row="1" Grid.Column="1" ZoomExtentsWhenLoaded="{Binding ZoomWhenLoaded}">
+        <helix:HelixViewport3D Grid.Row="1" Grid.Column="1" ZoomExtentsWhenLoaded="{Binding ZoomWhenLoaded}"
+                               airchannel:MouseBehaviour.MouseDownCommand="{Binding MouseDownCommand}"
+                               airchannel:MouseBehaviour.MouseUpCommand="{Binding MouseUpCommand}"
+                               airchannel:MouseBehaviour.MouseMoveCommand="{Binding MouseMoveCommand}"
+                               >
 
             <!-- Scene Camera -->
             <helix:HelixViewport3D.Camera>
@@ -32,15 +38,15 @@
             <helix:DirectionalHeadLight Brightness="1"/>
 
             <!-- Models -->
-            <helix:MeshGeometryVisual3D x:Name="MainMesh" Content="{Binding DisplayMesh}">
-
-            </helix:MeshGeometryVisual3D>
+            <helix:MeshGeometryVisual3D Content="{Binding DisplayMesh}" />
+            <helix:MeshGeometryVisual3D Content="{Binding AirChannelsMesh}" />
+            <helix:MeshGeometryVisual3D Content="{Binding AirChannelToolMesh}" />
 
             <!-- Visual tools for the mesh view -->
-            <helix:TubeVisual3D x:Name="xAxisLine" Path="-110,0,0,110,0,0" Diameter="0.8" ThetaDiv="20" IsPathClosed="True" Fill="Red"  />
-            <helix:TubeVisual3D x:Name="yAxisLine" Path="0,-115,0,0,115,0" Diameter="0.8" ThetaDiv="20" IsPathClosed="True" Fill="Green" />
-            <helix:TubeVisual3D x:Name="zAxisLine" Path="0,0,-100,0,0,100" Diameter="0.8" ThetaDiv="20" IsPathClosed="True" Fill="Blue" />
-            <helix:GridLinesVisual3D x:Name="gridLines" Width="230" Length="220" MinorDistance="5" MajorDistance="10" Thickness="0.2" />
+            <helix:TubeVisual3D Path="-110,0,0,110,0,0" Diameter="0.8" ThetaDiv="20" IsPathClosed="True" Fill="Red"  Visible="{Binding ShowMesh}"/>
+            <helix:TubeVisual3D Path="0,-115,0,0,115,0" Diameter="0.8" ThetaDiv="20" IsPathClosed="True" Fill="Green" Visible="{Binding ShowMesh}"/>
+            <helix:TubeVisual3D Path="0,0,-100,0,0,100" Diameter="0.8" ThetaDiv="20" IsPathClosed="True" Fill="Blue" Visible="{Binding ShowMesh}"/>
+            <helix:GridLinesVisual3D  Width="230" Length="220" MinorDistance="5" MajorDistance="10" Thickness="0.2" Visible="{Binding ShowMesh}"/>
 
         </helix:HelixViewport3D>
 

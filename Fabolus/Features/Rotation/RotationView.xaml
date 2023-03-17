@@ -18,6 +18,8 @@
         <Slider Minimum="-190" Maximum="190" TickFrequency="1" TickPlacement="None" 
                 Value="{Binding XAxisAngle, Mode=TwoWay}"
                 b:SliderExtension.DragCompletedCommand="{Binding SaveRotationCommand}"
+                AutoToolTipPlacement="TopLeft"
+                AutoToolTipPrecision="1"
                 Margin="2" />
         <Label Content="y axis" 
                 HorizontalAlignment="Center" 
@@ -28,6 +30,8 @@
         <Slider Minimum="-190" Maximum="190" TickFrequency="1" TickPlacement="None" 
                 Value="{Binding YAxisAngle, Mode=TwoWay}"
                 b:SliderExtension.DragCompletedCommand="{Binding SaveRotationCommand}"
+                AutoToolTipPlacement="TopLeft"
+                AutoToolTipPrecision="1"
                 Margin="2"/>
         <Label Content="z axis" 
                 HorizontalAlignment="Center" 
@@ -38,6 +42,8 @@
         <Slider Minimum="-190" Maximum="190" TickFrequency="1" TickPlacement="None" 
                 Value="{Binding ZAxisAngle, Mode=TwoWay}"
                 b:SliderExtension.DragCompletedCommand="{Binding SaveRotationCommand}"
+                AutoToolTipPlacement="TopLeft"
+                AutoToolTipPrecision="1"
                 Margin="2"/>
         <Button Content="reset" 
                 Height="30"
