@@ -22,7 +22,7 @@ namespace Fabolus.Features.AirChannel {
         private List<AirChannelModel> _channels;
 
         private double _channelDiameter = 5.0f;
-        private double _zHeightOffset = 5.0f;
+        private double _zHeightOffset = 10.0f;
         private double _maxZHeight => _bolus.Geometry.Bounds.Z + _bolus.Geometry.Bounds.SizeZ + _zHeightOffset;
 
         private BolusModel _bolus;
@@ -51,7 +51,7 @@ namespace Fabolus.Features.AirChannel {
         #region Receiving
         private void Receive(AddAirChannelMessage message) {
             var point = message.point;
-            _channels.Add(new AirChannelModel(point, _channelDiameter, _maxZHeight));
+            _channels.Add(new AirChannelModel(point, _channelDiameter, _maxZHeight - point.Z));
 
             SendUpdate();
         }
@@ -71,7 +71,7 @@ namespace Fabolus.Features.AirChannel {
         private void Receive(BolusUpdatedMessage message) {
             _bolus = message.bolus;
             if (_bolus.Geometry is null) return;
-            //TODO: need to change into BolusChanged and SendBolus messages
+            //TODO: need to change into BolusChanged and SendBolus messages. Clears airholes each time you switch views otherwise
             _channels.Clear(); //changing the bolus means airholes no longer valid
 
             SendUpdate();
