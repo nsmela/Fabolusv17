@@ -16,7 +16,7 @@ namespace Fabolus.Features.Import
 
         public ImportMeshViewModel() {
             DisplayMesh = new Model3DGroup();
-            ZoomsWhenLoaded = true;
+            ZoomWhenLoaded = true;
 
             //messages
             WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r, m) => { Receive(m); });

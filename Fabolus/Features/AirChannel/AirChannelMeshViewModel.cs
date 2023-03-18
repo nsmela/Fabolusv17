@@ -49,17 +49,30 @@ namespace Fabolus.Features.AirChannel
         }
 
         #region Private Methods
-        private void Update() {
+        private void UpdateAirChannelTool() { //TODO: optimize to only handle things that have changed. This triggers on any change
             //generate meshes for air channels to display
 
+            UpdateAirchannelTool();
+            
+            //generates mesh for saved air channels in air channel store
+            AirChannelsMesh.Children.Clear();
+            if (_airChannels.Count > 0) {
+                foreach(var a in _airChannels) 
+                    AirChannelsMesh.Children.Add(new GeometryModel3D(a.Geometry, _channelsSkin)); //TODO: load all at once? has to stay seperate to detect
+            }
+
+            //look -272, 263, -301 up -0.448, 0.432, 0.783 pos 272, -263, 301 target 0,0,0
+        }
+
+        private void UpdateAirchannelTool() {
             //generate mesh for air channel tool
+            AirChannelToolMesh.Children.Clear();
             if (MouseHit != new Point3D()) {
                 var tool = new AirChannelModel(MouseHit, Diameter, Height - MouseHit.Z);
                 var mesh = new GeometryModel3D(tool.Geometry, _toolSkin);
                 AirChannelToolMesh.Children.Clear();
                 AirChannelToolMesh.Children.Add(mesh);
             }
-            //
         }
 
         private DiffuseMaterial SetSkin(Color colour, double opacity) {
@@ -87,14 +100,36 @@ namespace Fabolus.Features.AirChannel
             _diameter = message.diameter;
             _height = message.height;
 
-            Update();
+            UpdateAirChannelTool();
         }
         #endregion
 
         #region Commands
         [RelayCommand]
         private void MouseDown(MouseEventArgs e) {
+            if (e.RightButton == MouseButtonState.Pressed) return;
+            MouseHit = new Point3D(); //clears position, a successful hit will recreate it
 
+            //test if bolus mesh is hit
+            var mousePosition = e.GetPosition((IInputElement)e.Source);
+            var hitParams = new RayHitTestParameters(
+                new Point3D(mousePosition.X, mousePosition.Y, 0),
+                new Vector3D(mousePosition.X, mousePosition.Y, 10)
+                );
+
+            var viewport = ((HelixViewport3D)e.Source).Viewport;
+
+            var hits = Viewport3DHelper.FindHits(viewport, mousePosition);
+            if (hits == null || hits.Count == 0) return;
+
+            foreach (var hit in hits) {
+                if (hit.Model == null) continue;
+                if (hit.Model.GetName() != "bolus") continue;
+
+                WeakReferenceMessenger.Default.Send(new AddAirChannelMessage(hit.Position));
+                UpdateAirChannelTool();
+                return;
+            }
         }
 
         [RelayCommand]
@@ -104,6 +139,12 @@ namespace Fabolus.Features.AirChannel
 
         [RelayCommand]
         private void MouseMove(MouseEventArgs e) {
+            //abort if any mouse buttons are down
+            if (e.LeftButton == MouseButtonState.Pressed) return;
+            if (e.RightButton == MouseButtonState.Pressed) return;
+
+            MouseHit = new Point3D(); //clears position, a successful hit will recreate it
+            
             //test if bolus mesh is hit
             var mousePosition = e.GetPosition((IInputElement)e.Source);
             var hitParams = new RayHitTestParameters(
@@ -111,40 +152,24 @@ namespace Fabolus.Features.AirChannel
                 new Vector3D(mousePosition.X, mousePosition.Y, 10)
                 );
 
-            //need a filter to return only the bolus mesh
-            //test only the bolus model
-            //ModelVisual3D testModel = new ModelVisual3D();
-            //testModel.Content = DisplayMesh;
             var viewport = ((HelixViewport3D)e.Source).Viewport;
             
-            //var results = Viewport3DHelper.FindHits(e.Source as HelixVisual3D, mousePosition);
             var hits = Viewport3DHelper.FindHits(viewport, mousePosition);
-
-            //ShowMesh = false; //prevents meshes to be hit that we don't want the mouse to detect
-            //HitTestResult hit = VisualTreeHelper.HitTest((HelixToolkit.Wpf.HelixViewport3D)e.Source, mousePosition);
-            //ShowMesh = true;
-            /*
-            foreach(var hit in results) {
-                
-            }
-
-            if (hit == null) {
-                MouseHit = new Point3D();
+            if (hits == null || hits.Count == 0) { //mouse isn't over the bolus mesh
+                UpdateAirChannelTool();
                 return;
             }
 
-            var meshHit = hit as RayMeshGeometry3DHitTestResult;
-            
-            if (meshHit == null || meshHit.ModelHit.GetName() != "bolus") {
-                MouseHit = new Point3D();
+                foreach (var hit in hits) {
+                if(hit.Model == null ) continue;
+                if (hit.Model.GetName() != "bolus") continue;
+
+                MouseHit = hit.Position;
+                UpdateAirChannelTool();
                 return;
             }
 
-            MouseHit = meshHit.PointHit;
-            Update();
-            return;
-            */
-            //if not, test if an air channel is hit
+            //check if an air channel is mouse over
         }
         #endregion
 

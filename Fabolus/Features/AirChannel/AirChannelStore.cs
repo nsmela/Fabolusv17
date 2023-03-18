@@ -1,12 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using Fabolus.Features.Bolus;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
 
 namespace Fabolus.Features.AirChannel {
@@ -76,7 +71,7 @@ namespace Fabolus.Features.AirChannel {
         private void Receive(BolusUpdatedMessage message) {
             _bolus = message.bolus;
             if (_bolus.Geometry is null) return;
-
+            //TODO: need to change into BolusChanged and SendBolus messages
             _channels.Clear(); //changing the bolus means airholes no longer valid
 
             SendUpdate();

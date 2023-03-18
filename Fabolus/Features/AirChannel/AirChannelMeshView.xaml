@@ -22,6 +22,7 @@
                                airchannel:MouseBehaviour.MouseDownCommand="{Binding MouseDownCommand}"
                                airchannel:MouseBehaviour.MouseUpCommand="{Binding MouseUpCommand}"
                                airchannel:MouseBehaviour.MouseMoveCommand="{Binding MouseMoveCommand}"
+                               ShowCameraInfo="True"
                                >
 
             <!-- Scene Camera -->

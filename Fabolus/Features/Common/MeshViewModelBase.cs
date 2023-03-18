@@ -16,14 +16,14 @@ namespace Fabolus.Features.Common
 
         //Camera controls
         [ObservableProperty] private PerspectiveCamera? _camera;
-        [ObservableProperty] private bool? _zoomsWhenLoaded = false;
+        [ObservableProperty] private bool? _zoomWhenLoaded = false;
 
         //public camera position
         public virtual void OnOpen() { }
         public virtual void OnClose() { }
 
         public MeshViewModelBase(bool? zoom = false) {
-            ZoomsWhenLoaded= zoom;
+            ZoomWhenLoaded= zoom;
         }
     }
 
