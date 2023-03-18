@@ -49,22 +49,17 @@ namespace Fabolus.Features.AirChannel
         }
 
         #region Private Methods
-        private void UpdateAirChannelTool() { //TODO: optimize to only handle things that have changed. This triggers on any change
+        private void Update() { //TODO: optimize to only handle things that have changed. This triggers on any change
             //generate meshes for air channels to display
 
-            UpdateAirchannelTool();
-            
-            //generates mesh for saved air channels in air channel store
-            AirChannelsMesh.Children.Clear();
-            if (_airChannels.Count > 0) {
-                foreach(var a in _airChannels) 
-                    AirChannelsMesh.Children.Add(new GeometryModel3D(a.Geometry, _channelsSkin)); //TODO: load all at once? has to stay seperate to detect
-            }
+            UpdateAirChannelTool();
+            UpdateAirChannels();
+
 
             //look -272, 263, -301 up -0.448, 0.432, 0.783 pos 272, -263, 301 target 0,0,0
         }
 
-        private void UpdateAirchannelTool() {
+        private void UpdateAirChannelTool() {
             //generate mesh for air channel tool
             AirChannelToolMesh.Children.Clear();
             if (MouseHit != new Point3D()) {
@@ -72,6 +67,16 @@ namespace Fabolus.Features.AirChannel
                 var mesh = new GeometryModel3D(tool.Geometry, _toolSkin);
                 AirChannelToolMesh.Children.Clear();
                 AirChannelToolMesh.Children.Add(mesh);
+            }
+        }
+
+        private void UpdateAirChannels() {
+            //generates mesh for saved air channels in air channel store
+            AirChannelsMesh.Children.Clear();
+            if (_airChannels.Count > 0) {
+                foreach (var a in _airChannels) {
+                    AirChannelsMesh.Children.Add(new GeometryModel3D(a.Geometry, _channelsSkin)); //TODO: load all at once? has to stay seperate to detect
+                }
             }
         }
 
@@ -100,7 +105,7 @@ namespace Fabolus.Features.AirChannel
             _diameter = message.diameter;
             _height = message.height;
 
-            UpdateAirChannelTool();
+            Update();
         }
         #endregion
 
@@ -127,7 +132,6 @@ namespace Fabolus.Features.AirChannel
                 if (hit.Model.GetName() != "bolus") continue;
 
                 WeakReferenceMessenger.Default.Send(new AddAirChannelMessage(hit.Position));
-                UpdateAirChannelTool();
                 return;
             }
         }
@@ -160,7 +164,7 @@ namespace Fabolus.Features.AirChannel
                 return;
             }
 
-                foreach (var hit in hits) {
+            foreach (var hit in hits) {
                 if(hit.Model == null ) continue;
                 if (hit.Model.GetName() != "bolus") continue;
 
