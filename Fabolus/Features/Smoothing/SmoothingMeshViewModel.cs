@@ -21,25 +21,18 @@ namespace Fabolus.Features.Smoothing
         private DiffuseMaterial _meshSkinMaterial;
         #endregion
 
-        public SmoothingMeshViewModel() {
-                DisplayMesh = new Model3DGroup();
-
-                //material for mesh skin set ahead to prevent multiple calls
-                //can allow editing in viewer later
-                _meshSkinMaterial = new DiffuseMaterial(new SolidColorBrush(_meshSkinColor));
-                _meshSkinMaterial.Brush.Opacity = _meshOpacity;
-
-                //messages
-                WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r, m) => { Receive(m); });
-
-                //updated display mesh if one existed before switching to this view
-                WeakReferenceMessenger.Default.Send<RequestBolusMessage>();
+        public SmoothingMeshViewModel() : base() {
         }
 
         #region Receive Messages
-        private void Receive(BolusUpdatedMessage message) {
-            var bolus = message.bolus;
+        
+
+        #endregion
+
+        #region Private Methods
+        protected override void Update(BolusModel bolus) {
             if (bolus.Geometry == null) return;
+            if (_meshSkinMaterial == null) UpdateSkin();
 
             DisplayMesh.Children.Clear();
 
@@ -49,11 +42,17 @@ namespace Fabolus.Features.Smoothing
             if (bolus.HasMesh(BolusModel.SMOOTHED_BOLUS_LABEL)) {
                 geometryModel = new GeometryModel3D(bolus.Geometry, _meshSkinMaterial);
                 geometryModel.BackMaterial = _meshSkinMaterial;
-            }else  geometryModel = bolus.Model3D; 
+            } else geometryModel = bolus.Model3D;
 
             DisplayMesh.Children.Add(geometryModel);
         }
 
+        private void UpdateSkin() {
+            //material for mesh skin set ahead to prevent multiple calls
+            //can allow editing in viewer later
+            _meshSkinMaterial = new DiffuseMaterial(new SolidColorBrush(_meshSkinColor));
+            _meshSkinMaterial.Brush.Opacity = _meshOpacity;
+        }
         #endregion
     }
 }

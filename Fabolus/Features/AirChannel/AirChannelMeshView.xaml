@@ -19,9 +19,9 @@
 
         <!-- Mesh View -->
         <helix:HelixViewport3D Grid.Row="1" Grid.Column="1" ZoomExtentsWhenLoaded="{Binding ZoomWhenLoaded}"
-                               airchannel:MouseBehaviour.MouseDownCommand="{Binding MouseDownCommand}"
-                               airchannel:MouseBehaviour.MouseUpCommand="{Binding MouseUpCommand}"
-                               airchannel:MouseBehaviour.MouseMoveCommand="{Binding MouseMoveCommand}"
+                               common:MouseBehaviour.MouseDownCommand="{Binding MouseDownCommand}"
+                               common:MouseBehaviour.MouseUpCommand="{Binding MouseUpCommand}"
+                               common:MouseBehaviour.MouseMoveCommand="{Binding MouseMoveCommand}"
                                >
 
             <!-- Scene Camera -->

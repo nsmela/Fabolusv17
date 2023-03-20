@@ -9,12 +9,13 @@ namespace Fabolus.Features.AirChannel {
     public sealed record AddAirChannelMessage(Point3D point);
     public sealed record SetAirChannelDiameterMessage(double diameter);
     public sealed record ClearAirChannelsMessage();
-    public sealed record RequestAirChannelsMessage();
-    public sealed record AirChannelsUpdatedMessage(List<AirChannelModel> channels, double diameter, double height);
+    public sealed record AirChannelsUpdatedMessage(List<AirChannelModel> channels);
+    public sealed record AirChannelSettingsUpdatedMessage(double diameter, double height);
 
     //requests
     public class AirChannelsRequestMessage : RequestMessage<List<AirChannelModel>> { }
     public class AirChannelDiameterRequestMessage : RequestMessage<double> { }
+    public class AirChannelHeightRequestMessage : RequestMessage<double> { }
 
     #endregion
 
@@ -23,7 +24,12 @@ namespace Fabolus.Features.AirChannel {
 
         private double _channelDiameter = 5.0f;
         private double _zHeightOffset = 10.0f;
-        private double _maxZHeight => _bolus.Geometry.Bounds.Z + _bolus.Geometry.Bounds.SizeZ + _zHeightOffset;
+        private double _maxZHeight {
+            get {
+                if (_bolus == null || _bolus.Geometry == null) return 0.0f;
+                else return _bolus.Geometry.Bounds.Z + _bolus.Geometry.Bounds.SizeZ + _zHeightOffset;
+            }
+        }
 
         private BolusModel _bolus;
 
@@ -34,18 +40,23 @@ namespace Fabolus.Features.AirChannel {
             WeakReferenceMessenger.Default.Register<AddAirChannelMessage>(this, (r, m) => { Receive(m); });
             WeakReferenceMessenger.Default.Register<SetAirChannelDiameterMessage>(this, (r, m) => { Receive(m); });
             WeakReferenceMessenger.Default.Register<ClearAirChannelsMessage>(this, (r, m) => { Receive(m); });
-            WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r,m) => { Receive(m); });
+            WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r,m) => { Update(m.bolus); });
 
             //request messages
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelsRequestMessage>(this, (r, m) => { m.Reply(r._channels); });
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelDiameterRequestMessage>(this, (r, m) => { m.Reply(r._channelDiameter); });
-
-            //requesting info
-            _bolus = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
+            WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelHeightRequestMessage>(this, (r, m) => { m.Reply(r._maxZHeight); });
         }
 
-        private void SendUpdate() {
-            WeakReferenceMessenger.Default.Send(new AirChannelsUpdatedMessage(_channels, _channelDiameter, _maxZHeight));
+        private void SendChannelsUpdate() => WeakReferenceMessenger.Default.Send(new AirChannelsUpdatedMessage(_channels));
+        private void SendSettingsUpdate() => WeakReferenceMessenger.Default.Send(new AirChannelSettingsUpdatedMessage(_channelDiameter, _maxZHeight));
+        private void Update(BolusModel bolus) {
+            _channels.Clear(); //changing the bolus means airholes no longer valid
+            if (bolus == null || bolus.Geometry is null) return;
+            _bolus = bolus;
+
+            SendChannelsUpdate();
+            SendSettingsUpdate();
         }
 
         #region Receiving
@@ -53,28 +64,19 @@ namespace Fabolus.Features.AirChannel {
             var point = message.point;
             _channels.Add(new AirChannelModel(point, _channelDiameter, _maxZHeight - point.Z));
 
-            SendUpdate();
+            SendChannelsUpdate();
         }
 
         private void Receive(SetAirChannelDiameterMessage message) {
             _channelDiameter = message.diameter;
 
-            SendUpdate();
+            SendSettingsUpdate();
         }
 
         private void Receive(ClearAirChannelsMessage message) {
             _channels.Clear();
 
-            SendUpdate();
-        }
-
-        private void Receive(BolusUpdatedMessage message) {
-            _bolus = message.bolus;
-            if (_bolus.Geometry is null) return;
-            //TODO: need to change into BolusChanged and SendBolus messages. Clears airholes each time you switch views otherwise
-            _channels.Clear(); //changing the bolus means airholes no longer valid
-
-            SendUpdate();
+            SendChannelsUpdate();
         }
         #endregion
     }

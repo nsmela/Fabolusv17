@@ -18,7 +18,8 @@
         </Grid.Resources>
 
         <!-- Mesh View -->
-        <helix:HelixViewport3D Grid.Row="1" Grid.Column="1" ZoomExtentsWhenLoaded="{Binding ZoomWhenLoaded}">
+        <helix:HelixViewport3D Grid.Row="1" Grid.Column="1" 
+                               ZoomExtentsWhenLoaded="{Binding ZoomWhenLoaded}">
 
             <!-- Scene Camera -->
             <helix:HelixViewport3D.Camera>

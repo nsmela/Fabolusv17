@@ -18,6 +18,8 @@ using g3;
 namespace Fabolus.Features.AirChannel
 {
     public partial class AirChannelMeshViewModel : MeshViewModelBase {
+        private const string BOLUS = "bolus";
+
         [ObservableProperty] private List<AirChannelModel> _airChannels;
         [ObservableProperty] private double _diameter, _height;
         [ObservableProperty] Point3D _mouseHit;
@@ -26,58 +28,82 @@ namespace Fabolus.Features.AirChannel
 
         private DiffuseMaterial _toolSkin, _selectedSkin, _channelsSkin; 
 
-        public AirChannelMeshViewModel() {
-            DisplayMesh = new Model3DGroup();
-            AirChannelsMesh= new Model3DGroup();
-            AirChannelToolMesh= new Model3DGroup();
-            ShowTool = false;
-            ShowMesh = true;
+        public AirChannelMeshViewModel() : base() {
+            //messages
+            WeakReferenceMessenger.Default.Register<AirChannelsUpdatedMessage>(this, (r, m) => { Update(m.channels); });
+            WeakReferenceMessenger.Default.Register<AirChannelSettingsUpdatedMessage>(this, (r, m) => { Update(m.diameter, m.height); });
 
-            MouseHit = new Point3D();
+            //parse existing info when switching to this new MeshViewModel
+            List<AirChannelModel> channels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
+            Update(channels);
 
-            //skin colours
-            _toolSkin = SetSkin(Colors.DarkBlue, 1.0f);
-            _selectedSkin = SetSkin(Colors.MediumPurple, 0.5f);
-            _channelsSkin = SetSkin(Colors.Purple, 0.4f);
-
-            WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r, m) => { Receive(m); });
-            WeakReferenceMessenger.Default.Register<AirChannelsUpdatedMessage>(this, (r, m) => { Receive(m); });
-
-            //updated display mesh if one existed before switching to this view
-            WeakReferenceMessenger.Default.Send<RequestBolusMessage>(new RequestBolusMessage());
-            WeakReferenceMessenger.Default.Send<RequestAirChannelsMessage>(new RequestAirChannelsMessage());
+            double diameter = WeakReferenceMessenger.Default.Send<AirChannelDiameterRequestMessage>();
+            double height = WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
+            Update(diameter, height);
         }
 
         #region Private Methods
-        private void Update() { //TODO: optimize to only handle things that have changed. This triggers on any change
+        protected override void Update(BolusModel bolus) { 
+            DisplayMesh.Children.Clear();
+
+            //building geometry model
+            var model = bolus.Model3D;
+            model.SetName(BOLUS);
+            DisplayMesh.Children.Add(model);
+
+            //first time loading viewmodel needs to initialize values
+            if (_toolSkin == null) Initialize();
+
             //generate meshes for air channels to display
-
-            UpdateAirChannelTool();
-            UpdateAirChannels();
-
-
-            //look -272, 263, -301 up -0.448, 0.432, 0.783 pos 272, -263, 301 target 0,0,0
+            Update(AirChannels);
         }
 
-        private void UpdateAirChannelTool() {
+        //to update the size and position of the air channel tool
+        private void Update(Point3D anchor) {
             //generate mesh for air channel tool
             AirChannelToolMesh.Children.Clear();
-            if (MouseHit != new Point3D()) {
-                var tool = new AirChannelModel(MouseHit, Diameter, Height - MouseHit.Z);
+            if (anchor != new Point3D()) {
+                var tool = new AirChannelModel(anchor, Diameter, Height - anchor.Z);
                 var mesh = new GeometryModel3D(tool.Geometry, _toolSkin);
                 AirChannelToolMesh.Children.Clear();
                 AirChannelToolMesh.Children.Add(mesh);
             }
         }
 
-        private void UpdateAirChannels() {
+        //to update the list of air channels
+        private void Update(List<AirChannelModel> airChannels) {
+            if (airChannels == null || airChannels.Count == AirChannelsMesh.Children.Count()) return; //no need to update
+            AirChannels = airChannels;
+
             //generates mesh for saved air channels in air channel store
             AirChannelsMesh.Children.Clear();
-            if (_airChannels.Count > 0) {
-                foreach (var a in _airChannels) {
+            if (AirChannels.Count > 0) {
+                foreach (var a in AirChannels) {
                     AirChannelsMesh.Children.Add(new GeometryModel3D(a.Geometry, _channelsSkin)); //TODO: load all at once? has to stay seperate to detect
                 }
             }
+        }
+
+        //to update the settings
+        private void Update(double diameter, double height) {
+            //tool needs to be updated
+            Diameter = diameter;
+            Height = height;
+            Update(MouseHit);
+        }
+
+        private void Initialize() {
+            AirChannelsMesh = new Model3DGroup();
+            AirChannelToolMesh = new Model3DGroup();
+            ShowTool = false;
+            ShowMesh = true;
+
+            MouseHit = new Point3D();
+
+            //skin colours
+            _toolSkin = SetSkin(Colors.MediumPurple, 0.5f);
+            _selectedSkin = SetSkin(Colors.Purple, 0.4f);
+            _channelsSkin = SetSkin(Colors.Purple, 1.0f);
         }
 
         private DiffuseMaterial SetSkin(Color colour, double opacity) {
@@ -90,23 +116,6 @@ namespace Fabolus.Features.AirChannel
         #endregion
 
         #region Receive
-        private void Receive(BolusUpdatedMessage message) {
-            var bolus = message.bolus;
-            DisplayMesh.Children.Clear();
-
-            //building geometry model
-            var model = bolus.Model3D;
-            model.SetName("bolus");
-            DisplayMesh.Children.Add(model);
-        }
-
-        private void Receive(AirChannelsUpdatedMessage message) {
-            _airChannels = message.channels;
-            _diameter = message.diameter;
-            _height = message.height;
-
-            Update();
-        }
         #endregion
 
         #region Commands
@@ -117,11 +126,6 @@ namespace Fabolus.Features.AirChannel
 
             //test if bolus mesh is hit
             var mousePosition = e.GetPosition((IInputElement)e.Source);
-            var hitParams = new RayHitTestParameters(
-                new Point3D(mousePosition.X, mousePosition.Y, 0),
-                new Vector3D(mousePosition.X, mousePosition.Y, 10)
-                );
-
             var viewport = ((HelixViewport3D)e.Source).Viewport;
 
             var hits = Viewport3DHelper.FindHits(viewport, mousePosition);
@@ -129,7 +133,7 @@ namespace Fabolus.Features.AirChannel
 
             foreach (var hit in hits) {
                 if (hit.Model == null) continue;
-                if (hit.Model.GetName() != "bolus") continue;
+                if (hit.Model.GetName() != BOLUS) continue;
 
                 WeakReferenceMessenger.Default.Send(new AddAirChannelMessage(hit.Position));
                 return;
@@ -147,140 +151,43 @@ namespace Fabolus.Features.AirChannel
             if (e.LeftButton == MouseButtonState.Pressed) return;
             if (e.RightButton == MouseButtonState.Pressed) return;
 
-            MouseHit = new Point3D(); //clears position, a successful hit will recreate it
-            
-            //test if bolus mesh is hit
-            var mousePosition = e.GetPosition((IInputElement)e.Source);
-            var hitParams = new RayHitTestParameters(
-                new Point3D(mousePosition.X, mousePosition.Y, 0), 
-                new Vector3D(mousePosition.X, mousePosition.Y, 10)
-                );
-
-            var viewport = ((HelixViewport3D)e.Source).Viewport;
-            
-            var hits = Viewport3DHelper.FindHits(viewport, mousePosition);
-            if (hits == null || hits.Count == 0) { //mouse isn't over the bolus mesh
-                UpdateAirChannelTool();
-                return;
-            }
-
-            foreach (var hit in hits) {
-                if(hit.Model == null ) continue;
-                if (hit.Model.GetName() != "bolus") continue;
-
-                MouseHit = hit.Position;
-                UpdateAirChannelTool();
-                return;
-            }
+            MouseHit = GetHitSpot(e, BOLUS);
+            Update(MouseHit);
 
             //check if an air channel is mouse over
         }
         #endregion
 
         #region Ray Hit Tests
-        private RayMeshGeometry3DHitTestResult _meshHit;
+        private IList<Viewport3DHelper.HitResult> GetHits(MouseEventArgs e) {
+            //test if bolus mesh is hit
+            var mousePosition = e.GetPosition((IInputElement)e.Source);
+            var viewport = ((HelixViewport3D)e.Source).Viewport;
 
-        private HitTestResultBehavior MeshHitsCallback(HitTestResult result) {
-            RayHitTestResult rayResult = result as RayHitTestResult;
-            if (rayResult == null) return HitTestResultBehavior.Continue;
-
-            RayMeshGeometry3DHitTestResult meshResult = rayResult as RayMeshGeometry3DHitTestResult;
-            if(meshResult == null) return HitTestResultBehavior.Continue;
-            
-            var label = meshResult.ModelHit.GetName();
-            if(label != "bolus") return HitTestResultBehavior.Continue;
-
-            //if fits all creiteria
-            MouseHit = meshResult.PointHit;
-            return HitTestResultBehavior.Stop;
-            
+            return Viewport3DHelper.FindHits(viewport, mousePosition);
         }
+
+        private Viewport3DHelper.HitResult GetHits(MouseEventArgs e, string filterLabel) {
+            var hits = GetHits(e);
+
+            if (hits == null) return null; //nothing found
+
+            foreach (var hit in hits) {
+                if (hit.Model == null) continue;
+                if (hit.Model.GetName() == filterLabel) return hit;
+            }
+
+            return null;//nothing found
+        }
+
+        private Point3D GetHitSpot(MouseEventArgs e, string filterLabel) {
+            var hit = GetHits(e, filterLabel);
+            if (hit == null) return new Point3D();
+            else return hit.Position;
+        }
+
         #endregion
 
     }
 
-    #region MouseBehavior
-    //for mouse interactions
-    public class MouseBehaviour {
-        #region Mouse Up
-        public static readonly DependencyProperty MouseUpCommandProperty =
-        DependencyProperty.RegisterAttached("MouseUpCommand", typeof(ICommand), typeof(MouseBehaviour), new FrameworkPropertyMetadata(new PropertyChangedCallback(MouseUpCommandChanged)));
-
-        private static void MouseUpCommandChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
-            FrameworkElement element = (FrameworkElement)d;
-
-            element.MouseUp += new MouseButtonEventHandler(element_MouseUp);
-        }
-
-        static void element_MouseUp(object sender, MouseButtonEventArgs e) {
-            FrameworkElement element = (FrameworkElement)sender;
-
-            ICommand command = GetMouseUpCommand(element);
-
-            command.Execute(e);
-        }
-
-        public static void SetMouseUpCommand(UIElement element, ICommand value) {
-            element.SetValue(MouseUpCommandProperty, value);
-        }
-
-        public static ICommand GetMouseUpCommand(UIElement element) {
-            return (ICommand)element.GetValue(MouseUpCommandProperty);
-        }
-        #endregion
-
-        #region Mouse Down
-        public static readonly DependencyProperty MouseDownCommandProperty =
-        DependencyProperty.RegisterAttached("MouseDownCommand", typeof(ICommand), typeof(MouseBehaviour), new FrameworkPropertyMetadata(new PropertyChangedCallback(MouseDownCommandChanged)));
-
-        private static void MouseDownCommandChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
-            FrameworkElement element = (FrameworkElement)d;
-
-            element.MouseDown += new MouseButtonEventHandler(element_MouseDown);
-        }
-
-        static void element_MouseDown(object sender, MouseButtonEventArgs e) {
-            FrameworkElement element = (FrameworkElement)sender;
-
-            ICommand command = GetMouseDownCommand(element);
-
-            command.Execute(e);
-        }
-
-        public static void SetMouseDownCommand(UIElement element, ICommand value) {
-            element.SetValue(MouseDownCommandProperty, value);
-        }
-
-        public static ICommand GetMouseDownCommand(UIElement element) {
-            return (ICommand)element.GetValue(MouseDownCommandProperty);
-        }
-        #endregion
-
-        #region Mouse Move
-        public static readonly DependencyProperty MouseMoveCommandProperty =
-            DependencyProperty.RegisterAttached("MouseMoveCommand", typeof(ICommand), typeof(MouseBehaviour), new FrameworkPropertyMetadata(new PropertyChangedCallback(MouseMoveCommandChanged)));
-
-        private static void MouseMoveCommandChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
-            FrameworkElement element = (FrameworkElement)d;
-
-            element.MouseMove += new MouseEventHandler(element_MouseMove);    //MouseButtonEventHandler(element_MouseMove);
-        }
-
-        static void element_MouseMove(object sender, MouseEventArgs e) {
-            FrameworkElement element = (FrameworkElement)sender;
-
-            ICommand command = GetMouseMoveCommand(element);
-
-            command.Execute(e);
-        }
-        public static void SetMouseMoveCommand(UIElement element, ICommand value) {
-            element.SetValue(MouseMoveCommandProperty, value);
-        }
-
-        public static ICommand GetMouseMoveCommand(UIElement element) {
-            return (ICommand)element.GetValue(MouseMoveCommandProperty);
-        }
-        #endregion
-    }
-    #endregion
 }

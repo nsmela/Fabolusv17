@@ -1,5 +1,6 @@
 ﻿
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace Fabolus.Features.Common {
     public class ViewModelBase : ObservableObject {
@@ -13,6 +14,9 @@ namespace Fabolus.Features.Common {
 
         //public Methods
         public void OnOpen() { }
-        public void OnClose() { }
+        public void OnClose() {
+            MeshViewModel.OnClose();
+            WeakReferenceMessenger.Default.UnregisterAll(this);
+        }
     }
 }

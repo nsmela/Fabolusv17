@@ -1,14 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
-using Fabolus.Features.AirChannel;
 using g3;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media.Media3D;
+
 
 namespace Fabolus.Features.Bolus {
 
@@ -20,7 +14,6 @@ namespace Fabolus.Features.Bolus {
 
     //utility
     public sealed record BolusUpdatedMessage(BolusModel bolus);
-    public sealed record RequestBolusMessage();
 
     //rotations
     public sealed record ApplyRotationMessage(Vector3 axis, double angle);
@@ -41,18 +34,19 @@ namespace Fabolus.Features.Bolus {
             WeakReferenceMessenger.Default.Register<AddNewBolusMessage>(this, (r, m) => { Receive(m); });
             WeakReferenceMessenger.Default.Register<RemoveBolusMessage>(this, (r, m) => { Receive(m); });
             WeakReferenceMessenger.Default.Register<ClearBolusMessage>(this, (r, m) => { Receive(m); });
-            WeakReferenceMessenger.Default.Register<RequestBolusMessage>(this, (r, m) => { Receive(m); });
             WeakReferenceMessenger.Default.Register<ApplyRotationMessage>(this, (r,m) => { Receive(m); });
             WeakReferenceMessenger.Default.Register<ClearRotationsMessage>(this, (r,m)=> { Receive(m); });
 
             //request messages
-            WeakReferenceMessenger.Default.Register<BolusStore, BolusRequestMessage>(this, (r, m) => { m.Reply(r._bolus); });
+            WeakReferenceMessenger.Default.Register<BolusStore, BolusRequestMessage>(this, (r, m) => { 
+                m.Reply(r._bolus); 
+            });
         }
 
         private void SendBolusUpdate() => WeakReferenceMessenger.Default.Send(new BolusUpdatedMessage(_bolus));
 
         //messages
-        public void Receive(AddNewBolusMessage message) {
+        private void Receive(AddNewBolusMessage message) {
             var label = message.label;
             var mesh = message.mesh;
 
@@ -61,17 +55,15 @@ namespace Fabolus.Features.Bolus {
             SendBolusUpdate();
         }
 
-        public void Receive(RemoveBolusMessage message) {
+        private void Receive(RemoveBolusMessage message) {
             _bolus.RemoveMesh(message.label);
             SendBolusUpdate();
         }
 
-        public void Receive(ClearBolusMessage message) {
+        private void Receive(ClearBolusMessage message) {
             _bolus = new BolusModel();
             SendBolusUpdate();
         }
-
-        public void Receive(RequestBolusMessage message) => SendBolusUpdate();
 
         private void Receive(ApplyRotationMessage message) {
             var axis = new Vector3d {

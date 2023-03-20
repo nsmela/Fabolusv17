@@ -115,7 +115,7 @@ namespace Fabolus.Features.Smoothing {
 
             WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r,m)=> { _bolus = m.bolus; });
 
-            WeakReferenceMessenger.Default.Send(new RequestBolusMessage());
+            _bolus = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
         }
 
         private DMesh3 SmoothingByMarchingCubes() {

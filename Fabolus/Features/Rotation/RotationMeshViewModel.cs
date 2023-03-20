@@ -27,18 +27,36 @@ namespace Fabolus.Features.Rotation {
         private DiffuseMaterial _meshSkinMaterial;
         #endregion
 
-        public RotationMeshViewModel() {
-            DisplayMesh = new Model3DGroup();
-            _geometry= new MeshGeometry3D();
+        public RotationMeshViewModel() : base() {
 
-            OverhangAxis = new Vector3D(0, 0, -1); //pointing downwards
+        }
 
+        #region Receive Messages
+
+        #endregion
+
+        #region Private Methods
+        protected override void Update(BolusModel bolus) {
+            if (_meshSkinMaterial == null) Initialize(); //if the viewmodel hasn't been initialized yet
+
+            //for easy reading
+            _geometry = bolus.Geometry;
+            if (_geometry == null || _geometry.TriangleIndices.Count <= 0) return;
+
+            DisplayMesh.Children.Clear();
+
+            //building geometry model
+            var model = GetOverhangsModel();
+            DisplayMesh.Children.Add(model);
+        }
+
+        private void Initialize() {
             //gradient color used for overhang display texture
             var gradientBrush = new LinearGradientBrush();
             gradientBrush.StartPoint = new System.Windows.Point(0, 0);
             gradientBrush.EndPoint = new System.Windows.Point(0, 1);
 
-            gradientBrush.GradientStops.Add( new GradientStop {
+            gradientBrush.GradientStops.Add(new GradientStop {
                 Color = Colors.Gray,
                 Offset = OVERHANG_GOOD
             });
@@ -56,28 +74,11 @@ namespace Fabolus.Features.Rotation {
             _meshSkinMaterial = new DiffuseMaterial(gradientBrush);
             _meshSkinMaterial.Brush.Opacity = _meshOpacity;
 
-            WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r, m) => { Receive(m); });
+            _geometry = new MeshGeometry3D();
 
-            //updated display mesh if one existed before switching to this view
-            WeakReferenceMessenger.Default.Send<RequestBolusMessage>(new RequestBolusMessage());
+            OverhangAxis = new Vector3D(0, 0, -1); //pointing downwards
         }
 
-        #region Receive Messages
-        private void Receive(BolusUpdatedMessage message) {
-            //for easy reading
-            _geometry = message.bolus.Geometry;
-            if (_geometry == null || _geometry.TriangleIndices.Count <= 0 ) return;
-
-            DisplayMesh.Children.Clear();
-
-            //building geometry model
-            var model = GetOverhangsModel();
-            DisplayMesh.Children.Add(model);
-        }
-
-        #endregion
-
-        #region Private Methods
         private void UpdateTempModel() {
             DisplayMesh.Children.Clear();
 
@@ -87,6 +88,9 @@ namespace Fabolus.Features.Rotation {
         }
 
         private GeometryModel3D GetTempOverhangs() {
+            //Overhangs are displayed using a gradient brush and vertex texture coordinates
+            //The angle of the vertex's normal vs the reference angle determines how far along the gradient 
+
             //apply temp rotation to reference axis
             var rotation = new AxisAngleRotation3D(RotationAxis, -RotationAngle);
             var rotate = new RotateTransform3D(rotation);
@@ -94,11 +98,11 @@ namespace Fabolus.Features.Rotation {
             transform.Children.Add(rotate);
             var refAngle = transform.Transform(OverhangAxis);
 
-            //get temp texture coord
+            //using the transformed referance angle, generate texture coordinates to use with the gradient brush
             var texture = GetTextureCoords(_geometry, refAngle);
             _geometry.TextureCoordinates = texture;
 
-            //ge temp model
+            //get temp model
             GeometryModel3D geometryModel = new GeometryModel3D(_geometry, _meshSkinMaterial);
             geometryModel.BackMaterial = _meshSkinMaterial;
             return geometryModel;
