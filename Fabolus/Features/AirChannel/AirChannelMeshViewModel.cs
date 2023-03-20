@@ -26,8 +26,9 @@ namespace Fabolus.Features.AirChannel
         [ObservableProperty] Point3D _mouseHit;
         [ObservableProperty] private Model3DGroup _airChannelsMesh, _airChannelToolMesh, _testMesh;
         [ObservableProperty] private bool _showTool, _showMesh;
+        [ObservableProperty] private int? _selectedAirChannel = null;
 
-        private DiffuseMaterial _toolSkin, _channelsSkin; 
+        private DiffuseMaterial _toolSkin, _channelsSkin, _selectedSkin; 
 
         public AirChannelMeshViewModel() : base() {
             //messages
@@ -64,7 +65,7 @@ namespace Fabolus.Features.AirChannel
             //generate mesh for air channel tool
             AirChannelToolMesh.Children.Clear();
             if (anchor != new Point3D()) {
-                var tool = new AirChannelModel(new AirChannelStraight(anchor, Diameter, Height));
+                var tool = new AirChannelStraight(anchor, Diameter, Height);
                 var mesh = new GeometryModel3D(tool.Geometry, _toolSkin);
                 AirChannelToolMesh.Children.Clear();
                 AirChannelToolMesh.Children.Add(mesh);
@@ -74,13 +75,17 @@ namespace Fabolus.Features.AirChannel
         //to update the list of air channels
         private void Update(List<AirChannelModel> airChannels) {
             if (airChannels == null) return; //no need to update
+
             AirChannels = airChannels;
 
             //generates mesh for saved air channels in air channel store
             AirChannelsMesh.Children.Clear();
             if (AirChannels.Count > 0) {
-                foreach (var a in AirChannels) {
-                    AirChannelsMesh.Children.Add(new GeometryModel3D(a.Geometry, _channelsSkin)); //TODO: load all at once? has to stay seperate to detect
+                for(int i = 0; i < AirChannels.Count; i++) {
+                    bool isSelected = i == _selectedAirChannel;
+                    var model = new GeometryModel3D(AirChannels[i].Geometry, _channelsSkin);
+                    model.SetName(AIRCHANNEL_LABEL + i.ToString()); //adding a unique label for hit detection
+                    AirChannelsMesh.Children.Add(model); //TODO: load all at once? has to stay seperate to detect
                 }
             }
         }
@@ -104,6 +109,7 @@ namespace Fabolus.Features.AirChannel
             //skin colours
             _toolSkin = SetSkin(Colors.MediumPurple, 0.5f);
             _channelsSkin = SetSkin(Colors.Purple, 1.0f);
+            _selectedSkin = SetSkin(Colors.BlueViolet, 1.0f);
         }
 
         private DiffuseMaterial SetSkin(Color colour, double opacity) {
@@ -137,28 +143,30 @@ namespace Fabolus.Features.AirChannel
             //get all hits
             var hits = GetHits(e); 
             if(hits == null || hits.Count == 0) return;
+            foreach(var result in hits) {
+                if(result.Model.GetName() == BOLUS_LABEL) {
+                    var shape = new AirChannelAngled(result.Position, result.Normal, Diameter, Height);
+                    WeakReferenceMessenger.Default.Send(new AddAirChannelShapeMessage(shape));
+                    return;
+                }
 
-            //find the air channel that was clicked on
-            foreach(var hitResult in hits) {
-                foreach(GeometryModel3D model in AirChannelsMesh.Children) {
-                    if(model == hitResult.Model) {
+                foreach (GeometryModel3D model in AirChannelsMesh.Children) {
+                    if (model == result.Model) {
+                        foreach(var a in AirChannels) {
+                            
+                        }
+
                         Update(AirChannels);
 
                         var mesh = model.Geometry;
-                        var material = new DiffuseMaterial(new SolidColorBrush(Colors.Blue));
                         AirChannelsMesh.Children.Remove(model);
-                        AirChannelsMesh.Children.Add(new GeometryModel3D(mesh, material));
+                        AirChannelsMesh.Children.Add(new GeometryModel3D(mesh, _selectedSkin));
                         return;
                     }
                 }
-            }
 
-            //test if bolus mesh is hit
-            var hit = GetHits(e, BOLUS_LABEL);
-            if (hit != null) {
-                var shape = new AirChannelAngled(hit.Position, hit.Normal, Diameter, Height);
-                WeakReferenceMessenger.Default.Send(new AddAirChannelShapeMessage(shape));
-                return;
+                //nothing was clicked
+                _selectedAirChannel = null; //deselect the air channel
             }
 
             //WeakReferenceMessenger.Default.Send(new AddAirChannelMessage(hit.Position)); //for straight airchannel

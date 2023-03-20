@@ -33,9 +33,11 @@ namespace Fabolus.Features.AirChannel {
         }
 
         private BolusModel _bolus;
+        private int? _currentId; //used to identify air channels
 
         public AirChannelStore() {
             _channels = new List<AirChannelModel>();
+            _currentId = null;
 
             //registering messages
             WeakReferenceMessenger.Default.Register<AddAirChannelMessage>(this, (r, m) => { Receive(m); });
@@ -54,6 +56,8 @@ namespace Fabolus.Features.AirChannel {
         private void SendSettingsUpdate() => WeakReferenceMessenger.Default.Send(new AirChannelSettingsUpdatedMessage(_channelDiameter, _maxZHeight));
         private void Update(BolusModel bolus) {
             _channels.Clear(); //changing the bolus means airholes no longer valid
+            _currentId = null; //clear id count
+
             if (bolus == null || bolus.Geometry is null) return;
             _bolus = bolus;
 
@@ -65,14 +69,23 @@ namespace Fabolus.Features.AirChannel {
         private void AddAirChannel(AirChannelShape shape) {
             if (_channels == null) _channels = new List<AirChannelModel>();
 
-            _channels.Add(new AirChannelModel(shape));
+            if (_currentId == null) _currentId = 0;
+            else _currentId++;
+
+            _channels.Add(new AirChannelModel(shape, _currentId));
+
+            
 
             SendChannelsUpdate();
         }
 
         private void Receive(AddAirChannelMessage message) {
             var point = message.point;
-            _channels.Add(new AirChannelModel(new AirChannelStraight(point, _channelDiameter, _maxZHeight)));
+
+            if (_currentId == null) _currentId = 0;
+            else _currentId++;
+
+            _channels.Add(new AirChannelModel(new AirChannelStraight(point, _channelDiameter, _maxZHeight), _currentId));
 
             SendChannelsUpdate();
         }
@@ -85,6 +98,7 @@ namespace Fabolus.Features.AirChannel {
 
         private void Receive(ClearAirChannelsMessage message) {
             _channels.Clear();
+            _currentId = null;
 
             SendChannelsUpdate();
         }

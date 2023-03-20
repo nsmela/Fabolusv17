@@ -5,7 +5,7 @@ using System.Windows.Media.Media3D;
 namespace Fabolus.Features.AirChannel {
     public class AirChannelModel {
         public AirChannelShape Shape { get; private set; }
-
+        public int? Id { get; set; }
 
         #region Meshes
         public MeshGeometry3D Geometry => Shape.Geometry;
@@ -14,9 +14,9 @@ namespace Fabolus.Features.AirChannel {
         #endregion
 
         #region Public Methods
-        public AirChannelModel(AirChannelShape shape) {
+        public AirChannelModel(AirChannelShape shape, int? id) {
             Shape = shape;
-
+            Id = id;
         }
         #endregion
     }
