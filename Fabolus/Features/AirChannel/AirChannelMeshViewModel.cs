@@ -23,10 +23,10 @@ namespace Fabolus.Features.AirChannel
         [ObservableProperty] private List<AirChannelModel> _airChannels;
         [ObservableProperty] private double _diameter, _height;
         [ObservableProperty] Point3D _mouseHit;
-        [ObservableProperty] private Model3DGroup _airChannelsMesh, _airChannelToolMesh;
+        [ObservableProperty] private Model3DGroup _airChannelsMesh, _airChannelToolMesh, _testMesh;
         [ObservableProperty] private bool _showTool, _showMesh;
 
-        private DiffuseMaterial _toolSkin, _selectedSkin, _channelsSkin; 
+        private DiffuseMaterial _toolSkin, _channelsSkin; 
 
         public AirChannelMeshViewModel() : base() {
             //messages
@@ -102,7 +102,6 @@ namespace Fabolus.Features.AirChannel
 
             //skin colours
             _toolSkin = SetSkin(Colors.MediumPurple, 0.5f);
-            _selectedSkin = SetSkin(Colors.Purple, 0.4f);
             _channelsSkin = SetSkin(Colors.Purple, 1.0f);
         }
 
@@ -112,7 +111,24 @@ namespace Fabolus.Features.AirChannel
             return new DiffuseMaterial(brush);
         }
 
-        
+        private void UpdateAngledPointer(MouseEventArgs e) {
+            TestMesh = new Model3DGroup();
+
+            var hit = GetHits(e, BOLUS);
+            if (hit == null) return;
+
+            Point3D anchor = hit.Position;
+            Point3D topAnchor = anchor + hit.Normal * 10.0f; //extend normal by 10.0f units and then add it to the point to get the top point
+
+            //build the model
+            var mesh = new MeshBuilder();
+            mesh.AddArrow(
+                anchor,
+                topAnchor,
+                2.5f);
+            TestMesh.Children.Add(new GeometryModel3D( mesh.ToMesh(), _toolSkin));
+        }
+
         #endregion
 
         #region Receive
@@ -151,6 +167,10 @@ namespace Fabolus.Features.AirChannel
             if (e.LeftButton == MouseButtonState.Pressed) return;
             if (e.RightButton == MouseButtonState.Pressed) return;
 
+            //test
+            UpdateAngledPointer(e);
+
+            //calculate mouse hit and which model
             MouseHit = GetHitSpot(e, BOLUS);
             Update(MouseHit);
 
