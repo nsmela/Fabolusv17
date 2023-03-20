@@ -82,7 +82,7 @@ namespace Fabolus.Features.AirChannel
             AirChannelsMesh.Children.Clear();
             if (AirChannels.Count > 0) {
                 for(int i = 0; i < AirChannels.Count; i++) {
-                    bool isSelected = i == _selectedAirChannel;
+                    bool isSelected = i == _selectedAirChannel; //color the selected air channel differently
                     var model = new GeometryModel3D(AirChannels[i].Geometry, _channelsSkin);
                     model.SetName(AIRCHANNEL_LABEL + i.ToString()); //adding a unique label for hit detection
                     AirChannelsMesh.Children.Add(model); //TODO: load all at once? has to stay seperate to detect
@@ -153,7 +153,7 @@ namespace Fabolus.Features.AirChannel
                 foreach (GeometryModel3D model in AirChannelsMesh.Children) {
                     if (model == result.Model) {
                         foreach(var a in AirChannels) {
-                            
+                            //TODO: select
                         }
 
                         Update(AirChannels);
