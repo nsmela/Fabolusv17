@@ -63,7 +63,7 @@ namespace Fabolus.Features.AirChannel
             //generate mesh for air channel tool
             AirChannelToolMesh.Children.Clear();
             if (anchor != new Point3D()) {
-                var tool = new AirChannelModel(anchor, Diameter, Height - anchor.Z);
+                var tool = new AirChannelModel(new AirChannelStraight(anchor, Diameter, Height));
                 var mesh = new GeometryModel3D(tool.Geometry, _toolSkin);
                 AirChannelToolMesh.Children.Clear();
                 AirChannelToolMesh.Children.Add(mesh);
@@ -118,15 +118,17 @@ namespace Fabolus.Features.AirChannel
             if (hit == null) return;
 
             Point3D anchor = hit.Position;
-            Point3D topAnchor = anchor + hit.Normal * 10.0f; //extend normal by 10.0f units and then add it to the point to get the top point
+            //Point3D topAnchor = anchor + hit.Normal * 10.0f; //extend normal by 10.0f units and then add it to the point to get the top point
 
             //build the model
-            var mesh = new MeshBuilder();
+            /*var mesh = new MeshBuilder();
             mesh.AddArrow(
                 anchor,
                 topAnchor,
                 2.5f);
-            TestMesh.Children.Add(new GeometryModel3D( mesh.ToMesh(), _toolSkin));
+            TestMesh.Children.Add(new GeometryModel3D( mesh.ToMesh(), _toolSkin));*/
+            var airchannel = new AirChannelAngled(anchor, hit.Normal, Diameter, Height);
+            TestMesh.Children.Add(new GeometryModel3D(airchannel.Geometry, _toolSkin));
         }
 
         #endregion
@@ -141,19 +143,14 @@ namespace Fabolus.Features.AirChannel
             MouseHit = new Point3D(); //clears position, a successful hit will recreate it
 
             //test if bolus mesh is hit
-            var mousePosition = e.GetPosition((IInputElement)e.Source);
-            var viewport = ((HelixViewport3D)e.Source).Viewport;
+            var hit = GetHits(e, BOLUS);
+            if(hit == null) return;
 
-            var hits = Viewport3DHelper.FindHits(viewport, mousePosition);
-            if (hits == null || hits.Count == 0) return;
+            //WeakReferenceMessenger.Default.Send(new AddAirChannelMessage(hit.Position));
 
-            foreach (var hit in hits) {
-                if (hit.Model == null) continue;
-                if (hit.Model.GetName() != BOLUS) continue;
+            var shape = new AirChannelAngled(hit.Position, hit.Normal, Diameter, Height);
+            WeakReferenceMessenger.Default.Send(new AddAirChannelShapeMessage(shape));
 
-                WeakReferenceMessenger.Default.Send(new AddAirChannelMessage(hit.Position));
-                return;
-            }
         }
 
         [RelayCommand]
@@ -172,7 +169,7 @@ namespace Fabolus.Features.AirChannel
 
             //calculate mouse hit and which model
             MouseHit = GetHitSpot(e, BOLUS);
-            Update(MouseHit);
+            //Update(MouseHit);
 
             //check if an air channel is mouse over
         }

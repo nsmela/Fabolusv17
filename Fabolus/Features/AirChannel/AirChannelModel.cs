@@ -4,66 +4,19 @@ using System.Windows.Media.Media3D;
 
 namespace Fabolus.Features.AirChannel {
     public class AirChannelModel {
-        public Point3D Point { get; set; }
-        public double Diameter { get; set; }
-        public double Length { get; set; }
-        public double Radius => Diameter / 2;
-        public Point3D Anchor => new Point3D(Point.X, Point.Y, Point.Z - 1);
-        public Point3D Top => new Point3D(Point.X, Point.Y, Point.Z + Length);
-        public Vector3d DAnchor => new Vector3d(Anchor.X, Anchor.Y, Anchor.Z);
-        public Vector3d DTop => new Vector3d(Top.X, Top.Y, Top.Z);
+        public AirChannelShape Shape { get; private set; }
+
 
         #region Meshes
-        public MeshGeometry3D Geometry {
-            get {
-                MeshBuilder mesh = new MeshBuilder(true);
-                mesh.AddSphere(Anchor, Radius);
-                mesh.AddCylinder(Anchor, Top, Radius, 32, false, true);
-                return mesh.ToMesh();
-            }
-        }
+        public MeshGeometry3D Geometry => Shape.Geometry;
+        public DMesh3 Mesh => Shape.Mesh;
 
-        public DMesh3 Mesh {
-            get {
-                MeshEditor mesh = new MeshEditor(new DMesh3());
-
-                Sphere3Generator_NormalizedCube generateSphere = new Sphere3Generator_NormalizedCube {
-                    Radius = this.Radius,
-                    EdgeVertices = 5
-                };
-                DMesh3 sphereMesh = generateSphere.Generate().MakeDMesh();
-                MeshTransforms.Translate(sphereMesh, DAnchor);
-                mesh.AppendMesh(sphereMesh);
-
-                CappedCylinderGenerator generateCyclinder = new CappedCylinderGenerator {
-                    BaseRadius = (float)Radius,
-                    TopRadius = (float)Radius,
-                    Height = (float)Length,
-                    Slices = 64
-                };
-                DMesh3 tubeMesh = generateCyclinder.Generate().MakeDMesh();
-                Quaterniond rotate = new Quaterniond(Vector3d.AxisX, 90.0f);
-                MeshTransforms.Rotate(tubeMesh, Vector3d.Zero, rotate);
-                MeshTransforms.Translate(tubeMesh, DAnchor);
-                mesh.AppendMesh(tubeMesh);
-
-                return mesh.Mesh;
-            }
-        }
         #endregion
 
         #region Public Methods
-        public AirChannelModel(Point3D point, double diameter, double length) {
-            Point = point;
-            Diameter = diameter;
-            Length = length;
-        }
+        public AirChannelModel(AirChannelShape shape) {
+            Shape = shape;
 
-        public MeshGeometry3D OffsetGeometry(double offset) {
-            MeshBuilder mesh = new MeshBuilder(true);
-            mesh.AddSphere(Anchor, Radius);
-            mesh.AddCylinder(Anchor, Top, Radius + offset, 32, false, true);
-            return mesh.ToMesh();
         }
         #endregion
     }
@@ -71,7 +24,6 @@ namespace Fabolus.Features.AirChannel {
     public abstract class AirChannelShape {
          public virtual MeshGeometry3D Geometry { get; protected set; }
         public virtual DMesh3 Mesh { get; protected set; }
-        public abstract void Build();
     }
 
     public class AirChannelStraight : AirChannelShape {
@@ -81,18 +33,16 @@ namespace Fabolus.Features.AirChannel {
         private double _length => _height - _topAnchor.Z;
         private Point3D _anchor { get; set; }
         private Point3D _topAnchor => new Point3D(_anchor.X, _anchor.Y, _height);
-        public Vector3d _dAnchor => new Vector3d(_anchor.X, _anchor.Y, _anchor.Z);
-        public Vector3d _dTop => new Vector3d(_topAnchor.X, _topAnchor.Y, _topAnchor.Z);
+        private Vector3d _dAnchor => new Vector3d(_anchor.X, _anchor.Y, _anchor.Z);
+        private Vector3d _dTop => new Vector3d(_topAnchor.X, _topAnchor.Y, _topAnchor.Z);
 
-        public AirChannelStraight(Point3D anchor, double height, double diameter = 2.0f) {
+        public AirChannelStraight(Point3D anchor, double diameter, double height) {
             _anchor = new Point3D(anchor.X, anchor.Y, anchor.Z - 1);
             _diameter = diameter;
             _height = height;
-            Build();
-        }
 
-        public override void Build() {
             SetGeometry();
+            SetMesh();
         }
 
         private void SetGeometry() {
@@ -101,7 +51,7 @@ namespace Fabolus.Features.AirChannel {
             mesh.AddCylinder(
                 _anchor,
                 _topAnchor,
-                _diameter);
+                _radius);
             Geometry = mesh.ToMesh();
         }
 
@@ -129,6 +79,57 @@ namespace Fabolus.Features.AirChannel {
             mesh.AppendMesh(tubeMesh);
 
             Mesh = mesh.Mesh;
+        }
+    }
+
+    public class AirChannelAngled : AirChannelShape {
+        private double _diameter;
+        private double _radius => _diameter / 2;
+        private double _height;
+        private double _length => _height - _topAnchor.Z;
+        private Point3D _anchor { get; set; }
+        private Vector3D _direction { get; set; }
+        private Point3D _topAnchor => new Point3D(_anchor.X, _anchor.Y, _height);
+        private Vector3d _dAnchor => new Vector3d(_anchor.X, _anchor.Y, _anchor.Z);
+        private Vector3d _dTop => new Vector3d(_topAnchor.X, _topAnchor.Y, _topAnchor.Z);
+
+        public AirChannelAngled(Point3D anchor, Vector3D direction, double diameter, double height) {
+            _anchor = anchor + direction * -2.0f; //moving the anchor deep 2.0 mm deep within the model
+            _direction = direction;
+            _diameter= diameter;
+            _height= height;
+
+            SetGeometry();
+            SetMesh();
+        }
+
+        private void SetGeometry() {
+            float coneLength = 10.0f;
+
+            var mesh = new MeshBuilder();
+            mesh.AddSphere(_anchor, _radius  / 2);
+            mesh.AddCone(
+                _anchor, //cone tip position
+                _direction, //cone direction
+                _radius /2, //cone base radius
+                _radius, //cone top radius
+                coneLength, //cone length
+                false, //base cap
+                false, //top cap
+                16 //divisions/resolution
+                );
+
+            var point = _anchor + _direction * coneLength; //used for anchor for next mesh addition
+            mesh.AddSphere(point, _radius);
+            mesh.AddCylinder(
+                point,
+                new Point3D(point.X, point.Y, _height),
+                _radius); 
+            Geometry = mesh.ToMesh();
+        }
+
+        private void SetMesh() {
+            
         }
     }
 }
