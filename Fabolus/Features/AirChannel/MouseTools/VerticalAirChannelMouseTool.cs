@@ -1,14 +1,15 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 using System.Windows.Input;
 using System.Windows.Media.Media3D;
 using CommunityToolkit.Mvvm.Messaging;
-using Fabolus.Features.Bolus;
 using HelixToolkit.Wpf;
 using MouseTool = Fabolus.Features.AirChannel.MouseTools.AirChannelMouseTool;
 
 namespace Fabolus.Features.AirChannel.MouseTools {
     public class VerticalAirChannelMouseTool : AirChannelMouseTool {
         private string BOLUS_LABEL => AirChannelMeshViewModel.BOLUS_LABEL;
+        private string AIRCHANNEL_LABEL => AirChannelMeshViewModel.AIRCHANNEL_LABEL;
         private double _diameter, _height;
         private Point3D _lastMousePosition;
 
@@ -36,11 +37,27 @@ namespace Fabolus.Features.AirChannel.MouseTools {
             var hits = GetHits(mouse);
             if (hits == null || hits.Count == 0) return; //nothing was struck
             foreach (var result in hits) {
-                if (result.Model.GetName() == BOLUS_LABEL) { //if clicked on bolus
-                    var shape = new AirChannelStraight(result.Position, _diameter, _height);
+
+                string name = result.Model.GetName();
+                if (name == null) continue;
+
+                if (name == BOLUS_LABEL) { //if clicked on bolus
+                    _lastMousePosition = result.Position;
+                    var shape = new AirChannelStraight(_lastMousePosition, _diameter, _height);
                     WeakReferenceMessenger.Default.Send(new AddAirChannelShapeMessage(shape));
                     return;
                 }
+
+                //if airchannel
+                if (name.Contains(AIRCHANNEL_LABEL)) {
+                    //number at end is the channel's index
+                    var number = Regex.Match(result.Model.GetName(), @"\d+$", RegexOptions.RightToLeft).Value;
+                    int index = int.Parse(number);
+                    WeakReferenceMessenger.Default.Send(new AirChannelSetMessage(index));
+                    return;
+                }
+
+                //if nothing is clicked on
             }
         }
 

@@ -37,16 +37,17 @@ namespace Fabolus.Features.AirChannel
 
         public AirChannelMeshViewModel() : base() {
             //messages
-            WeakReferenceMessenger.Default.Register<AirChannelsUpdatedMessage>(this, (r, m) => { Update(m.channels); });
-            WeakReferenceMessenger.Default.Register<AirChannelSettingsUpdatedMessage>(this, (r, m) => { Update(m.diameter, m.height); });
+            WeakReferenceMessenger.Default.Register<AirChannelsUpdatedMessage>(this, (r, m) => { Update(m.channels, m.selectedIndex); });
+            WeakReferenceMessenger.Default.Register<AirChannelSettingsUpdatedMessage>(this, (r, m) => { Update(m.diameter, m.height, m.selectedIndex); });
 
             //parse existing info when switching to this new MeshViewModel
             List<AirChannelModel> channels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
-            Update(channels);
+            Update(channels, null);
 
             double diameter = WeakReferenceMessenger.Default.Send<AirChannelDiameterRequestMessage>();
             double height = WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
-            Update(diameter, height);
+            int? selectedIndex = null;
+            Update(diameter, height, selectedIndex);
 
         }
 
@@ -64,7 +65,7 @@ namespace Fabolus.Features.AirChannel
             if (_toolSkin == null) Initialize();
 
             //generate meshes for air channels to display
-            Update(AirChannels);
+            Update(AirChannels, null);
 
             //ensure mouse tool has 
         }
@@ -97,7 +98,7 @@ namespace Fabolus.Features.AirChannel
         }
 
         //to update the list of air channels
-        private void Update(List<AirChannelModel> airChannels) {
+        private void Update(List<AirChannelModel> airChannels, int? selectedIndex) {
             if (airChannels == null) return; //no need to update
 
             AirChannels = airChannels;
@@ -106,8 +107,9 @@ namespace Fabolus.Features.AirChannel
             AirChannelsMesh.Children.Clear();
             if (AirChannels.Count > 0) {
                 for(int i = 0; i < AirChannels.Count; i++) {
-                    bool isSelected = i == _selectedAirChannel; //color the selected air channel differently
-                    var model = new GeometryModel3D(AirChannels[i].Geometry, _channelsSkin);
+                    bool isSelected = (selectedIndex != null &&  i == selectedIndex); //color the selected air channel differently
+                    var skin = isSelected ? _selectedSkin : _channelsSkin;
+                    var model = new GeometryModel3D(AirChannels[i].Geometry, skin);
                     model.SetName(AIRCHANNEL_LABEL + i.ToString()); //adding a unique label for hit detection
                     AirChannelsMesh.Children.Add(model); //TODO: load all at once? has to stay seperate to detect
                 }
@@ -115,7 +117,7 @@ namespace Fabolus.Features.AirChannel
         }
 
         //to update the settings
-        private void Update(double diameter, double height) {
+        private void Update(double diameter, double height, int? selectedIndex) {
             //tool needs to be updated
             Diameter = diameter;
             Height = height;
