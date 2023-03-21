@@ -14,12 +14,16 @@ using CommunityToolkit.Mvvm.Input;
 using System.Windows.Media;
 using HelixToolkit.Wpf;
 using g3;
+using Fabolus.Features.AirChannel.MouseTools;
 
 namespace Fabolus.Features.AirChannel
 {
     public partial class AirChannelMeshViewModel : MeshViewModelBase {
         private const string BOLUS_LABEL = "bolus"; //used to name the bolus model for hit detection
         private const string AIRCHANNEL_LABEL = "airchannel"; //names each airchannel for hit detection
+
+        //controls what the mouse functions are in mesh view
+        private AirChannelMouseTool _mouseTool;
 
         [ObservableProperty] private List<AirChannelModel> _airChannels;
         [ObservableProperty] private double _diameter, _height;
@@ -43,6 +47,7 @@ namespace Fabolus.Features.AirChannel
             double diameter = WeakReferenceMessenger.Default.Send<AirChannelDiameterRequestMessage>();
             double height = WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
             Update(diameter, height);
+
         }
 
         #region Private Methods
@@ -60,6 +65,23 @@ namespace Fabolus.Features.AirChannel
 
             //generate meshes for air channels to display
             Update(AirChannels);
+
+            //ensure mouse tool has 
+        }
+
+        private void OnMouseMove() {
+            AirChannelToolMesh.Children.Clear();
+            if (_mouseTool.ToolMesh == null) return;
+
+            //update the tool mesh in meshview
+            var mesh = new GeometryModel3D(_mouseTool.ToolMesh, _toolSkin);
+            AirChannelToolMesh.Children.Add(mesh);
+
+            //TODO: instead of making the mesh over, maybe adjust the points instead? or transform the points?
+        }
+
+        private void OnMouseDown() {
+
         }
 
         //to update the size and position of the air channel tool
@@ -98,6 +120,11 @@ namespace Fabolus.Features.AirChannel
             Diameter = diameter;
             Height = height;
             Update(MouseHit);
+            
+            //update mouse tool mesh
+            _mouseTool.SetDiameter(Diameter);
+            _mouseTool.SetHeight(Height);
+            OnMouseMove();
         }
 
         private void Initialize() {
@@ -107,6 +134,8 @@ namespace Fabolus.Features.AirChannel
             ShowMesh = true;
 
             MouseHit = new Point3D();
+            //mouse tools
+            _mouseTool = new VerticalAirChannelMouseTool(_bolus, BOLUS_LABEL);
 
             //skin colours
             _toolSkin = SetSkin(Colors.MediumPurple, 0.5f);
@@ -167,41 +196,8 @@ namespace Fabolus.Features.AirChannel
         #region Commands
         [RelayCommand]
         private void MouseDown(MouseEventArgs e) {
-            if (e.RightButton == MouseButtonState.Pressed) return;
-            MouseHit = new Point3D(); //clears position, a successful hit will recreate it
-
-            //get all hits
-            var hits = GetHits(e); 
-            if(hits == null || hits.Count == 0) return;
-            foreach(var result in hits) {
-                if(result.Model.GetName() == BOLUS_LABEL) {
-                    var shape = new AirChannelAngled(result.Position, result.Normal, Diameter, Height);
-                    UpdateShortestPath(result.Position);
-                    WeakReferenceMessenger.Default.Send(new AddAirChannelShapeMessage(shape));
-                    return;
-                }
-
-                foreach (GeometryModel3D model in AirChannelsMesh.Children) {
-                    if (model == result.Model) {
-                        foreach(var a in AirChannels) {
-                            //TODO: select
-                        }
-
-                        Update(AirChannels);
-
-                        var mesh = model.Geometry;
-                        AirChannelsMesh.Children.Remove(model);
-                        AirChannelsMesh.Children.Add(new GeometryModel3D(mesh, _selectedSkin));
-                        return;
-                    }
-                }
-
-                //nothing was clicked
-                _selectedAirChannel = null; //deselect the air channel
-            }
-
-            //WeakReferenceMessenger.Default.Send(new AddAirChannelMessage(hit.Position)); //for straight airchannel
-
+            _mouseTool.MouseDown(e);
+            OnMouseDown();
         }
 
         [RelayCommand]
@@ -211,19 +207,8 @@ namespace Fabolus.Features.AirChannel
 
         [RelayCommand]
         private void MouseMove(MouseEventArgs e) {
-            //abort if any mouse buttons are down
-            if (e.LeftButton == MouseButtonState.Pressed) return;
-            if (e.RightButton == MouseButtonState.Pressed) return;
-
-            //test
-            UpdateAngledPointer(e);
-            //check if over a air channel, then abort if so
-
-            //calculate mouse hit and which model
-            MouseHit = GetHitSpot(e, BOLUS_LABEL);
-            //Update(MouseHit);
-
-            //check if an air channel is mouse over
+            _mouseTool.MouseMove(e);
+            OnMouseMove();
         }
         #endregion
 
