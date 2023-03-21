@@ -24,7 +24,7 @@ namespace Fabolus.Features.AirChannel {
         private List<AirChannelModel> _channels;
 
         private double _channelDiameter = 5.0f;
-        private double _zHeightOffset = 10.0f;
+        private double _zHeightOffset = 20.0f;
         private double _maxZHeight {
             get {
                 if (_bolus == null || _bolus.Geometry == null) return 0.0f;

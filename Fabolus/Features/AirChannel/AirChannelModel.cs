@@ -94,7 +94,7 @@ namespace Fabolus.Features.AirChannel {
         private Vector3d _dTop => new Vector3d(_topAnchor.X, _topAnchor.Y, _topAnchor.Z);
 
         public AirChannelAngled(Point3D anchor, Vector3D direction, double diameter, double height) {
-            _anchor = anchor + direction * -2.0f; //moving the anchor deep 2.0 mm deep within the model
+            _anchor = anchor + direction * -0.5f; //moving the anchor deep 2.0 mm deep within the model
             _direction = direction;
             _diameter= diameter;
             _height= height;
@@ -107,24 +107,24 @@ namespace Fabolus.Features.AirChannel {
             float coneLength = 10.0f;
 
             var mesh = new MeshBuilder();
-            mesh.AddSphere(_anchor, _radius  / 2);
+            //mesh.AddSphere(_anchor, _radius  / 2);
             mesh.AddCone(
                 _anchor, //cone tip position
                 _direction, //cone direction
-                _radius /2, //cone base radius
-                _radius, //cone top radius
+                _radius, //cone base radius
+                _radius + 1.0f, //cone top radius
                 coneLength, //cone length
-                false, //base cap
+                true, //base cap
                 false, //top cap
                 16 //divisions/resolution
                 );
 
             var point = _anchor + _direction * coneLength; //used for anchor for next mesh addition
-            mesh.AddSphere(point, _radius);
+            mesh.AddSphere(point, _radius + 1.0f);
             mesh.AddCylinder(
                 point,
                 new Point3D(point.X, point.Y, _height),
-                _radius); 
+                _radius + 1.0f); 
             Geometry = mesh.ToMesh();
         }
 
