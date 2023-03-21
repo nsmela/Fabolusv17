@@ -19,8 +19,8 @@ using Fabolus.Features.AirChannel.MouseTools;
 namespace Fabolus.Features.AirChannel
 {
     public partial class AirChannelMeshViewModel : MeshViewModelBase {
-        private const string BOLUS_LABEL = "bolus"; //used to name the bolus model for hit detection
-        private const string AIRCHANNEL_LABEL = "airchannel"; //names each airchannel for hit detection
+        public const string BOLUS_LABEL = "bolus"; //used to name the bolus model for hit detection
+        public const string AIRCHANNEL_LABEL = "airchannel"; //names each airchannel for hit detection
 
         //controls what the mouse functions are in mesh view
         private AirChannelMouseTool _mouseTool;
@@ -122,8 +122,6 @@ namespace Fabolus.Features.AirChannel
             Update(MouseHit);
             
             //update mouse tool mesh
-            _mouseTool.SetDiameter(Diameter);
-            _mouseTool.SetHeight(Height);
             OnMouseMove();
         }
 
@@ -135,7 +133,7 @@ namespace Fabolus.Features.AirChannel
 
             MouseHit = new Point3D();
             //mouse tools
-            _mouseTool = new VerticalAirChannelMouseTool(_bolus, BOLUS_LABEL);
+            _mouseTool = new VerticalAirChannelMouseTool();
 
             //skin colours
             _toolSkin = SetSkin(Colors.MediumPurple, 0.5f);
