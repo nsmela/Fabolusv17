@@ -28,7 +28,8 @@ namespace Fabolus.Features.AirChannel
         [ObservableProperty] private bool _showTool, _showMesh;
         [ObservableProperty] private int? _selectedAirChannel = null;
         [ObservableProperty] private Point3D? _pathStart, _pathEnd;
-        private DiffuseMaterial _toolSkin, _channelsSkin, _selectedSkin; 
+        private DiffuseMaterial _toolSkin, _channelsSkin, _selectedSkin;
+        private BolusModel _bolus;
 
         public AirChannelMeshViewModel() : base() {
             //messages
@@ -49,7 +50,8 @@ namespace Fabolus.Features.AirChannel
             DisplayMesh.Children.Clear();
 
             //building geometry model
-            var model = bolus.Model3D;
+            _bolus = bolus;
+            var model = _bolus.Model3D;
             model.SetName(BOLUS_LABEL);
             DisplayMesh.Children.Add(model);
 
@@ -114,6 +116,7 @@ namespace Fabolus.Features.AirChannel
             //shortest path
             _pathStart = null;
             _pathEnd = null;
+            TestMesh = new();
         }
 
         private DiffuseMaterial SetSkin(Color colour, double opacity) {
@@ -148,6 +151,12 @@ namespace Fabolus.Features.AirChannel
             _pathEnd = point;
 
             //calculate shortest geodist path
+            var path = _bolus.GetGeoDist((Point3D)_pathStart, (Point3D)_pathEnd);
+            var pathMesh = new AirChannelPath(path, 1.0f);
+
+            TestMesh.Children.Clear();
+            var model = new GeometryModel3D(pathMesh.Geometry, _selectedSkin);
+            TestMesh.Children.Add(model);
         }
 
         #endregion
@@ -167,6 +176,7 @@ namespace Fabolus.Features.AirChannel
             foreach(var result in hits) {
                 if(result.Model.GetName() == BOLUS_LABEL) {
                     var shape = new AirChannelAngled(result.Position, result.Normal, Diameter, Height);
+                    UpdateShortestPath(result.Position);
                     WeakReferenceMessenger.Default.Send(new AddAirChannelShapeMessage(shape));
                     return;
                 }

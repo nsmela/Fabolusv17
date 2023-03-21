@@ -1,5 +1,6 @@
 ﻿using g3;
 using HelixToolkit.Wpf;
+using System.Collections.Generic;
 using System.Windows.Media.Media3D;
 
 namespace Fabolus.Features.AirChannel {
@@ -22,7 +23,7 @@ namespace Fabolus.Features.AirChannel {
     }
 
     public abstract class AirChannelShape {
-         public virtual MeshGeometry3D Geometry { get; protected set; }
+        public virtual MeshGeometry3D Geometry { get; protected set; }
         public virtual DMesh3 Mesh { get; protected set; }
     }
 
@@ -96,8 +97,8 @@ namespace Fabolus.Features.AirChannel {
         public AirChannelAngled(Point3D anchor, Vector3D direction, double diameter, double height) {
             _anchor = anchor + direction * -0.5f; //moving the anchor deep 2.0 mm deep within the model
             _direction = direction;
-            _diameter= diameter;
-            _height= height;
+            _diameter = diameter;
+            _height = height;
 
             SetGeometry();
             SetMesh();
@@ -124,12 +125,39 @@ namespace Fabolus.Features.AirChannel {
             mesh.AddCylinder(
                 point,
                 new Point3D(point.X, point.Y, _height),
-                _radius + 1.0f); 
+                _radius + 1.0f);
             Geometry = mesh.ToMesh();
         }
 
         private void SetMesh() {
-            
+
+        }
+    }
+
+    public class AirChannelPath : AirChannelShape {
+        private double _diameter;
+        private double _radius => _diameter / 2;
+        private List<Point3D> _path { get; set; }
+
+        public AirChannelPath(List<Point3D> path, double diameter) {
+            _path = path;
+            _diameter = diameter;
+
+            SetGeometry();
+            //SetMesh(); //TODO
+        }
+
+        private void SetGeometry() {
+            if (_path == null) return;
+
+            var mesh = new MeshBuilder();
+
+            mesh.AddSphere(_path[0], _radius);
+            for (int i = 0; i < _path.Count - 1; i++) {
+                mesh.AddCylinder(_path[i], _path[i + 1], _diameter, 16);
+                mesh.AddSphere(_path[i + 1], _radius);
+            }
+            Geometry = mesh.ToMesh();
         }
     }
 }

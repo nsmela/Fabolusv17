@@ -1,12 +1,13 @@
 ﻿using Fabolus.Features.Bolus.Tools;
 using g3;
+using System;
 using System.Collections.Generic;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
 namespace Fabolus.Features.Bolus {
 
-    public class BolusModel {
+    public partial class BolusModel {
         #region Bolus Types
         public const string ORIGINAL_BOLUS_LABEL = "original"; //imported model
         public const string SMOOTHED_BOLUS_LABEL = "smoothed"; //smoothed model
@@ -47,6 +48,7 @@ namespace Fabolus.Features.Bolus {
         public GeometryModel3D Model3D => _model3D;
 
         private List<Quaterniond> _transforms;
+
         #endregion
 
         #region Public Methods
@@ -107,6 +109,11 @@ namespace Fabolus.Features.Bolus {
             UpdateGeometry();
         }
 
+        public List<Point3D> GetGeoDist(Point3D startPoint, Point3D endPoint) {
+            Vector3d start = new Vector3d(startPoint.X, startPoint.Y, startPoint.Z);
+            Vector3d end = new Vector3d(endPoint.X, endPoint.Y, endPoint.Z);
+            return ShortestPath(start, end);
+        }
         #endregion
 
         #region Private Methods
@@ -120,6 +127,8 @@ namespace Fabolus.Features.Bolus {
             _model3D = new GeometryModel3D(Geometry, _meshSkinMaterial);
             _model3D.BackMaterial = _meshSkinMaterial;
         }
+
+
         #endregion
     }
 }
