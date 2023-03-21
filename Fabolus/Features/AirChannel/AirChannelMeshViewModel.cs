@@ -23,11 +23,11 @@ namespace Fabolus.Features.AirChannel
 
         [ObservableProperty] private List<AirChannelModel> _airChannels;
         [ObservableProperty] private double _diameter, _height;
-        [ObservableProperty] Point3D _mouseHit;
+        [ObservableProperty] private Point3D _mouseHit;
         [ObservableProperty] private Model3DGroup _airChannelsMesh, _airChannelToolMesh, _testMesh;
         [ObservableProperty] private bool _showTool, _showMesh;
         [ObservableProperty] private int? _selectedAirChannel = null;
-
+        [ObservableProperty] private Point3D? _pathStart, _pathEnd;
         private DiffuseMaterial _toolSkin, _channelsSkin, _selectedSkin; 
 
         public AirChannelMeshViewModel() : base() {
@@ -110,6 +110,10 @@ namespace Fabolus.Features.AirChannel
             _toolSkin = SetSkin(Colors.MediumPurple, 0.5f);
             _channelsSkin = SetSkin(Colors.Purple, 1.0f);
             _selectedSkin = SetSkin(Colors.BlueViolet, 1.0f);
+
+            //shortest path
+            _pathStart = null;
+            _pathEnd = null;
         }
 
         private DiffuseMaterial SetSkin(Color colour, double opacity) {
@@ -127,6 +131,23 @@ namespace Fabolus.Features.AirChannel
             Point3D anchor = hit.Position;
             var airchannel = new AirChannelAngled(anchor, hit.Normal, Diameter, Height);
             TestMesh.Children.Add(new GeometryModel3D(airchannel.Geometry, _toolSkin));
+        }
+
+        private void UpdateShortestPath(Point3D point) {
+            if(point == null){ //clear the results
+                _pathStart= null;
+                _pathEnd= null;
+                return;
+            }
+
+            if(_pathStart == null) {
+                _pathStart = point;
+                return;
+            }
+
+            _pathEnd = point;
+
+            //calculate shortest geodist path
         }
 
         #endregion
