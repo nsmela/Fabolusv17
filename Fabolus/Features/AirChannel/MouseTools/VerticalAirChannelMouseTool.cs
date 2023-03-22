@@ -35,9 +35,12 @@ namespace Fabolus.Features.AirChannel.MouseTools {
 
             //get all hits
             var hits = GetHits(mouse);
-            if (hits == null || hits.Count == 0) return; //nothing was struck
+            if (hits == null || hits.Count == 0) {
+                //if nothing is clicked on
+                WeakReferenceMessenger.Default.Send(new AirChannelSetMessage(null));
+                return; //nothing was struck
+            }
             foreach (var result in hits) {
-
                 string name = result.Model.GetName();
                 if (name == null) continue;
 
@@ -57,7 +60,7 @@ namespace Fabolus.Features.AirChannel.MouseTools {
                     return;
                 }
 
-                //if nothing is clicked on
+
             }
         }
 

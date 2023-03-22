@@ -12,7 +12,7 @@ namespace Fabolus.Features.AirChannel {
     public sealed record ClearAirChannelsMessage();
     public sealed record AirChannelsUpdatedMessage(List<AirChannelModel> channels, int? selectedIndex);
     public sealed record AirChannelSettingsUpdatedMessage(double diameter, double height, int? selectedIndex);
-    public sealed record AirChannelSetMessage(int channelIndex);
+    public sealed record AirChannelSetMessage(int? channelIndex);
 
     //requests
     public class AirChannelsRequestMessage : RequestMessage<List<AirChannelModel>> { }
