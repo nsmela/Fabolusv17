@@ -30,7 +30,7 @@ namespace Fabolus.Features.Bolus {
         private PointHashGrid3d<int> _pointhash;
         private List<Node> _nodeMap; //used for calculating paths
 
-        private List<Point3D>? ShortestPath(Point3D startPoint, int startTriangle, Point3D endPoint, int endTriangle, double angleThreshold = 90.0f) {
+        private List<Point3D>? ShortestPath(Point3D startPoint, int startTriangle, Point3D endPoint, int endTriangle, double angleThreshold = 45.0f) {
             //uses the Dijkstra-inspired method A* to find the path from the nodes
             //create/update list of nodes
             GenerateNodeMap(new Vector3d(endPoint.X, endPoint.Y, endPoint.Z));
@@ -68,6 +68,7 @@ namespace Fabolus.Features.Bolus {
                     double weight = parentNode.DistanceSoFar + nodeDistance;
                     //checks angle
                     if (TransformedMesh.GetVertexNormal(nodeIndex).AngleD(refAngle) > angleThreshold) weight *= weightOffset;
+                    if (TransformedMesh.GetVertexNormal(nodeIndex).AngleD(refAngle * 2.0f) > angleThreshold) weight *= weightOffset;
 
                     //if nearest to start is null
                     //OR if weight < smallest weight
@@ -112,6 +113,7 @@ namespace Fabolus.Features.Bolus {
             foreach(var node in _nodeMap) {
                 //skips calculating node children
                 node.Visited = false;
+                node.Vertex = TransformedMesh.GetVertex(node.Id);//if rotated after generated, need to update
                 node.DistanceToEnd = node.Vertex.Distance(endPoint);
                 node.DistanceSoFar = 0.0f;
             }
