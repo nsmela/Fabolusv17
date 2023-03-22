@@ -32,6 +32,7 @@ namespace Fabolus.Features.AirChannel
         [ObservableProperty] private bool _showTool, _showMesh;
         [ObservableProperty] private int? _selectedAirChannel = null;
         [ObservableProperty] private Point3D? _pathStart, _pathEnd;
+        [ObservableProperty] private List<AirChannelMouseTool> _mouseTools;
         private DiffuseMaterial _toolSkin, _channelsSkin, _selectedSkin;
         private BolusModel _bolus;
 
@@ -135,7 +136,11 @@ namespace Fabolus.Features.AirChannel
 
             MouseHit = new Point3D();
             //mouse tools
-            _mouseTool = new VerticalAirChannelMouseTool();
+            MouseTools = new();
+            MouseTools.Add(new VerticalAirChannelMouseTool());
+            MouseTools.Add(new AngledAirChannelMouseTool());
+
+            _mouseTool = MouseTools[0];
 
             //skin colours
             _toolSkin = SetSkin(Colors.MediumPurple, 0.5f);
