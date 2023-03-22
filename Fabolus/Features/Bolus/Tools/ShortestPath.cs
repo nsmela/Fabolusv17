@@ -84,19 +84,30 @@ namespace Fabolus.Features.Bolus {
 
         private void GenerateNodeMap(Vector3d endPoint) {
             if (Mesh.VertexIndices().Count() <= 0) return;
-            _nodeMap = new();
-            
-            foreach (var index in TransformedMesh.VertexIndices()) {
-                Vector3d vert = TransformedMesh.GetVertex(index);
-                var node = new Node {
-                    Id = index,
-                    Vertex = vert,
-                    DistanceToEnd = vert.Distance(endPoint),
-                    DistanceSoFar = 0.0f,
-                    ChildrenNodes = GetChildrenNodes(index),
-                    Visited = false
-                };
-                _nodeMap.Add(node);
+            if (_nodeMap == null) {
+                _nodeMap = new();
+
+                foreach (var index in TransformedMesh.VertexIndices()) {
+                    Vector3d vert = TransformedMesh.GetVertex(index);
+                    var node = new Node {
+                        Id = index,
+                        Vertex = vert,
+                        DistanceToEnd = vert.Distance(endPoint),
+                        DistanceSoFar = 0.0f,
+                        ChildrenNodes = GetChildrenNodes(index),
+                        Visited = false
+                    };
+                    _nodeMap.Add(node);
+                }
+
+                return;
+            }
+
+            foreach(var node in _nodeMap) {
+                //skips calculating node children
+                node.Visited = false;
+                node.DistanceToEnd = node.Vertex.Distance(endPoint);
+                node.DistanceSoFar = 0.0f;
             }
         }
     

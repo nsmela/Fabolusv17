@@ -118,6 +118,9 @@ namespace Fabolus.Features.Bolus {
             var mesh = TransformedMesh;
             _geometry = MeshConversion.DMeshToMeshGeometry(mesh);
             GenerateModel();
+
+            //updated node map for pathfinding
+            GenerateNodeMap(new Vector3d(0,0,0));
         }
 
         private void GenerateModel() {
