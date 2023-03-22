@@ -20,6 +20,13 @@ namespace Fabolus.Features.Bolus {
         public bool Visited; //node has been fully evaluated and doesn't need to be revisited
     }
 
+    internal class EdgeNode {
+        public int Id; //edge id
+        public int StartVert;
+        public int EndVert;
+        public double Length;
+    }
+
     public partial class BolusModel {
         public int? GetTriangleId(int t1, int t2, int t3) {
             var tId = TransformedMesh.FindTriangle(t1, t2, t3);
@@ -163,8 +170,31 @@ namespace Fabolus.Features.Bolus {
 
         private List<Point3D> GetGeodesicPath(List<Point3D> path) {
             //Youtube link: https://www.youtube.com/watch?v=DbNEsryLULE
-            //don't use vertex positions, only edge lengths List<double>
 
+            //a new mesh to edit as we see fit
+            var mesh = new DMesh3();
+            mesh.Copy(TransformedMesh);
+
+            //don't use vertex positions, only edge lengths
+            //get vertex id from nodeMap
+            var verts = new List<int>();
+            foreach (var n in _nodeMap) verts.Add(n.Id);
+
+            //get edge ids from those vertex ids
+            var edges = new List<int>();
+            for(int i = 1; i < verts.Count; i++) {
+                var e = mesh.VtxVerticesItr(verts[i]);
+                var edge = e.First(x => x == verts[i - 1]);
+                edges.Add(edge);
+            }
+
+            //generate node list
+            var nodes = new List<EdgeNode>();
+            foreach (var e in edges) {
+                nodes.Add(new EdgeNode {
+                    Id = e
+                });
+            }
             //convert path into a list of edges and their lengths
 
             //check angle formed by each step in the path. greater than pi implies geodesic
