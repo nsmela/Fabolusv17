@@ -20,6 +20,10 @@ namespace Fabolus.Features.Bolus {
     }
 
     public partial class BolusModel {
+        public int? GetTriangleId(int t1, int t2, int t3) {
+            var tId = Mesh.FindTriangle(t1, t2, t3);
+            return tId;
+        }
 
         //used for mesh vertices calculations
         private PointHashGrid3d<int> _pointhash;
@@ -138,5 +142,7 @@ namespace Fabolus.Features.Bolus {
 
             return path;
         }
+
+
     }
 }
