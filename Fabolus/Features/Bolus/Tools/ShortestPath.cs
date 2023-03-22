@@ -29,6 +29,7 @@ namespace Fabolus.Features.Bolus {
         private PointHashGrid3d<int> _pointhash;
 
         private List<Point3D> ShortestPath(Vector3d startPoint, Vector3d endPoint) {
+            //uses the Dijkstra-inspired method A* to find the path from the nodes
             //create list of nodes
             var map = new List<Node>();
             foreach(var index in Mesh.VertexIndices()) {

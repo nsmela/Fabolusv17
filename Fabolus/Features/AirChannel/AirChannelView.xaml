@@ -10,6 +10,16 @@
     <StackPanel HorizontalAlignment="Stretch" 
                 VerticalAlignment="Top" 
                 Margin="4,0,4,0">
+        <Label Content="air channel type" HorizontalAlignment="Center" 
+                        VerticalAlignment="Center"
+                        FontSize="12" 
+                        FontWeight="Bold"
+                        FontFamily="\Fonts\#Poppins"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Button Content="1" Height="30" Width="30" Margin="2" Command="{Binding SetAirChannelToolAngledCommand}"/>
+            <Button Content="2" Height="30" Width="30" Margin="2" Command="{Binding SetAirChannelToolAngledCommand}"/>
+            <Button Content="3" Height="30" Width="30" Margin="2" Command="{Binding SetAirChannelToolPathCommand}"/>
+        </StackPanel>
         <Label Content="channel diameter" 
                         HorizontalAlignment="Center" 
                         VerticalAlignment="Center"

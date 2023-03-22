@@ -2,12 +2,6 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fabolus.Features.Common;
-using Fabolus.Features.Import;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Fabolus.Features.AirChannel {
     public partial class AirChannelViewModel : ViewModelBase {
@@ -16,20 +10,18 @@ namespace Fabolus.Features.AirChannel {
         public override MeshViewModelBase MeshViewModel => new AirChannelMeshViewModel();
 
         [ObservableProperty] private double _channelDiameter; //saved in air channel store to share with mesh view
+        partial void OnChannelDiameterChanged(double value) =>  WeakReferenceMessenger.Default.Send(new SetAirChannelDiameterMessage(value));
 
         public AirChannelViewModel() {
             _channelDiameter = WeakReferenceMessenger.Default.Send<AirChannelDiameterRequestMessage>();
         }
 
-        partial void OnChannelDiameterChanged(double value) {
-            //update airchannel store
-            WeakReferenceMessenger.Default.Send(new SetAirChannelDiameterMessage(value));
-        }
-
         #region Commands
 
-        [RelayCommand]
-        private void ClearAirChannels() => WeakReferenceMessenger.Default.Send(new ClearAirChannelsMessage());
+        [RelayCommand] private void ClearAirChannels() => WeakReferenceMessenger.Default.Send(new ClearAirChannelsMessage());
+        [RelayCommand] private void SetAirChannelToolStraight() => WeakReferenceMessenger.Default.Send(new SetAirChannelTool(0));
+        [RelayCommand] private void SetAirChannelToolAngled() => WeakReferenceMessenger.Default.Send(new SetAirChannelTool(1));
+        [RelayCommand] private void SetAirChannelToolPath() => WeakReferenceMessenger.Default.Send(new SetAirChannelTool(2));
         #endregion
     }
 }

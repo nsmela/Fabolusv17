@@ -15,12 +15,12 @@ namespace Fabolus.Features.AirChannel.MouseTools {
     internal class PathAirChannelMouseTool : AirChannelMouseTool {
         private string BOLUS_LABEL => AirChannelMeshViewModel.BOLUS_LABEL;
         private string AIRCHANNEL_LABEL => AirChannelMeshViewModel.AIRCHANNEL_LABEL;
+
         private double _diameter, _height;
         private List<Point3D> _pathPoints;
+        private Point3D? _lastMousePosition;
 
-        public override Geometry3D? ToolMesh => null; //TODO
-            //_lastMousePosition == null || _lastMousePosition == new Point3D() ?
-           // null : null; //TODO
+        public override Geometry3D? ToolMesh => ToMesh();
 
         public PathAirChannelMouseTool() {
             _pathPoints = new();
@@ -50,15 +50,17 @@ namespace Fabolus.Features.AirChannel.MouseTools {
                 if (name == null) continue;
 
                 if (name == BOLUS_LABEL) { //if clicked on bolus
+                    _pathPoints.Add(result.Position);
+
                     var t1 = result.RayHit.VertexIndex1;
                     var t2 = result.RayHit.VertexIndex2;
                     var t3 = result.RayHit.VertexIndex3;
                     var bolus = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
 
 
-                    _lastMousePosition = result.Position;
-                    var shape = new AirChannelStraight(_lastMousePosition, _diameter, _height);
-                    WeakReferenceMessenger.Default.Send(new AddAirChannelShapeMessage(shape));
+                    _lastMousePosition = null;
+                    //var shape = new AirChannelStraight(_lastMousePosition, _diameter, _height);
+                    //WeakReferenceMessenger.Default.Send(new AddAirChannelShapeMessage(shape));
                     return;
                 }
 
@@ -87,6 +89,23 @@ namespace Fabolus.Features.AirChannel.MouseTools {
         public override void MouseUp(MouseEventArgs mouse) {
 
         }
+
+        #region Private Methods
+        private Geometry3D? ToMesh() {
+            if (_pathPoints == null ) return null;
+            var mesh = new MeshBuilder();
+
+            foreach(var p in _pathPoints ) {
+                mesh.AddSphere(p, _diameter / 2);
+            }
+
+            if(_lastMousePosition!= null) mesh.AddSphere((Point3D)_lastMousePosition, _diameter / 2);
+
+            return mesh.ToMesh();
+
+        }
+        #endregion
+
 
     }
 }
