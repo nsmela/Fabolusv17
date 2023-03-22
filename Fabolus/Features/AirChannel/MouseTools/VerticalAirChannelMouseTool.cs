@@ -11,11 +11,11 @@ namespace Fabolus.Features.AirChannel.MouseTools {
         private string BOLUS_LABEL => AirChannelMeshViewModel.BOLUS_LABEL;
         private string AIRCHANNEL_LABEL => AirChannelMeshViewModel.AIRCHANNEL_LABEL;
         private double _diameter, _height;
-        private Point3D _lastMousePosition;
+        private Point3D? _lastMousePosition;
 
         public override Geometry3D? ToolMesh =>
             _lastMousePosition == null || _lastMousePosition == new Point3D() ? 
-            null : new AirChannelStraight(_lastMousePosition, _diameter, _height).Geometry;
+            null : new AirChannelStraight((Point3D)_lastMousePosition, _diameter, _height).Geometry;
 
         public VerticalAirChannelMouseTool() { 
 
@@ -46,7 +46,8 @@ namespace Fabolus.Features.AirChannel.MouseTools {
 
                 if (name == BOLUS_LABEL) { //if clicked on bolus
                     _lastMousePosition = result.Position;
-                    var shape = new AirChannelStraight(_lastMousePosition, _diameter, _height);
+                    Point3D point = (_lastMousePosition != null) ? (Point3D)_lastMousePosition : new Point3D();
+                    var shape = new AirChannelStraight(point, _diameter, _height);
                     WeakReferenceMessenger.Default.Send(new AddAirChannelShapeMessage(shape));
                     return;
                 }

@@ -31,15 +31,8 @@ namespace Fabolus.Features.Bolus {
             }
         }
 
-        public DMesh3 TransformedMesh {
-            get {
-                if (Mesh == null) return null;
-                var mesh = new DMesh3();
-                mesh.Copy(Mesh);
-                foreach (var q in _transforms) MeshTransforms.Rotate(mesh, Vector3d.Zero, q);
-                return mesh;
-            }
-        }
+        private DMesh3 _transformedMesh;
+        public DMesh3 TransformedMesh => _transformedMesh;
 
         private MeshGeometry3D _geometry;
         public MeshGeometry3D Geometry => _geometry;
@@ -109,15 +102,19 @@ namespace Fabolus.Features.Bolus {
             UpdateGeometry();
         }
 
-        public List<Point3D> GetGeoDist(Point3D startPoint, Point3D endPoint) {
-            Vector3d start = new Vector3d(startPoint.X, startPoint.Y, startPoint.Z);
-            Vector3d end = new Vector3d(endPoint.X, endPoint.Y, endPoint.Z);
-            return ShortestPath(start, end);
+        public List<Point3D> GetGeoDist(Point3D startPoint, int startTriangle, Point3D endPoint, int endTriangle) { 
+            return ShortestPath(startPoint, startTriangle, endPoint, endTriangle);
         }
         #endregion
 
         #region Private Methods
         private void UpdateGeometry() {
+            //creates transformed mesh
+            _transformedMesh = new DMesh3();
+            _transformedMesh.Copy(Mesh);
+            foreach (var q in _transforms) MeshTransforms.Rotate(_transformedMesh, Vector3d.Zero, q);
+
+            //creates new MeshGeometry3D
             var mesh = TransformedMesh;
             _geometry = MeshConversion.DMeshToMeshGeometry(mesh);
             GenerateModel();

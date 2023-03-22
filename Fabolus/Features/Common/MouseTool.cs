@@ -33,9 +33,9 @@ namespace Fabolus.Features.Common {
             return null;//nothing found
         }
 
-        protected static Point3D GetHitSpot(MouseEventArgs e, string filterLabel) {
+        protected static Point3D? GetHitSpot(MouseEventArgs e, string filterLabel) {
             var hit = GetHits(e, filterLabel);
-            if (hit == null) return new Point3D();
+            if (hit == null) return null;
             else return hit.Position;
         }
     }
