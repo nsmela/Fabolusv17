@@ -22,7 +22,7 @@ namespace Fabolus.Features.Bolus {
 
     public partial class BolusModel {
         public int? GetTriangleId(int t1, int t2, int t3) {
-            var tId = Mesh.FindTriangle(t1, t2, t3);
+            var tId = TransformedMesh.FindTriangle(t1, t2, t3);
             return tId;
         }
 
@@ -30,17 +30,21 @@ namespace Fabolus.Features.Bolus {
         private PointHashGrid3d<int> _pointhash;
         private List<Node> _nodeMap; //used for calculating paths
 
-        private List<Point3D>? ShortestPath(Point3D startPoint, int startTriangle, Point3D endPoint, int endTriangle) {
+        private List<Point3D>? ShortestPath(Point3D startPoint, int startTriangle, Point3D endPoint, int endTriangle, double angleThreshold = 90.0f) {
             //uses the Dijkstra-inspired method A* to find the path from the nodes
             //create/update list of nodes
             GenerateNodeMap(new Vector3d(endPoint.X, endPoint.Y, endPoint.Z));
 
             //using triangles to get the starting vertex index of the node. Crude, but reliable and quick.
             //TODO: optimize to find the best vertex closest to the end point or start point
-            var start = Mesh.GetTriangle(startTriangle).a;
-            var end = Mesh.GetTriangle(endTriangle).a;
+            var start = TransformedMesh.GetTriangle(startTriangle).a;
+            var end = TransformedMesh.GetTriangle(endTriangle).a;
 
             if (start < 0 || end < 0) return null; //if cannot find start or end positions, abort
+
+            //angle used to judge how far off from the input
+            var refAngle = TransformedMesh.GetVertexNormal(start);
+            double weightOffset = 2.0f;
 
             //search
             Queue<Node> queue = new Queue<Node>();
@@ -62,6 +66,8 @@ namespace Fabolus.Features.Bolus {
 
                     //calculate weight = parent.DistanceSoFar + child.Distance
                     double weight = parentNode.DistanceSoFar + nodeDistance;
+                    //checks angle
+                    if (TransformedMesh.GetVertexNormal(nodeIndex).AngleD(refAngle) > angleThreshold) weight *= weightOffset;
 
                     //if nearest to start is null
                     //OR if weight < smallest weight
@@ -83,7 +89,7 @@ namespace Fabolus.Features.Bolus {
         }
 
         private void GenerateNodeMap(Vector3d endPoint) {
-            if (Mesh.VertexIndices().Count() <= 0) return;
+            if (TransformedMesh.VertexIndices().Count() <= 0) return;
             if (_nodeMap == null) {
                 _nodeMap = new();
 
@@ -115,7 +121,7 @@ namespace Fabolus.Features.Bolus {
             var result = new List<Tuple<int, double>>();
 
             //all vertices linked to a single vert can be found from the triangles linked to that vert
-            var children = Mesh.VtxVerticesItr(index);
+            var children = TransformedMesh.VtxVerticesItr(index);
             foreach(var child in children) {
                 if (child == index) continue;
                 result.Add(new Tuple<int, double>(child, DistanceTo(index, child)));
@@ -125,8 +131,8 @@ namespace Fabolus.Features.Bolus {
         }
 
         private double DistanceTo(int startVertex, int endVertex) {
-            Vector3d start = Mesh.GetVertex(startVertex);
-            Vector3d end = Mesh.GetVertex(endVertex);
+            Vector3d start = TransformedMesh.GetVertex(startVertex);
+            Vector3d end = TransformedMesh.GetVertex(endVertex);
 
             return start.Distance(end);
         }
@@ -135,7 +141,7 @@ namespace Fabolus.Features.Bolus {
         private int FindClosestVertices(Vector3d point, double searchRadius) {
             //outputs the vid and the distance
             var result = _pointhash.FindNearestInRadius(point, searchRadius,
-                (v) => { return point.DistanceSquared(Mesh.GetVertex(v)); });
+                (v) => { return point.DistanceSquared(TransformedMesh.GetVertex(v)); });
             return result.Key;
         }
 
@@ -153,6 +159,19 @@ namespace Fabolus.Features.Bolus {
             return path;
         }
 
+        private List<Point3D> GetGeodesicPath(List<Point3D> path) {
+            //Youtube link: https://www.youtube.com/watch?v=DbNEsryLULE
+            //don't use vertex positions, only edge lengths List<double>
 
+            //convert path into a list of edges and their lengths
+
+            //check angle formed by each step in the path. greater than pi implies geodesic
+            //if not, introduce edge flips to reduce the path
+
+            //flip out subroutine
+
+            //once completed, need to trace out the path to keep the line along the surface. 
+            return null;
+        }
     }
 }

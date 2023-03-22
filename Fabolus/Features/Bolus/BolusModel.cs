@@ -115,8 +115,7 @@ namespace Fabolus.Features.Bolus {
             foreach (var q in _transforms) MeshTransforms.Rotate(_transformedMesh, Vector3d.Zero, q);
 
             //creates new MeshGeometry3D
-            var mesh = TransformedMesh;
-            _geometry = MeshConversion.DMeshToMeshGeometry(mesh);
+            _geometry = MeshConversion.DMeshToMeshGeometry(TransformedMesh);
             GenerateModel();
 
             //updated node map for pathfinding

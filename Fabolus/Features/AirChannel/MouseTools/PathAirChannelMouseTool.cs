@@ -85,7 +85,7 @@ namespace Fabolus.Features.AirChannel.MouseTools {
                     var t1 = result.RayHit.VertexIndex1;
                     var t2 = result.RayHit.VertexIndex2;
                     var t3 = result.RayHit.VertexIndex3;
-                    var triangleIndex = _bolus.Mesh.FindTriangle(t1, t2, t3);
+                    var triangleIndex = _bolus.TransformedMesh.FindTriangle(t1, t2, t3);
                     _pathTriangles.Add(triangleIndex);
 
                     _lastMousePosition = null; //hides tool until moved
