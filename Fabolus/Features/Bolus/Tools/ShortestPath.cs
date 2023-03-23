@@ -25,6 +25,7 @@ namespace Fabolus.Features.Bolus {
         public int StartVert;
         public int EndVert;
         public double Length;
+        public Index2i Edge;
     }
 
     public partial class BolusModel {
@@ -171,6 +172,9 @@ namespace Fabolus.Features.Bolus {
         private List<Point3D> GetGeodesicPath(List<Point3D> path) {
             //Youtube link: https://www.youtube.com/watch?v=DbNEsryLULE
 
+            //create an A* path between endpoints
+            //var path = ShortestPath(start, t1, end, t2);
+
             //a new mesh to edit as we see fit
             var mesh = new DMesh3();
             mesh.Copy(TransformedMesh);
@@ -192,18 +196,137 @@ namespace Fabolus.Features.Bolus {
             var nodes = new List<EdgeNode>();
             foreach (var e in edges) {
                 nodes.Add(new EdgeNode {
-                    Id = e
+                    Id = e,
+                    Edge = mesh.GetEdgeV(e)
                 });
             }
+
             //convert path into a list of edges and their lengths
+            //IterativeShorten();
+            bool shortest = false;
+            while (shortest) {
+                Index3i orig_t0 = new();
+                Index3i orig_t1 = new();
+                Index3i flip_t0 = new();
+                Index3i flip_t1 = new();
 
-            //check angle formed by each step in the path. greater than pi implies geodesic
-            //if not, introduce edge flips to reduce the path
+                DMesh3.EdgeFlipInfo eInfo = new();
 
-            //flip out subroutine
+                for (int i = 0; i < nodes.Count - 1; i++) {
+                    //check angle formed by each step in the path. greater than pi implies geodesic
+                    //if not, introduce edge flips to reduce the path
+                    var eID = nodes[i].Id;
+                    var endID = nodes[i].Id;
+                    var edge = mesh.GetEdge(eID); // return [v0,v1,t0,t1], or Index4i.Max if eid is invalid
+                    var endEdge = mesh.GetEdge(endID);
 
+                    //finding the edge verts and their associations
+                    //start vert, shared vert, endpoint vert
+                    int v0 = FindEdgeVertexNotShared(endEdge, edge);
+                    int v1 = FindSharedEdgeVertex(edge, endEdge);
+                    int v2 = FindEdgeVertexNotShared(edge, endEdge);
+
+                    //find the first triangle's edges and their verts not on the edge
+                    int? vT0 = GetOtherTriangleVertex(mesh, edge.c, v0, v1);
+                    int? vT1 = GetOtherTriangleVertex(mesh, edge.d, v0, v1);
+
+                    if (vT0 == null || vT1 == null) continue;
+
+                    //which triangle vertex is cloest to the endpoint?
+                    double distance0 = mesh.GetVertex((int)vT0).Distance(mesh.GetVertex(v2));
+                    double distance1 = mesh.GetVertex((int)vT1).Distance(mesh.GetVertex(v2));
+
+                    int vID = (distance0 < distance1) ? (int)vT0 : (int)vT1; //the vertex to use for shortening
+                    
+                    //is angle Bi less than pi?
+
+
+
+
+
+
+
+
+                    //index ids
+
+
+                    //check which triangle is best suited
+                    //the vert that's closest to the endpoint belongs to the best triangle
+
+
+
+
+
+
+
+
+
+
+                    //for current edge, check if the edge flip
+                    var angleBetweenEdges = 0;
+
+                    //preview the edge flip
+                    MeshUtil.GetEdgeFlipTris(mesh, nodes[i].Id,
+                        out orig_t0, out orig_t1, out flip_t0, out flip_t1);
+
+                    //FlipOut subroutine
+                        //input path through verts a, b, c
+                        //output: new shorter path through verts
+                        //output: also each direction to assist with tracing along the surface
+
+                        //get both triangles associated with edge ab
+                        //which of these triangles should be flipped? the one who's vert is closest to the endpoint
+                        //
+
+                        //check if angle < pi
+                        //using the edge to be flipped, use MeshUtil.OpeningAngleD
+                        //if so, flip
+                        //next edge
+                        //continue until back to input edges endpoint
+
+                    var flip = mesh.FlipEdge(nodes[i].Id, out eInfo);
+                }
+                //checked if this is the shortest path possible
+            }
             //once completed, need to trace out the path to keep the line along the surface. 
             return null;
+        }
+
+        private int FindSharedEdgeVertex(Index4i e0, Index4i e1) {
+            if (e0.a == e1.a) return e0.a;
+            if (e0.a == e1.b) return e0.a;
+            if (e0.b == e1.a) return e0.b;
+            if (e0.b == e1.a) return e0.b;
+
+            return DMesh3.InvalidID;
+        }
+
+        /// <summary>
+        /// Find the vertex on test edge that isn't shared with referenceEdge
+        /// </summary>
+        /// <param name="reID">Reference Edge used to filter out vertices</param>
+        /// <param name="testEdge">Test Edge has vertex we want</param>
+        //
+        private int FindEdgeVertexNotShared(Index4i reID, Index4i teID) {
+            if (teID.a != reID.a && teID.a != reID.b) return teID.a;
+            if (teID.b != reID.a && teID.a != reID.b) return teID.b;
+
+            return DMesh3.InvalidID;
+        }
+
+        private Index3i FindClosestTriangle(Index3i t1, Index3i t2, Vector3d target) {
+            //Indexi is vId0, vID1, vID2
+
+            return DMesh3.InvalidTriangle;
+        }
+
+        private int? GetOtherTriangleVertex(DMesh3 mesh, int tID, int v0, int v1) {
+            var verts = mesh.GetTriangle(tID); //get vert IDs from triangle
+
+            foreach(var v in verts.array ) 
+                if (v != v0 && v != v1) return v;
+
+            return null; //return null if invalid
         }
     }
 }

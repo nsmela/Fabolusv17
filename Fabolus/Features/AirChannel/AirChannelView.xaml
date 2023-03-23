@@ -38,6 +38,13 @@
         <StackPanel HorizontalAlignment="Stretch" 
                     VerticalAlignment="Top" 
                     Margin="4,0,4,0">
+            <Button Content="add path" 
+                Height="30"
+                HorizontalAlignment="Stretch"
+                FontSize="14" 
+                FontWeight="Bold"
+                FontFamily="\Fonts\#Poppins"
+                Command="{Binding AddAirChannelPathCommand}" />
             <Button Content="clear" 
                 Height="30"
                 HorizontalAlignment="Stretch"

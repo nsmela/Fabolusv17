@@ -12,6 +12,8 @@ using Fabolus.Features.Common;
 using Fabolus.Features.Bolus;
 
 namespace Fabolus.Features.AirChannel.MouseTools {
+    public sealed record AddPathAirChannelMessage();
+
     internal class PathAirChannelMouseTool : AirChannelMouseTool {
         private string BOLUS_LABEL => AirChannelMeshViewModel.BOLUS_LABEL;
         private string AIRCHANNEL_LABEL => AirChannelMeshViewModel.AIRCHANNEL_LABEL;
@@ -50,11 +52,14 @@ namespace Fabolus.Features.AirChannel.MouseTools {
                 _mesh = ToMesh();
             });
 
+            WeakReferenceMessenger.Default.Register<AddPathAirChannelMessage>(this, (r, m) => { AddAirChannelPath(); });
+
             _diameter = WeakReferenceMessenger.Default.Send<AirChannelDiameterRequestMessage>();
             _height = WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
             
         }
 
+        #region Mouse Commands
         public override void MouseDown(MouseEventArgs mouse) {
             if (mouse.RightButton == MouseButtonState.Pressed) return;
             _bolus = (BolusModel)WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
@@ -75,18 +80,18 @@ namespace Fabolus.Features.AirChannel.MouseTools {
                 if (name == null) continue;
 
                 if (name == BOLUS_LABEL) { //if clicked on bolus
-                    if(_pathPoints.Count > 1) {
-                        _pathPoints.RemoveAt(1);
-                        _pathTriangles.RemoveAt(1);
-                    }
+                    //if(_pathPoints.Count > 1) {
+                    //    _pathPoints.RemoveAt(1);
+                     //   _pathTriangles.RemoveAt(1);
+                    //}
 
                     _pathPoints.Add(result.Position);
 
-                    var t1 = result.RayHit.VertexIndex1;
-                    var t2 = result.RayHit.VertexIndex2;
-                    var t3 = result.RayHit.VertexIndex3;
-                    var triangleIndex = _bolus.TransformedMesh.FindTriangle(t1, t2, t3);
-                    _pathTriangles.Add(triangleIndex);
+                    //var t1 = result.RayHit.VertexIndex1;
+                    //var t2 = result.RayHit.VertexIndex2;
+                    //var t3 = result.RayHit.VertexIndex3;
+                    //var triangleIndex = _bolus.TransformedMesh.FindTriangle(t1, t2, t3);
+                    //_pathTriangles.Add(triangleIndex);
 
                     _lastMousePosition = null; //hides tool until moved
 
@@ -120,6 +125,7 @@ namespace Fabolus.Features.AirChannel.MouseTools {
         public override void MouseUp(MouseEventArgs mouse) {
 
         }
+        #endregion
 
         #region Private Methods
         private MeshGeometry3D? ToMesh() {
@@ -130,6 +136,13 @@ namespace Fabolus.Features.AirChannel.MouseTools {
                 mesh.AddSphere(p, _diameter / 2);
             }
 
+            if (_pathPoints.Count > 1) {
+                for(int i = 0; i< _pathPoints.Count - 1; i++) {
+                    mesh.AddCylinder(_pathPoints[i], _pathPoints[i + 1], 0.5f);
+                }
+            }
+
+            /*
             if(_pathPoints.Count > 1 ) {
                 var path = GetPath();
                 if (path != null && path.Count > 0) {
@@ -138,7 +151,7 @@ namespace Fabolus.Features.AirChannel.MouseTools {
                     }
                 } 
             }
-
+            */
             return mesh.ToMesh();
 
         }
@@ -164,6 +177,20 @@ namespace Fabolus.Features.AirChannel.MouseTools {
 
             return paths;
         }
+
+        private void AddAirChannelPath() {
+            //create shape
+            var mesh = new AirChannelPath(_pathPoints, _diameter, _height);
+
+            //clear relevant variables
+            _pathPoints.Clear();
+            _mesh = ToMesh();
+
+            //add it to air channel store
+            WeakReferenceMessenger.Default.Send(new AddAirChannelShapeMessage(mesh));
+
+        }
+
         #endregion
 
 

@@ -21,6 +21,9 @@ namespace Fabolus.Features.Bolus {
         private float _meshOpacity = 1.0f;
         private DiffuseMaterial _meshSkinMaterial;
 
+        //experiemental, used to quicken spatial inquiries
+        private DMeshAABBTree3 _spatial;
+
         #region Properties and Fields
         //the latest mesh
         public DMesh3 Mesh {
@@ -105,6 +108,14 @@ namespace Fabolus.Features.Bolus {
         public List<Point3D> GetGeoDist(Point3D startPoint, int startTriangle, Point3D endPoint, int endTriangle) { 
             return ShortestPath(startPoint, startTriangle, endPoint, endTriangle);
         }
+
+        public List<Point3D> GetDirectPath(Point3D start, Point3D end, int startTriangleIndex, int endTriangleIndex) {
+            var startV = new Vector3d(start.X, start.Y, start.Z);
+            var endV = new Vector3d(end.X, end.Y, end.Z);
+
+            var path = BolusUtility.GetDirectPath(TransformedMesh, startV, endV, startTriangleIndex, endTriangleIndex);
+            return null;
+        }
         #endregion
 
         #region Private Methods
@@ -120,6 +131,10 @@ namespace Fabolus.Features.Bolus {
 
             //updated node map for pathfinding
             GenerateNodeMap(new Vector3d(0,0,0));
+
+            //update spatial structure
+            _spatial = new DMeshAABBTree3(_transformedMesh);
+            _spatial.Build();
         }
 
         private void GenerateModel() {
