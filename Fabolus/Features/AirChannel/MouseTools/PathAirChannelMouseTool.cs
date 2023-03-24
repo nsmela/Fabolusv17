@@ -80,19 +80,7 @@ namespace Fabolus.Features.AirChannel.MouseTools {
                 if (name == null) continue;
 
                 if (name == BOLUS_LABEL) { //if clicked on bolus
-                    //if(_pathPoints.Count > 1) {
-                    //    _pathPoints.RemoveAt(1);
-                     //   _pathTriangles.RemoveAt(1);
-                    //}
-
                     _pathPoints.Add(result.Position);
-
-                    //var t1 = result.RayHit.VertexIndex1;
-                    //var t2 = result.RayHit.VertexIndex2;
-                    //var t3 = result.RayHit.VertexIndex3;
-                    //var triangleIndex = _bolus.TransformedMesh.FindTriangle(t1, t2, t3);
-                    //_pathTriangles.Add(triangleIndex);
-
                     _lastMousePosition = null; //hides tool until moved
 
                     _mesh = ToMesh();
@@ -180,7 +168,9 @@ namespace Fabolus.Features.AirChannel.MouseTools {
 
         private void AddAirChannelPath() {
             //create shape
-            var mesh = new AirChannelPath(_pathPoints, _diameter, _height);
+            var path = new List<Point3D>();
+            _pathPoints.ForEach(p => path.Add(new Point3D(p.X, p.Y, p.Z - _diameter/2))); //for testing bottom render
+            var mesh = new AirChannelPath(path, _diameter, _height);
 
             //clear relevant variables
             _pathPoints.Clear();
