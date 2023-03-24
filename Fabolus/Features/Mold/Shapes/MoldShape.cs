@@ -12,7 +12,7 @@ namespace Fabolus.Features.Mold
     public abstract class MoldShape
     {
         public abstract string Name { get; }
-        public MoldStore.MoldSettings? Settings { get; protected set; }
+        public MoldStore.MoldSettings Settings { get; protected set; }
         public BolusModel Bolus { get; protected set; }
         public Geometry3D Geometry { get; protected set; }
         public DMesh3 Mesh { get; protected set; }

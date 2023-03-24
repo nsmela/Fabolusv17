@@ -60,7 +60,8 @@ namespace Fabolus.Features.Mold
         private void NewSettings(MoldStore.MoldSettings settings) { 
             _settings = settings;
             _shape.SetSettings(_settings);
-            WeakReferenceMessenger.Default.Send(new MoldSettingsUpdatedMessage(settings));
+            WeakReferenceMessenger.Default.Send(new MoldSettingsUpdatedMessage(settings)); //do we actually need this?
+            WeakReferenceMessenger.Default.Send(new MoldShapeUpdatedMessage(_shape));
         }
 
         private void NewBolus(BolusModel bolus) {

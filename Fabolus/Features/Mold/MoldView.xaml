@@ -19,7 +19,7 @@
                         FontWeight="Bold"
                         FontFamily="\Fonts\#Poppins"/>
         <Slider
-                        Value="{Binding OffsetDistance, Mode=TwoWay}"
+                        Value="{Binding OffsetXY, Mode=TwoWay}"
                         Minimum="2" 
                         Maximum="8" 
                         TickFrequency="0.5" 

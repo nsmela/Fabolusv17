@@ -19,12 +19,11 @@ namespace Fabolus.Features.Mold {
         }
 
         public override void ToMesh() {
-            if (Settings == null) return;
             if (Bolus == null || Bolus.Mesh == null || Bolus.Mesh.VertexCount == 0) return;
 
             //calculate
             var mesh = new MeshBuilder();
-            mesh.AddSphere(new Point3D(0, 0, 0), 30.0f);
+            mesh.AddSphere(new Point3D(0, 0, 0), Settings.OffsetXY * 10.0f);
             Geometry = mesh.ToMesh();
         }
 
