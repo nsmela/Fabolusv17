@@ -1,4 +1,5 @@
-﻿using Fabolus.Features.Common;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Fabolus.Features.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,8 +11,10 @@ namespace Fabolus.Features.Mold {
         public override string? ViewModelTitle => "mold";
         public override MeshViewModelBase MeshViewModel => new MoldMeshViewModel();
 
-        public MoldViewModel() {
+        private MoldStore.MoldSettings _settings;
 
+        public MoldViewModel() {
+            _settings = WeakReferenceMessenger.Default.Send<MoldSettingsRequestMessage>();
         }
 
         #region Commands

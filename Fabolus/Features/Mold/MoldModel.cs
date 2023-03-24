@@ -6,5 +6,6 @@ using System.Threading.Tasks;
 
 namespace Fabolus.Features.Mold {
     public class MoldModel {
+
     }
 }

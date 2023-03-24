@@ -14,10 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Features\Mold\Tools\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.1.0" />
     <PackageReference Include="geometry3Sharp" Version="1.0.324" />
     <PackageReference Include="HelixToolkit.Wpf" Version="2.23.0" />
@@ -41,6 +37,10 @@
     <None Update="Files\PoissonRecon.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Features\Mold\Tools\" />
   </ItemGroup>
 
 </Project>
