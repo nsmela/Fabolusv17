@@ -5,6 +5,7 @@ using Fabolus.Features.AirChannel;
 using Fabolus.Features.Bolus;
 using Fabolus.Features.Common;
 using Fabolus.Features.Import;
+using Fabolus.Features.Mold;
 using Fabolus.Features.Rotation;
 using Fabolus.Features.Smoothing;
 using HelixToolkit.Wpf;
@@ -17,6 +18,7 @@ namespace Fabolus.Features.MainWindow {
         //stores
         private BolusStore _bolusStore;
         private AirChannelStore _airChannelsStore;
+        private MoldStore _moldStore;
 
         [ObservableProperty] private ViewModelBase? _currentViewModel;
         [ObservableProperty] private MeshViewModelBase _currentMeshView;
@@ -36,6 +38,7 @@ namespace Fabolus.Features.MainWindow {
         public MainViewModel() {
             _bolusStore= new BolusStore();
             _airChannelsStore= new AirChannelStore();
+            _moldStore= new MoldStore();
             NavigateTo(new ImportViewModel());
 
             //messages
@@ -66,6 +69,7 @@ namespace Fabolus.Features.MainWindow {
         [RelayCommand] public async Task SwitchToImportView() => NavigateTo(new ImportViewModel());
         [RelayCommand] public async Task SwitchToRotationView() => NavigateTo(new RotationViewModel());
         [RelayCommand] public async Task SwitchToAirChannelView() => NavigateTo(new AirChannelViewModel());
+        [RelayCommand] public async Task SwitchToMoldView() => NavigateTo(new MoldViewModel());
 
         #endregion
     }

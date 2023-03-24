@@ -5,6 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Fabolus.Features.Mold {
-    internal class MoldStore {
+    public class MoldStore {
     }
 }
