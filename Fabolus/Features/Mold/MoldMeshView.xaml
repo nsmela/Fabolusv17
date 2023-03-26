@@ -33,6 +33,7 @@
 
         <!-- Models -->
         <helix:MeshGeometryVisual3D Content="{Binding DisplayMesh}" />
+        <helix:MeshGeometryVisual3D Content="{Binding AirChannelsMesh}" />
         <helix:MeshGeometryVisual3D Content="{Binding MoldMesh}" />
 
             <!-- Visual tools for the mesh view -->
