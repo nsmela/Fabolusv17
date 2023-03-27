@@ -16,6 +16,7 @@ namespace Fabolus.Features.Mold {
         [ObservableProperty] private double _offsetTop;
         [ObservableProperty] private double _offsetBottom;
         [ObservableProperty] private int _resolution;
+        [ObservableProperty] private bool _isBusy = false;
 
         partial void OnOffsetXYChanged(double value) => UpdateMoldSettings();
         partial void OnOffsetTopChanged(double value) => UpdateMoldSettings();
@@ -31,10 +32,14 @@ namespace Fabolus.Features.Mold {
 
         #region Messages
         private void UpdateSettings(MoldStore.MoldSettings settings) {
+            if (IsBusy) return;
+            IsBusy= true;
             OffsetXY = settings.OffsetXY;
             OffsetTop = settings.OffsetTop; 
             OffsetBottom = settings.OffsetBottom;
             Resolution = settings.Resolution;
+
+            IsBusy= false;
         }
         #endregion
 
@@ -43,6 +48,7 @@ namespace Fabolus.Features.Mold {
         /// Updates the Mold Settings in the Mold Store
         /// </summary>
         private void UpdateMoldSettings() {
+            if(IsBusy) return;
             _settings.OffsetXY= OffsetXY;
             _settings.OffsetTop= OffsetTop;
             _settings.OffsetBottom= OffsetBottom;

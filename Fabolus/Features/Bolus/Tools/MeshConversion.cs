@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Media.Media3D;
 
-namespace Fabolus.Features.Bolus.Tools
+namespace Fabolus.Features.Bolus
 {
-    public class MeshConversion {
+    public static partial class BolusUtility {
         public static MeshGeometry3D DMeshToMeshGeometry(DMesh3 value) {
             if (value != null) {
                 //compacting the DMesh to the indices are true

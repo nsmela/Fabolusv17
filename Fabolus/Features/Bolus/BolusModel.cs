@@ -1,4 +1,4 @@
-﻿using Fabolus.Features.Bolus.Tools;
+﻿using Fabolus.Features.Bolus;
 using g3;
 using System;
 using System.Collections.Generic;
@@ -130,7 +130,7 @@ namespace Fabolus.Features.Bolus {
             foreach (var q in _transforms) MeshTransforms.Rotate(_transformedMesh, Vector3d.Zero, q);
 
             //creates new MeshGeometry3D
-            _geometry = MeshConversion.DMeshToMeshGeometry(TransformedMesh);
+            _geometry = BolusUtility.DMeshToMeshGeometry(TransformedMesh);
             GenerateModel();
 
             //updated node map for pathfinding

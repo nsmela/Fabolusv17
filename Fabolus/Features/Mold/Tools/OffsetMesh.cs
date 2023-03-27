@@ -1,4 +1,5 @@
-﻿using g3;
+﻿using Fabolus.Features.Bolus;
+using g3;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +17,7 @@ namespace Fabolus.Features.Mold.Tools {
 
         public static MeshGeometry3D OffsetMesh(DMesh3 mesh, double offset, int resolution = 64) {
             DMesh3 offSesh = OffsetMeshD(mesh, offset, resolution);
-            return Bolus.Tools.MeshConversion.DMeshToMeshGeometry(offSesh);
+            return BolusUtility.DMeshToMeshGeometry(offSesh);
         }
     }
 }
