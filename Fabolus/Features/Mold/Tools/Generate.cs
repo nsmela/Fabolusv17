@@ -1,4 +1,6 @@
-﻿using Fabolus.Features.Bolus;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Fabolus.Features.AirChannel;
+using Fabolus.Features.Bolus;
 using g3;
 using System;
 using System.Collections.Generic;
@@ -20,6 +22,9 @@ namespace Fabolus.Features.Mold.Tools {
             editor.AppendMesh(mold);
 
             //boolean subtract air channels
+            var channels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
+
+            //result mesh
             return BolusUtility.DMeshToMeshGeometry(editor.Mesh);
         }
     }
