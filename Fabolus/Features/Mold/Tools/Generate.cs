@@ -22,10 +22,13 @@ namespace Fabolus.Features.Mold.Tools {
             editor.AppendMesh(mold);
 
             //boolean subtract air channels
-            var channels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
+            List<AirChannelModel> channels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
+            var airHole = new MeshEditor(new DMesh3());
+            foreach(var channel in channels) airHole.AppendMesh(BolusUtility.MeshGeometryToDMesh(channel.Geometry));
+            var mesh = BooleanSubtraction(editor.Mesh, airHole.Mesh);
 
             //result mesh
-            return BolusUtility.DMeshToMeshGeometry(editor.Mesh);
+            return BolusUtility.DMeshToMeshGeometry(mesh);
         }
     }
 }
