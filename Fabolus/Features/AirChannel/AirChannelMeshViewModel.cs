@@ -32,7 +32,7 @@ namespace Fabolus.Features.AirChannel
         [ObservableProperty] private int? _selectedAirChannel = null;
         [ObservableProperty] private Point3D? _pathStart, _pathEnd;
 
-        private DiffuseMaterial _toolSkin, _channelsSkin, _selectedSkin;
+        private DiffuseMaterial _toolSkin, _channelsSkin, _selectedSkin, _overhangsSkin;
         private BolusModel _bolus;
 
         //controls what the mouse functions are in mesh view
@@ -78,6 +78,12 @@ namespace Fabolus.Features.AirChannel
             _channelsSkin = SetSkin(Colors.Purple, 1.0f);
             _selectedSkin = SetSkin(Colors.BlueViolet, 1.0f);
 
+            var gradients = new Dictionary<Color, float>();
+            gradients.Add(Colors.Gray, 0.75f);
+            gradients.Add(Colors.Red, 0.80f);
+            gradients.Add(Colors.DarkSlateGray, 0.90f);
+            SetOverhangSkin(gradients);
+            Update(_bolus);
             //shortest path
             _pathStart = null;
             _pathEnd = null;
@@ -90,7 +96,7 @@ namespace Fabolus.Features.AirChannel
 
             //building geometry model
             _bolus = bolus;
-            var model = _bolus.Model3D;
+            var model = GetTempOverhangs();
             model.SetName(BOLUS_LABEL);
             DisplayMesh.Children.Add(model);
 
@@ -137,6 +143,58 @@ namespace Fabolus.Features.AirChannel
             brush.Opacity= opacity;
             return new DiffuseMaterial(brush);
         }
+
+        private void SetOverhangSkin(Dictionary<Color, float> gradients) {
+            var gradientBrush = new LinearGradientBrush();
+            gradientBrush.StartPoint = new System.Windows.Point(0, 0);
+            gradientBrush.EndPoint = new System.Windows.Point(0, 1);
+
+            foreach(var g in gradients) {
+                gradientBrush.GradientStops.Add(new GradientStop {
+                    Color = g.Key,
+                    Offset = g.Value
+                });
+            }
+
+            _overhangsSkin = new DiffuseMaterial(gradientBrush);
+        }
+
+        private GeometryModel3D GetTempOverhangs() {
+            //Overhangs are displayed using a gradient brush and vertex texture coordinates
+            //The angle of the vertex's normal vs the reference angle determines how far along the gradient 
+
+            //apply temp rotation to reference axis
+            var refAngle = new Vector3D(0, 0, -1);
+
+            //using the transformed referance angle, generate texture coordinates to use with the gradient brush
+            var texture = GetTextureCoords(_bolus.Geometry, refAngle);
+            _bolus.Geometry.TextureCoordinates = texture;
+
+            //get temp model
+            GeometryModel3D geometryModel = new GeometryModel3D(_bolus.Geometry, _overhangsSkin);
+            geometryModel.BackMaterial = _overhangsSkin;
+            return geometryModel;
+        }
+
+        private PointCollection GetTextureCoords(MeshGeometry3D mesh, Vector3D refAxis) {
+            var refAngle = 180.0f;
+            var normals = mesh.Normals;
+
+            PointCollection textureCoords = new PointCollection();
+            foreach (var normal in normals) {
+                double difference = Math.Abs(Vector3D.AngleBetween(normal, refAxis));
+
+                while (difference > refAngle) difference -= refAngle;
+
+                var ratio = difference / refAngle;
+
+                textureCoords.Add(new System.Windows.Point(0, ratio));
+            }
+
+            return textureCoords;
+        }
+
+
         private void OnMouseMove() {
             AirChannelToolMesh.Children.Clear();
             if (_mouseTool.ToolMesh == null) return;
