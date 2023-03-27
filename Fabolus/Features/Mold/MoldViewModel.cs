@@ -12,15 +12,15 @@ namespace Fabolus.Features.Mold {
         public override string? ViewModelTitle => "mold";
         public override MeshViewModelBase MeshViewModel => new MoldMeshViewModel();
 
-        [ObservableProperty] private double offsetXY;
-        [ObservableProperty] private double offsetTop;
-        [ObservableProperty] private double offsetBottom;
+        [ObservableProperty] private double _offsetXY;
+        [ObservableProperty] private double _offsetTop;
+        [ObservableProperty] private double _offsetBottom;
         [ObservableProperty] private int _resolution;
 
-        partial void OnOffsetXYChanged(double value) {
-            _settings.OffsetXY = value;
-            WeakReferenceMessenger.Default.Send(new MoldSetSettingsMessage(_settings));
-        }
+        partial void OnOffsetXYChanged(double value) => UpdateMoldSettings();
+        partial void OnOffsetTopChanged(double value) => UpdateMoldSettings();
+        partial void OnOffsetBottomChanged(double value) => UpdateMoldSettings();
+        partial void OnResolutionChanged(int value) => UpdateMoldSettings();
 
         private MoldStore.MoldSettings _settings;
 
@@ -29,7 +29,7 @@ namespace Fabolus.Features.Mold {
             UpdateSettings(_settings);
         }
 
-        #region Commands
+        #region Messages
         private void UpdateSettings(MoldStore.MoldSettings settings) {
             OffsetXY = settings.OffsetXY;
             OffsetTop = settings.OffsetTop; 
@@ -37,6 +37,22 @@ namespace Fabolus.Features.Mold {
             Resolution = settings.Resolution;
         }
         #endregion
+
+        #region Private Methods
+        /// <summary>
+        /// Updates the Mold Settings in the Mold Store
+        /// </summary>
+        private void UpdateMoldSettings() {
+            _settings.OffsetXY= OffsetXY;
+            _settings.OffsetTop= OffsetTop;
+            _settings.OffsetBottom= OffsetBottom;
+            _settings.Resolution= Resolution;
+
+            WeakReferenceMessenger.Default.Send(new MoldSetSettingsMessage(_settings));
+        }
+
+        #endregion
+
 
     }
 }

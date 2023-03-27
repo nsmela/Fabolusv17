@@ -8,7 +8,7 @@ using System.Windows.Media.Media3D;
 using System.Windows.Navigation;
 
 namespace Fabolus.Features.Bolus {
-    public partial class BolusUtility {
+    public static partial class BolusUtility {
 
         public static List<Point3D> GetDirectPath(DMesh3 mesh, Vector3d startV, Vector3d endV, int startT, int endT){
             //for each point 

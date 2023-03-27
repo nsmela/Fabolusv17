@@ -55,6 +55,7 @@ namespace Fabolus.Features.Bolus {
             SetModelColor(_meshSkinColor, _meshOpacity);
         }
         public BolusModel(DMesh3 mesh) {
+            mesh = BolusUtility.OrientationCentre(mesh);
             _transforms = new List<Quaterniond>();
             _meshes = new Dictionary<string, DMesh3>();
             SetModelColor(_meshSkinColor, _meshOpacity);
@@ -63,6 +64,9 @@ namespace Fabolus.Features.Bolus {
         }
 
         public void AddMesh(string label, DMesh3 mesh) {
+            //centres the mesh
+            mesh = BolusUtility.OrientationCentre(mesh);
+
             //display meshes are not to be set
             if (label == DISPLAY_BOLUS_LABEL) return; //TODO: throw an error
 

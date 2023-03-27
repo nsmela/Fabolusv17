@@ -23,7 +23,7 @@ namespace Fabolus.Features.Mold {
         public MoldMeshViewModel() : base () {
             MoldMesh = new();
 
-            _moldPreviewSkin = SetSkin(Colors.AliceBlue, 0.4f);
+            _moldPreviewSkin = SetSkin(Colors.Aqua, 0.4f);
             _moldSkin = SetSkin(Colors.Red);
             _channelsSkin = SetSkin(Colors.Purple, 1.0f);
 

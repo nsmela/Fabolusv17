@@ -28,6 +28,38 @@
                         AutoToolTipPrecision="1"
                         IsSnapToTickEnabled="True" 
                         Height="30" />
+        <Label Content="mold bottom offset" 
+                        HorizontalAlignment="Center" 
+                        VerticalAlignment="Center"
+                        FontSize="12" 
+                        FontWeight="Bold"
+                        FontFamily="\Fonts\#Poppins"/>
+        <Slider
+                        Value="{Binding OffsetBottom, Mode=TwoWay}"
+                        Minimum="2" 
+                        Maximum="8" 
+                        TickFrequency="0.5" 
+                        TickPlacement="TopLeft" 
+                        AutoToolTipPlacement="BottomRight"
+                        AutoToolTipPrecision="1"
+                        IsSnapToTickEnabled="True" 
+                        Height="30" />
+        <Label Content="mold top offset" 
+                        HorizontalAlignment="Center" 
+                        VerticalAlignment="Center"
+                        FontSize="12" 
+                        FontWeight="Bold"
+                        FontFamily="\Fonts\#Poppins"/>
+        <Slider
+                        Value="{Binding OffsetTop, Mode=TwoWay}"
+                        Minimum="2" 
+                        Maximum="8" 
+                        TickFrequency="0.5" 
+                        TickPlacement="TopLeft" 
+                        AutoToolTipPlacement="BottomRight"
+                        AutoToolTipPrecision="1"
+                        IsSnapToTickEnabled="True" 
+                        Height="30" />
         <Label Content="mold resolution" 
                         HorizontalAlignment="Center" 
                         VerticalAlignment="Center"

@@ -19,6 +19,11 @@ namespace Fabolus.Features.Mold
 
         public abstract void ToMesh();
 
+        /// <summary>
+        /// When changes are made to the mold, but not the bolus its referencing
+        /// </summary>
+        public abstract void UpdateMesh();
+
         public void SetSettings(MoldStore.MoldSettings settings) {
             Settings = settings;
             ToMesh();
