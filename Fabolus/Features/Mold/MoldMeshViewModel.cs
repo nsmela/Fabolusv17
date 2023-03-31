@@ -16,16 +16,17 @@ using System.Windows.Media.Media3D;
 namespace Fabolus.Features.Mold {
     public partial class MoldMeshViewModel : MeshViewModelBase {
         [ObservableProperty] private Model3DGroup _moldMesh, __airChannelsMesh;
-
+        [ObservableProperty] private bool _isFinal;
         private DiffuseMaterial _moldPreviewSkin, _moldSkin, _channelsSkin;
         private MoldShape _moldShape;
 
         public MoldMeshViewModel() : base () {
             MoldMesh = new();
+            IsFinal = false;
 
             _moldPreviewSkin = SetSkin(Colors.Aqua, 0.4f);
-            _moldSkin = SetSkin(Colors.Red);
-            _channelsSkin = SetSkin(Colors.Purple, 1.0f);
+            _moldSkin = SetSkin(Colors.Red, 0.8f);
+            _channelsSkin = SetSkin(Colors.Purple);
 
             WeakReferenceMessenger.Default.Register<MoldShapeUpdatedMessage>(this, (r,m) => { UpdateMold(m.shape); });
 

@@ -15,6 +15,7 @@ using System.Windows.Media;
 using HelixToolkit.Wpf;
 using g3;
 using Fabolus.Features.AirChannel.MouseTools;
+using Fabolus.Features.Rotation;
 
 namespace Fabolus.Features.AirChannel
 {
@@ -22,7 +23,6 @@ namespace Fabolus.Features.AirChannel
     public partial class AirChannelMeshViewModel : MeshViewModelBase {
         public const string BOLUS_LABEL = "bolus"; //used to name the bolus model for hit detection
         public const string AIRCHANNEL_LABEL = "airchannel"; //names each airchannel for hit detection
-
 
         [ObservableProperty] private List<AirChannelModel> _airChannels;
         [ObservableProperty] private double _diameter, _height;
@@ -79,9 +79,9 @@ namespace Fabolus.Features.AirChannel
             _selectedSkin = SetSkin(Colors.BlueViolet, 1.0f);
 
             var gradients = new Dictionary<Color, float>();
-            gradients.Add(Colors.Gray, 0.75f);
-            gradients.Add(Colors.Red, 0.80f);
-            gradients.Add(Colors.DarkSlateGray, 0.90f);
+            gradients.Add(RotationMeshViewModel.OVERHANG_COLOR_GOOD, RotationMeshViewModel.OVERHANG_GOOD);
+            gradients.Add(RotationMeshViewModel.OVERHANG_COLOR_WARNING, RotationMeshViewModel.OVERHANG_WARNING);
+            gradients.Add(RotationMeshViewModel.OVERHANG_COLOR_FAULT, RotationMeshViewModel.OVERHANG_FAULT);
             SetOverhangSkin(gradients);
             Update(_bolus);
             //shortest path

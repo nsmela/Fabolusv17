@@ -37,7 +37,6 @@ namespace Fabolus.Features.Mold
         private MoldSettings _settings;
         private BolusModel? _bolus;
         private MoldShape _shape;
-        private Bitmap3 _bolusBitmap;
 
         public MoldStore() {
             _settings = new MoldSettings {

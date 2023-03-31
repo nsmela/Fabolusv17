@@ -8,9 +8,13 @@ using System.Windows.Media.Media3D;
 
 namespace Fabolus.Features.Rotation {
     public partial class RotationMeshViewModel : MeshViewModelBase {
-        private const float OVERHANG_GOOD = 0.75f;
-        private const float OVERHANG_WARNING = 0.80f;
-        private const float OVERHANG_FAULT = 0.90f;
+        //overhangs
+        public static float OVERHANG_GOOD => 0.75f;
+        public static float OVERHANG_WARNING => 0.80f;
+        public static float OVERHANG_FAULT => 0.90f;
+        public static Color OVERHANG_COLOR_GOOD => Colors.Gray;
+        public static Color OVERHANG_COLOR_WARNING => Colors.Yellow;
+        public static Color OVERHANG_COLOR_FAULT => Colors.Red;
 
         [ObservableProperty] private Vector3D _rotationAxis;
         [ObservableProperty] private float _rotationAngle;
@@ -57,15 +61,15 @@ namespace Fabolus.Features.Rotation {
             gradientBrush.EndPoint = new System.Windows.Point(0, 1);
 
             gradientBrush.GradientStops.Add(new GradientStop {
-                Color = Colors.Gray,
+                Color = OVERHANG_COLOR_GOOD,
                 Offset = OVERHANG_GOOD
             });
             gradientBrush.GradientStops.Add(new GradientStop {
-                Color = Colors.Yellow,
+                Color = OVERHANG_COLOR_WARNING,
                 Offset = OVERHANG_WARNING
             }); ;
             gradientBrush.GradientStops.Add(new GradientStop {
-                Color = Colors.Red,
+                Color = OVERHANG_COLOR_FAULT,
                 Offset = OVERHANG_FAULT
             });
 

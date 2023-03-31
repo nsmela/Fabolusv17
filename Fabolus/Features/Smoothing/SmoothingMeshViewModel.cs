@@ -1,15 +1,7 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using Fabolus.Features.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Fabolus.Features.Common;
 using System.Windows.Media.Media3D;
 using System.Windows.Media;
-using CommunityToolkit.Mvvm.Messaging;
 using Fabolus.Features.Bolus;
-using Fabolus.Features.Import;
 
 namespace Fabolus.Features.Smoothing
 {
