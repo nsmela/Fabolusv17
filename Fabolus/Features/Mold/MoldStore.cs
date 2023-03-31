@@ -1,12 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using Fabolus.Features.Bolus;
-using g3;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Windows.Media.Media3D;
 
 namespace Fabolus.Features.Mold
 {
@@ -15,13 +10,17 @@ namespace Fabolus.Features.Mold
     //set messages
     public sealed record MoldSetShapeMessage(MoldShape shape);
     public sealed record MoldSetSettingsMessage(MoldStore.MoldSettings settings);
+    public sealed record MoldSetFinalShapeMessage(MeshGeometry3D? mesh = null);
+
     //updates
     public sealed record MoldShapeUpdatedMessage(MoldShape shape);
     public sealed record MoldSettingsUpdatedMessage(MoldStore.MoldSettings settings);
+    public sealed record MoldFinalUpdatedMessage(MeshGeometry3D? mesh);
 
     //request messages
     public class MoldSettingsRequestMessage : RequestMessage<MoldStore.MoldSettings> { }
     public class MoldShapeRequestMessage : RequestMessage<MoldShape> { }
+    public class MoldFinalRequestMessage : RequestMessage<MeshGeometry3D?> { }
 
     #endregion
 
@@ -37,6 +36,7 @@ namespace Fabolus.Features.Mold
         private MoldSettings _settings;
         private BolusModel? _bolus;
         private MoldShape _shape;
+        private MeshGeometry3D? _geometry; 
 
         public MoldStore() {
             _settings = new MoldSettings {
@@ -47,14 +47,17 @@ namespace Fabolus.Features.Mold
             };
 
             _shape = new MoldBox(_settings);
+            _geometry = null;
 
             //messages
             WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r, m) => { NewBolus(m.bolus); });
             WeakReferenceMessenger.Default.Register<MoldSetSettingsMessage>(this, (r, m) => { NewSettings(m.settings); });
+            WeakReferenceMessenger.Default.Register<MoldSetFinalShapeMessage>(this, (r, m) => { NewFinalMold(m.mesh); });
 
             //request messages
             WeakReferenceMessenger.Default.Register<MoldSettingsRequestMessage>(this, (r, m) => { m.Reply(_settings); });
             WeakReferenceMessenger.Default.Register<MoldShapeRequestMessage>(this, (r, m) => { m.Reply(_shape); });
+            WeakReferenceMessenger.Default.Register<MoldFinalRequestMessage>(this, (r, m) => { m.Reply(_geometry); });
         }
 
         #region Messaging Responses
@@ -69,6 +72,11 @@ namespace Fabolus.Features.Mold
             _bolus = bolus;
             _shape.SetBolus(_bolus);
             WeakReferenceMessenger.Default.Send(new MoldShapeUpdatedMessage(_shape));
+        }
+
+        private void NewFinalMold(MeshGeometry3D? mesh) {
+            _geometry = mesh;
+            WeakReferenceMessenger.Default.Send(new MoldFinalUpdatedMessage(mesh));
         }
         #endregion
     }

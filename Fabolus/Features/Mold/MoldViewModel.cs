@@ -63,11 +63,13 @@ namespace Fabolus.Features.Mold {
 
         #region Commands
         [RelayCommand] private void GenerateMold() {
-            MoldShape shape = WeakReferenceMessenger.Default.Send<MoldShapeRequestMessage>();
             //how to create a shape with MoldShape and have it save and sent to MoldMeshView?
             //mold store has a generate mold message? it stores it? /clears it if airholes, rotation, smoothing, or mold settings change?
             //does the shape hold it?
             //mesh view needs to know if one exists when opening
+            MoldShape shape = WeakReferenceMessenger.Default.Send<MoldShapeRequestMessage>();
+            var mesh = MoldTools.GenerateMold(shape);
+            WeakReferenceMessenger.Default.Send(new MoldSetFinalShapeMessage(mesh));
         }
 
         #endregion
