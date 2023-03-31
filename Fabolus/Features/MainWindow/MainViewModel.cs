@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Fabolus.Features.AirChannel;
 using Fabolus.Features.Bolus;
 using Fabolus.Features.Common;
+using Fabolus.Features.Export;
 using Fabolus.Features.Import;
 using Fabolus.Features.Mold;
 using Fabolus.Features.Rotation;
@@ -70,6 +71,7 @@ namespace Fabolus.Features.MainWindow {
         [RelayCommand] public async Task SwitchToRotationView() => NavigateTo(new RotationViewModel());
         [RelayCommand] public async Task SwitchToAirChannelView() => NavigateTo(new AirChannelViewModel());
         [RelayCommand] public async Task SwitchToMoldView() => NavigateTo(new MoldViewModel());
+        [RelayCommand] public async Task SwitchToExportView() => NavigateTo(new ExportViewModel());
 
         #endregion
     }

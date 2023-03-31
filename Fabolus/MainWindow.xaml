@@ -57,6 +57,9 @@
             <Button Content="Mold"
                     Command="{Binding SwitchToMoldViewCommand}"
                     Width="64"/>
+            <Button Content="export"
+                    Command="{Binding SwitchToExportViewCommand}"
+                    Width="64"/>
         </StackPanel>
         
         <!-- Tools View  -->

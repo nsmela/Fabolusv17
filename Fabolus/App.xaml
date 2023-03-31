@@ -6,6 +6,7 @@
              xmlns:rotation="clr-namespace:Fabolus.Features.Rotation"
              xmlns:airchannel="clr-namespace:Fabolus.Features.AirChannel"
              xmlns:mold="clr-namespace:Fabolus.Features.Mold"
+             xmlns:export="clr-namespace:Fabolus.Features.Export"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
@@ -46,6 +47,12 @@
                 <mold:MoldMeshView/>
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type export:ExportViewModel}">
+                <export:ExportView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type export:ExportMeshViewModel}">
+                <export:ExportMeshView/>
+            </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
