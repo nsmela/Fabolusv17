@@ -47,27 +47,9 @@ namespace Fabolus.Features.Rotation {
         }
 
         private void Initialize() {
-            //gradient color used for overhang display texture
-            var gradientBrush = new LinearGradientBrush();
-            gradientBrush.StartPoint = new System.Windows.Point(0, 0);
-            gradientBrush.EndPoint = new System.Windows.Point(0, 1);
-
-            gradientBrush.GradientStops.Add(new GradientStop {
-                Color = OverhangSettings.OVERHANG_COLOR_GOOD,
-                Offset = OverhangSettings.OVERHANG_GOOD
-            });
-            gradientBrush.GradientStops.Add(new GradientStop {
-                Color = OverhangSettings.OVERHANG_COLOR_WARNING,
-                Offset = OverhangSettings.OVERHANG_WARNING
-            }); ;
-            gradientBrush.GradientStops.Add(new GradientStop {
-                Color = OverhangSettings.OVERHANG_COLOR_FAULT,
-                Offset = OverhangSettings.OVERHANG_FAULT
-            });
-
             //material for mesh skin set ahead to prevent multiple calls
             //can allow editing in viewer later
-            _meshSkinMaterial = new DiffuseMaterial(gradientBrush);
+            _meshSkinMaterial = OverhangSettings.OVERHANG_SKIN;
             _meshSkinMaterial.Brush.Opacity = _meshOpacity;
 
             _geometry = new MeshGeometry3D();

@@ -77,12 +77,8 @@ namespace Fabolus.Features.AirChannel
             _toolSkin = SetSkin(Colors.MediumPurple, 0.5f);
             _channelsSkin = SetSkin(Colors.Purple, 1.0f);
             _selectedSkin = SetSkin(Colors.BlueViolet, 1.0f);
+            _overhangsSkin = OverhangSettings.OVERHANG_SKIN;
 
-            var gradients = new Dictionary<Color, float>();
-            gradients.Add(OverhangSettings.OVERHANG_COLOR_GOOD, OverhangSettings.OVERHANG_GOOD);
-            gradients.Add(OverhangSettings.OVERHANG_COLOR_WARNING, OverhangSettings.OVERHANG_WARNING);
-            gradients.Add(OverhangSettings.OVERHANG_COLOR_FAULT, OverhangSettings.OVERHANG_FAULT);
-            SetOverhangSkin(gradients);
             Update(_bolus);
             //shortest path
             _pathStart = null;
@@ -142,21 +138,6 @@ namespace Fabolus.Features.AirChannel
             var brush = new SolidColorBrush(colour);
             brush.Opacity= opacity;
             return new DiffuseMaterial(brush);
-        }
-
-        private void SetOverhangSkin(Dictionary<Color, float> gradients) {
-            var gradientBrush = new LinearGradientBrush();
-            gradientBrush.StartPoint = new System.Windows.Point(0, 0);
-            gradientBrush.EndPoint = new System.Windows.Point(0, 1);
-
-            foreach(var g in gradients) {
-                gradientBrush.GradientStops.Add(new GradientStop {
-                    Color = g.Key,
-                    Offset = g.Value
-                });
-            }
-
-            _overhangsSkin = new DiffuseMaterial(gradientBrush);
         }
 
         private GeometryModel3D GetTempOverhangs() {
