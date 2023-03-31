@@ -8,14 +8,6 @@ using System.Windows.Media.Media3D;
 
 namespace Fabolus.Features.Rotation {
     public partial class RotationMeshViewModel : MeshViewModelBase {
-        //overhangs
-        public static float OVERHANG_GOOD => 0.75f;
-        public static float OVERHANG_WARNING => 0.80f;
-        public static float OVERHANG_FAULT => 0.90f;
-        public static Color OVERHANG_COLOR_GOOD => Colors.Gray;
-        public static Color OVERHANG_COLOR_WARNING => Colors.Yellow;
-        public static Color OVERHANG_COLOR_FAULT => Colors.Red;
-
         [ObservableProperty] private Vector3D _rotationAxis;
         [ObservableProperty] private float _rotationAngle;
         [ObservableProperty] private Vector3D _overhangAxis;
@@ -61,16 +53,16 @@ namespace Fabolus.Features.Rotation {
             gradientBrush.EndPoint = new System.Windows.Point(0, 1);
 
             gradientBrush.GradientStops.Add(new GradientStop {
-                Color = OVERHANG_COLOR_GOOD,
-                Offset = OVERHANG_GOOD
+                Color = OverhangSettings.OVERHANG_COLOR_GOOD,
+                Offset = OverhangSettings.OVERHANG_GOOD
             });
             gradientBrush.GradientStops.Add(new GradientStop {
-                Color = OVERHANG_COLOR_WARNING,
-                Offset = OVERHANG_WARNING
+                Color = OverhangSettings.OVERHANG_COLOR_WARNING,
+                Offset = OverhangSettings.OVERHANG_WARNING
             }); ;
             gradientBrush.GradientStops.Add(new GradientStop {
-                Color = OVERHANG_COLOR_FAULT,
-                Offset = OVERHANG_FAULT
+                Color = OverhangSettings.OVERHANG_COLOR_FAULT,
+                Offset = OverhangSettings.OVERHANG_FAULT
             });
 
             //material for mesh skin set ahead to prevent multiple calls

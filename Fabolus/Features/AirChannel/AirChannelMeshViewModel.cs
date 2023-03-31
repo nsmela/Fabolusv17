@@ -79,9 +79,9 @@ namespace Fabolus.Features.AirChannel
             _selectedSkin = SetSkin(Colors.BlueViolet, 1.0f);
 
             var gradients = new Dictionary<Color, float>();
-            gradients.Add(RotationMeshViewModel.OVERHANG_COLOR_GOOD, RotationMeshViewModel.OVERHANG_GOOD);
-            gradients.Add(RotationMeshViewModel.OVERHANG_COLOR_WARNING, RotationMeshViewModel.OVERHANG_WARNING);
-            gradients.Add(RotationMeshViewModel.OVERHANG_COLOR_FAULT, RotationMeshViewModel.OVERHANG_FAULT);
+            gradients.Add(OverhangSettings.OVERHANG_COLOR_GOOD, OverhangSettings.OVERHANG_GOOD);
+            gradients.Add(OverhangSettings.OVERHANG_COLOR_WARNING, OverhangSettings.OVERHANG_WARNING);
+            gradients.Add(OverhangSettings.OVERHANG_COLOR_FAULT, OverhangSettings.OVERHANG_FAULT);
             SetOverhangSkin(gradients);
             Update(_bolus);
             //shortest path
