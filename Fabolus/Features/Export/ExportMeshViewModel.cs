@@ -11,7 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
 namespace Fabolus.Features.Export {
-    public partial class ExportMeshViewModel :MeshViewModelBase {
+    public partial class ExportMeshViewModel : MeshViewModelBase {
 
         protected override void Update(BolusModel bolus) {
             //inherits from MeshViewModelBase, whose constructor automatically loads the bolus  DisplayMesh
