@@ -99,7 +99,7 @@
                         <ImageBrush ImageSource="/Images/mouse-wheel-button-click-active.jpg" />
                     </Ellipse.Fill>
                 </Ellipse>
-                <Label Content="{Binding RightMouseLabel}" Panel.ZIndex="3" VerticalAlignment="Center" Margin="5,0,0,0" Background="White" Width="140"/>
+                <Label Content="{Binding CentreMouseLabel}" Panel.ZIndex="3" VerticalAlignment="Center" Margin="5,0,0,0" Background="White" Width="140"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch"  Height="40"  >
                 <Ellipse Width="32" Height="32">
@@ -107,7 +107,7 @@
                         <ImageBrush ImageSource="/Images/right-mouse-button-click-active.jpg" />
                     </Ellipse.Fill>
                 </Ellipse>
-                <Label Content="{Binding CentreMouseLabel}" Panel.ZIndex="3" VerticalAlignment="Center" Margin="5,0,0,0" Background="White" Width="140"/>
+                <Label Content="{Binding RightMouseLabel}" Panel.ZIndex="3" VerticalAlignment="Center" Margin="5,0,0,0" Background="White" Width="140"/>
             </StackPanel>
         </StackPanel>
     </Grid>

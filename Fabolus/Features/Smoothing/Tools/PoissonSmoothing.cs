@@ -35,9 +35,6 @@ namespace Fabolus.Features.Smoothing.Tools
             string tempFolder = _baseDirectory + @"temp\";
             Directory.CreateDirectory(tempFolder);
 
-            //export ply file to temp folder
-            SaveDMeshToPLYFile(OriginalMesh, tempFolder + @"temp.ply");
-
             //run poisson reconstructor
             ExecutePoisson(tempFolder + @"temp.ply", tempFolder + @"temp_smooth", Depth, Scale, SamplesPerNode);
 
@@ -54,7 +51,7 @@ namespace Fabolus.Features.Smoothing.Tools
         /// <param name="mesh">Trianglemesh to export</param>
         /// <param name="outputFileName">Name of the file to write.</param>
         //---------------------------------------------------------------------------------------------
-        private static void SaveDMeshToPLYFile(DMesh3 mesh, string outputFileName)
+        public static void SaveDMeshToPLYFile(DMesh3 mesh, string outputFileName)
         {
             if (mesh == null)
                 return;

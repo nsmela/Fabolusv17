@@ -5,8 +5,10 @@ using Fabolus.Features.Bolus;
 using Fabolus.Features.Common;
 using Fabolus.Features.Smoothing.Tools;
 using g3;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Fabolus.Features.Smoothing {
@@ -86,7 +88,6 @@ namespace Fabolus.Features.Smoothing {
         }
 
         [ObservableProperty] private string _smoothingLabel;
-
         [ObservableProperty] private int _poissonDegrees, _poissonDepth, _poissonSamplesPerNode;
         [ObservableProperty] private float _poissonScale;
         private List<PoissonSettings> _poissonSettings = new List<PoissonSettings> {
@@ -116,6 +117,12 @@ namespace Fabolus.Features.Smoothing {
             WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r,m)=> { _bolus = m.bolus; });
 
             _bolus = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
+
+            //preemptively save the bolus as a temp file to save time smoothing with poisson
+            string tempFolder = AppDomain.CurrentDomain.BaseDirectory + @"\Files\temp\";
+            Directory.CreateDirectory(tempFolder);
+            string exportFile = tempFolder + @"temp.ply";
+            PoissonSmoothing.SaveDMeshToPLYFile(_bolus.Mesh, exportFile);
         }
 
         private DMesh3 SmoothingByMarchingCubes() {
