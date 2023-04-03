@@ -24,23 +24,34 @@ namespace Fabolus.Features.Mold.Shapes {
             var offsetMesh = MoldTools.OffsetMeshD(Bolus.TransformedMesh, Settings.OffsetXY);
             
             List<AirChannelModel> airchannels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
-            var channels = new MeshEditor(new DMesh3());
-            foreach(var a in airchannels) {
-                if (a != null && a.Geometry != null)
-                    BolusUtility.MeshGeometryToDMesh(a.Shape.GeometryOffset);
+
+            if (airchannels != null && airchannels.Count >= 1) {
+                var channels = new MeshEditor(new DMesh3());
+                foreach (var a in airchannels) {
+                    if (a != null && a.Geometry != null)
+                        channels.AppendMesh(BolusUtility.MeshGeometryToDMesh(a.Shape.GeometryOffset));
+                }
+                if (channels.Mesh != null && channels.Mesh.TriangleCount > 3) {
+                    var mesh = MoldTools.OffsetMeshD(channels.Mesh, Settings.OffsetXY);
+                    offsetMesh = MoldTools.BooleanUnion(offsetMesh, mesh);
+                }
             }
 
-            Bitmap3 bmp = BolusUtility.MeshBitmap(offsetMesh, channels.Mesh, Settings.Resolution);
+            var resolution = 2.5f;
+            var cells = (int)(offsetMesh.CachedBounds.MaxDim / resolution);
+            Bitmap3 bmp = BolusUtility.MeshBitmap(offsetMesh, cells);
             var processedBmp = BitmapExtendedToFloor(bmp);
 
             //turn it into a voxilized mesh
             VoxelSurfaceGenerator voxGen = new VoxelSurfaceGenerator();
             voxGen.Voxels = processedBmp;
             voxGen.Generate();
-            var result = new DMesh3(MoldTools.MarchingCubesSmoothing(voxGen.Meshes[0], Settings.Resolution));
+            
+            var result = new DMesh3(MoldTools.MarchingCubesSmoothing(voxGen.Meshes[0], cells));
 
             //mesh is small and not aligned
-            var scale = offsetMesh.CachedBounds.MaxDim / Settings.Resolution;
+            var scale = offsetMesh.CachedBounds.MaxDim / cells;
+
             MeshTransforms.Scale(result, scale);
             BolusUtility.CentreMesh(result, offsetMesh);
 
