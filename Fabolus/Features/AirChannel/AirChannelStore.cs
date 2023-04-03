@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using Fabolus.Features.Bolus;
+using g3;
 using System.Collections.Generic;
 using System.Windows.Media.Media3D;
 
@@ -19,6 +20,7 @@ namespace Fabolus.Features.AirChannel {
     public class AirChannelDiameterRequestMessage : RequestMessage<double> { }
     public class AirChannelHeightRequestMessage : RequestMessage<double> { }
     public class AirChannelSelectedRequestMessage : RequestMessage<int?> { }
+    public class AirChannelMeshRequestMessage : RequestMessage<DMesh3> { }
 
     #endregion
 
@@ -56,6 +58,7 @@ namespace Fabolus.Features.AirChannel {
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelDiameterRequestMessage>(this, (r, m) => { m.Reply(r._channelDiameter); });
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelHeightRequestMessage>(this, (r, m) => { m.Reply(r._maxZHeight); });
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelSelectedRequestMessage>(this, (r,m) => { m.Reply(r._selectedChannel); });
+            WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelMeshRequestMessage>(this, (r, m) => { m.Reply(r.ToMesh()); });
         }
 
         private void SendChannelsUpdate() => WeakReferenceMessenger.Default.Send(new AirChannelsUpdatedMessage(_channels, _selectedChannel));
@@ -92,6 +95,16 @@ namespace Fabolus.Features.AirChannel {
             _selectedChannel = _channels.Count - 1;
 
             SendChannelsUpdate();
+        }
+
+        private DMesh3 ToMesh() {
+            if (_channels == null || _channels.Count <= 0) return null;
+
+            var airHole = new MeshEditor(new DMesh3());
+            foreach (var channel in _channels)
+                if (channel.Geometry != null) airHole.AppendMesh(BolusUtility.MeshGeometryToDMesh(channel.Geometry)); //some reason, first channel is null
+
+            return airHole.Mesh;
         }
 
         private void Receive(AddAirChannelMessage message) {

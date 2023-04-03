@@ -44,7 +44,7 @@ namespace Fabolus.Features.AirChannel {
             mesh.AddSphere(_anchor, radius);
             mesh.AddCylinder(
                 _anchor,
-                _topAnchor,
+                new Point3D(_topAnchor.X, _topAnchor.Y, _topAnchor.Z - offset),
                 radius);
             return mesh.ToMesh();
         }
@@ -110,13 +110,13 @@ namespace Fabolus.Features.AirChannel {
                 _direction, //cone direction
                 radius, //cone base radius
                 radius + 1.0f, //cone top radius
-                coneLength, //cone length
+                coneLength - offset, //cone length
                 true, //base cap
                 false, //top cap
                 16 //divisions/resolution
                 );
 
-            var point = _anchor + _direction * coneLength; //used for anchor for next mesh addition
+            var point = _anchor + _direction * (coneLength - offset); //used for anchor for next mesh addition
             mesh.AddSphere(point, radius + 1.0f);
             mesh.AddCylinder(
                 point,

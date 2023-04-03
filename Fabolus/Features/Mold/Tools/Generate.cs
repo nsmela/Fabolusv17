@@ -13,20 +13,18 @@ using System.Windows.Media.Media3D;
 namespace Fabolus.Features.Mold.Tools {
     public static partial class MoldTools {
         public static MeshGeometry3D GenerateMold(MoldShape shape) {
+            //grab meshes for the preview mold and the bolus
             var mold = BolusUtility.MeshGeometryToDMesh(shape.Geometry as MeshGeometry3D);
             var bolus = BolusUtility.MeshGeometryToDMesh(shape.Bolus.Geometry as MeshGeometry3D);
 
-            //invert bolus mesh and add mold mesh
+            //invert bolus mesh and add preview mold mesh
             var editor = new MeshEditor(bolus);
             editor.ReverseTriangles(bolus.TriangleIndices(), true);
             editor.AppendMesh(mold);
 
             //boolean subtract air channels
-            List<AirChannelModel> channels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
-            var airHole = new MeshEditor(new DMesh3());
-            foreach(var channel in channels) 
-                if(channel.Geometry!= null) airHole.AppendMesh(BolusUtility.MeshGeometryToDMesh(channel.Geometry)); //some reason, first channel is null
-            var mesh = BooleanSubtraction(editor.Mesh, airHole.Mesh);
+            DMesh3 channels = WeakReferenceMessenger.Default.Send<AirChannelMeshRequestMessage>();
+            var mesh = BooleanSubtraction(editor.Mesh, channels);
 
             //result mesh
             return BolusUtility.DMeshToMeshGeometry(mesh);

@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fabolus.Features.Common;
+using Fabolus.Features.Mold.Shapes;
 using Fabolus.Features.Mold.Tools;
 using System;
 using System.Collections.Generic;
@@ -19,17 +20,33 @@ namespace Fabolus.Features.Mold {
         [ObservableProperty] private double _offsetBottom;
         [ObservableProperty] private int _resolution;
         [ObservableProperty] private bool _isBusy = false;
+        [ObservableProperty] private Action[] _shapesList;
+        [ObservableProperty] private int _shapeIndex, _shapeMax;
+        [ObservableProperty] private string _shapeName;
 
         partial void OnOffsetXYChanged(double value) => UpdateMoldSettings();
         partial void OnOffsetTopChanged(double value) => UpdateMoldSettings();
         partial void OnOffsetBottomChanged(double value) => UpdateMoldSettings();
         partial void OnResolutionChanged(int value) => UpdateMoldSettings();
+        partial void OnShapeIndexChanged(int value) => ShapesList[value].Invoke();
 
         private MoldStore.MoldSettings _settings;
 
         public MoldViewModel() {
+            //list of shapes ot choose from
+            ShapesList = new Action[] {
+                () => SetShape(new MoldBox(_settings)),
+                () => SetShape(new MoldRisingContour(_settings)),
+            };
+
+            ShapeMax = ShapesList.Length - 1;
+
             _settings = WeakReferenceMessenger.Default.Send<MoldSettingsRequestMessage>();
             UpdateSettings(_settings);
+
+            //to parse the name and settings automatically
+            ShapeIndex = 0;
+            ShapesList[ShapeIndex].Invoke();
         }
 
         #region Messages
@@ -40,9 +57,14 @@ namespace Fabolus.Features.Mold {
             OffsetTop = settings.OffsetTop; 
             OffsetBottom = settings.OffsetBottom;
             Resolution = settings.Resolution;
-
             IsBusy= false;
         }
+
+        private void SetShape(MoldShape shape) {
+            ShapeName = shape.Name;
+            WeakReferenceMessenger.Default.Send(new MoldSetShapeMessage(shape));
+        }
+        
         #endregion
 
         #region Private Methods

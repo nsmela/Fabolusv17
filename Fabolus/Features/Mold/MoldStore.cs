@@ -51,6 +51,7 @@ namespace Fabolus.Features.Mold
 
             //messages
             WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r, m) => { NewBolus(m.bolus); });
+            WeakReferenceMessenger.Default.Register<MoldSetShapeMessage>(this, (r, m) => { NewShape(m.shape); });
             WeakReferenceMessenger.Default.Register<MoldSetSettingsMessage>(this, (r, m) => { NewSettings(m.settings); });
             WeakReferenceMessenger.Default.Register<MoldSetFinalShapeMessage>(this, (r, m) => { NewFinalMold(m.mesh); });
 
@@ -77,6 +78,15 @@ namespace Fabolus.Features.Mold
         private void NewFinalMold(MeshGeometry3D? mesh) {
             _geometry = mesh;
             WeakReferenceMessenger.Default.Send(new MoldFinalUpdatedMessage(mesh));
+        }
+
+        private void NewShape(MoldShape? shape) {
+            _geometry = null;
+
+            _shape = shape;
+            _shape.SetBolus(_bolus);
+
+            WeakReferenceMessenger.Default.Send(new MoldShapeUpdatedMessage(_shape));
         }
         #endregion
     }
