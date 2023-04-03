@@ -24,7 +24,8 @@ namespace Fabolus.Features.Mold.Tools {
             //boolean subtract air channels
             List<AirChannelModel> channels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
             var airHole = new MeshEditor(new DMesh3());
-            foreach(var channel in channels) airHole.AppendMesh(BolusUtility.MeshGeometryToDMesh(channel.Geometry));
+            foreach(var channel in channels) 
+                if(channel.Geometry!= null) airHole.AppendMesh(BolusUtility.MeshGeometryToDMesh(channel.Geometry)); //some reason, first channel is null
             var mesh = BooleanSubtraction(editor.Mesh, airHole.Mesh);
 
             //result mesh
