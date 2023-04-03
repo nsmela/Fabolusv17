@@ -1,4 +1,5 @@
-﻿using g3;
+﻿using Fabolus.Features.Bolus;
+using g3;
 using HelixToolkit.Wpf;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,7 @@ namespace Fabolus.Features.AirChannel {
 
     public abstract class AirChannelShape {
         public virtual MeshGeometry3D Geometry { get; protected set; }
+        public virtual MeshGeometry3D GeometryOffset { get; protected set; }
         public virtual DMesh3 Mesh { get; protected set; }
     }
 
@@ -30,18 +32,21 @@ namespace Fabolus.Features.AirChannel {
             _diameter = diameter;
             _height = height;
 
-            SetGeometry();
+            Geometry = SetGeometry();
+            GeometryOffset = SetGeometry(3.2f);
             SetMesh();
         }
 
-        private void SetGeometry() {
+        private MeshGeometry3D SetGeometry(float offset = 0.0f) {
             var mesh = new MeshBuilder();
-            mesh.AddSphere(_anchor, _radius);
+            var radius = _radius + offset;
+
+            mesh.AddSphere(_anchor, radius);
             mesh.AddCylinder(
                 _anchor,
                 _topAnchor,
-                _radius);
-            Geometry = mesh.ToMesh();
+                radius);
+            return mesh.ToMesh();
         }
 
         private void SetMesh() {
@@ -88,20 +93,23 @@ namespace Fabolus.Features.AirChannel {
             _diameter = diameter;
             _height = height;
 
-            SetGeometry();
+            Geometry = SetGeometry();
+            GeometryOffset = SetGeometry(3.2f);
             SetMesh();
         }
 
-        private void SetGeometry() {
+        private MeshGeometry3D SetGeometry(float offset = 0.0f) {
             float coneLength = 10.0f;
 
             var mesh = new MeshBuilder();
-            //mesh.AddSphere(_anchor, _radius  / 2);
+
+            var radius = _radius + offset;
+
             mesh.AddCone(
                 _anchor, //cone tip position
                 _direction, //cone direction
-                _radius, //cone base radius
-                _radius + 1.0f, //cone top radius
+                radius, //cone base radius
+                radius + 1.0f, //cone top radius
                 coneLength, //cone length
                 true, //base cap
                 false, //top cap
@@ -109,16 +117,16 @@ namespace Fabolus.Features.AirChannel {
                 );
 
             var point = _anchor + _direction * coneLength; //used for anchor for next mesh addition
-            mesh.AddSphere(point, _radius + 1.0f);
+            mesh.AddSphere(point, radius + 1.0f);
             mesh.AddCylinder(
                 point,
                 new Point3D(point.X, point.Y, _height),
-                _radius + 1.0f);
-            Geometry = mesh.ToMesh();
+                radius + 1.0f);
+            return mesh.ToMesh();
         }
 
         private void SetMesh() {
-
+            BolusUtility.MeshGeometryToDMesh(Geometry); //temp solution
         }
     }
 
@@ -132,37 +140,39 @@ namespace Fabolus.Features.AirChannel {
             _diameter = diameter;
             _height = height;
 
-            SetGeometry();
+            Geometry = SetGeometry();
+            GeometryOffset = SetGeometry(3.2f);
             //SetMesh(); //TODO
         }
 
-        private void SetGeometry() {
-            if (_path == null) return;
-            if(_path.Count == 0 ) return;
+        private MeshGeometry3D SetGeometry(float offset = 0.0f) {
+            if (_path == null) return null;
+            if(_path.Count == 0 ) return null;
 
             var mesh = new MeshBuilder();
+            var radius = _radius + offset;
 
-            mesh.AddSphere(_path[0], _radius);
-            AddCylinder(_path[0], ref mesh);
+            mesh.AddSphere(_path[0], radius);
+            AddCylinder(_path[0], radius,  ref mesh);
 
             Point3D origin, end;
             for (int i = 1; i < _path.Count; i++) {
                 origin = _path[i - 1];
                 end = _path[i];
 
-                mesh.AddSphere(end, _radius);
-                AddCylinder(end, ref mesh);
-                AddChannel(origin, end, ref mesh);
+                mesh.AddSphere(end, radius);
+                AddCylinder(end, radius, ref mesh);
+                AddChannel(origin, end, radius, ref mesh);
             }
 
            
 
-            Geometry = mesh.ToMesh();
+            return mesh.ToMesh();
         }
         
         private void AddSphere(int pointIndex, ref MeshBuilder mesh) => mesh.AddSphere(Path(pointIndex), _radius);
-        private void AddCylinder(Point3D point, ref MeshBuilder mesh) => mesh.AddCylinder(point, new Point3D(point.X, point.Y, _height), _radius, 16, true, true);
-        private void AddChannel(Point3D origin, Point3D end, ref MeshBuilder mesh) {
+        private void AddCylinder(Point3D point, double radius, ref MeshBuilder mesh) => mesh.AddCylinder(point, new Point3D(point.X, point.Y, _height), radius, 16, true, true);
+        private void AddChannel(Point3D origin, Point3D end, double radius, ref MeshBuilder mesh) {
             var direction = Direction(origin, end);
             
             var indices = new int[]{
@@ -215,7 +225,7 @@ namespace Fabolus.Features.AirChannel {
 
             var o = new Point3D(origin.X, origin.Y, origin.Z);
             var e = new Point3D(end.X, end.Y, end.Z);
-            mesh.AddCylinder(o, e, _radius, 16, true, true);
+            mesh.AddCylinder(o, e, radius, 16, true, true);
             return;
 
             

@@ -22,5 +22,13 @@ namespace Fabolus.Features.Bolus {
             }
             return bmp;
         }
+
+        ///joins two Meshes together for a bitmap
+        public static Bitmap3 MeshBitmap(DMesh3 bodyMesh, DMesh3 toolMesh, int numcells) {
+            var mesh = new MeshEditor(bodyMesh);
+            mesh.AppendMesh(toolMesh);
+            return MeshBitmap(mesh.Mesh, numcells);
+
+        }
     }
 }
