@@ -16,7 +16,7 @@
                         FontWeight="Bold"
                         FontFamily="\Fonts\#Poppins"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-            <Button Content="1" Height="30" Width="30" Margin="2" Command="{Binding SetAirChannelToolAngledCommand}"/>
+            <Button Content="1" Height="30" Width="30" Margin="2" Command="{Binding SetAirChannelToolStraightCommand}"/>
             <Button Content="2" Height="30" Width="30" Margin="2" Command="{Binding SetAirChannelToolAngledCommand}"/>
             <Button Content="3" Height="30" Width="30" Margin="2" Command="{Binding SetAirChannelToolPathCommand}"/>
         </StackPanel>

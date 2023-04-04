@@ -1,27 +1,62 @@
 ﻿using Fabolus.Features.Bolus;
 using g3;
 using HelixToolkit.Wpf;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media.Media3D;
 
 namespace Fabolus.Features.AirChannel {
 
     public abstract class AirChannelShape {
         public virtual MeshGeometry3D Geometry { get; protected set; }
-        public virtual MeshGeometry3D GeometryOffset { get; protected set; }
         public virtual DMesh3 Mesh { get; protected set; }
+        public abstract DMesh3 MeshOffset(float offset, float height);
+
+        //mesh methods
+        protected DMesh3 Sphere(double radius, int edgeVerts, Vector3d anchor) {
+            Sphere3Generator_NormalizedCube generateSphere = new Sphere3Generator_NormalizedCube {
+                Radius = radius,
+                EdgeVertices = edgeVerts
+            };
+            DMesh3 sphereMesh = generateSphere.Generate().MakeDMesh();
+            MeshTransforms.Translate(sphereMesh, anchor);
+            return sphereMesh;
+        }
+
+        protected DMesh3 Cylinder(double radius, double height, int slices, Vector3d anchor) {
+            var generateCyclinder = new CappedCylinderGenerator {
+                BaseRadius = (float)radius,
+                TopRadius = (float)radius,
+                Height = (float)height,
+                Slices = slices
+            };
+            DMesh3 tubeMesh = generateCyclinder.Generate().MakeDMesh();
+            Quaterniond rotate = new Quaterniond(Vector3d.AxisX, 90.0f);
+            MeshTransforms.Rotate(tubeMesh, Vector3d.Zero, rotate);
+            MeshTransforms.Translate(tubeMesh, anchor);
+            return tubeMesh;
+        }
+
+        protected DMesh3 Cone(double bottomRadius, double topRadius, double height, int slices, Vector3d angle, Vector3d anchor) {
+            var generateCyclinder = new CappedCylinderGenerator {
+                BaseRadius = (float)bottomRadius,
+                TopRadius = (float)topRadius,
+                Height = (float)height,
+                Slices = slices
+            };
+            DMesh3 tubeMesh = generateCyclinder.Generate().MakeDMesh();
+            Quaterniond rotate = new Quaterniond(Vector3d.Zero, angle);
+            MeshTransforms.Rotate(tubeMesh, Vector3d.Zero, rotate);
+            MeshTransforms.Translate(tubeMesh, anchor);
+            return tubeMesh;
+        }
     }
 
     public class AirChannelStraight : AirChannelShape {
         private double _diameter;
         private double _radius => _diameter / 2;
         private double _height;
-        private double _length => _height - _topAnchor.Z;
+        private double _length => _height - _dAnchor.z;
         private Point3D _anchor { get; set; }
         private Point3D _topAnchor => new Point3D(_anchor.X, _anchor.Y, _height);
         private Vector3d _dAnchor => new Vector3d(_anchor.X, _anchor.Y, _anchor.Z);
@@ -33,19 +68,17 @@ namespace Fabolus.Features.AirChannel {
             _height = height;
 
             Geometry = SetGeometry();
-            GeometryOffset = SetGeometry(3.2f);
-            SetMesh();
+            Mesh = BolusUtility.MeshGeometryToDMesh(Geometry);
         }
 
-        private MeshGeometry3D SetGeometry(float offset = 0.0f) {
+        private MeshGeometry3D SetGeometry() {
             var mesh = new MeshBuilder();
-            var radius = _radius + offset;
 
-            mesh.AddSphere(_anchor, radius);
+            mesh.AddSphere(_anchor, _radius);
             mesh.AddCylinder(
                 _anchor,
-                new Point3D(_topAnchor.X, _topAnchor.Y, _topAnchor.Z - offset),
-                radius);
+                new Point3D(_topAnchor.X, _topAnchor.Y, _topAnchor.Z),
+                _radius);
             return mesh.ToMesh();
         }
 
@@ -74,13 +107,24 @@ namespace Fabolus.Features.AirChannel {
 
             Mesh = mesh.Mesh;
         }
+
+        public override DMesh3 MeshOffset(float offset, float height) {
+            var mesh = new MeshBuilder();
+            var radius = _radius + offset;
+
+            mesh.AddSphere(_anchor, radius);
+            mesh.AddCylinder(
+                _anchor,
+                new Point3D(_topAnchor.X, _topAnchor.Y, height),
+                radius);
+            return BolusUtility.MeshGeometryToDMesh( mesh.ToMesh());
+        }
     }
 
     public class AirChannelAngled : AirChannelShape {
         private double _diameter;
         private double _radius => _diameter / 2;
         private double _height;
-        private double _length => _height - _topAnchor.Z;
         private Point3D _anchor { get; set; }
         private Vector3D _direction { get; set; }
         private Point3D _topAnchor => new Point3D(_anchor.X, _anchor.Y, _height);
@@ -94,39 +138,63 @@ namespace Fabolus.Features.AirChannel {
             _height = height;
 
             Geometry = SetGeometry();
-            GeometryOffset = SetGeometry(3.2f);
-            SetMesh();
+            //SetMesh();
+            Mesh = BolusUtility.MeshGeometryToDMesh(Geometry);
         }
 
-        private MeshGeometry3D SetGeometry(float offset = 0.0f) {
+        private MeshGeometry3D SetGeometry() {
             float coneLength = 10.0f;
 
             var mesh = new MeshBuilder();
 
-            var radius = _radius + offset;
-
             mesh.AddCone(
                 _anchor, //cone tip position
                 _direction, //cone direction
-                radius, //cone base radius
-                radius + 1.0f, //cone top radius
-                coneLength - offset, //cone length
+                _radius, //cone base radius
+                _radius + 1.0f, //cone top radius
+                coneLength, //cone length
                 true, //base cap
                 false, //top cap
                 16 //divisions/resolution
                 );
 
-            var point = _anchor + _direction * (coneLength - offset); //used for anchor for next mesh addition
-            mesh.AddSphere(point, radius + 1.0f);
+            var point = _anchor + _direction * (coneLength); //used for anchor for next mesh addition
+            mesh.AddSphere(point, _radius + 1.0f);
             mesh.AddCylinder(
                 point,
                 new Point3D(point.X, point.Y, _height),
-                radius + 1.0f);
+                _radius + 1.0f);
             return mesh.ToMesh();
         }
 
         private void SetMesh() {
             BolusUtility.MeshGeometryToDMesh(Geometry); //temp solution
+        }
+
+        public override DMesh3 MeshOffset(float offset, float height) {
+            float coneLength = 10.0f;
+
+            var mesh = new MeshBuilder();
+            var radius = _radius + offset;
+            mesh.AddCone(
+                _anchor, //cone tip position
+                _direction, //cone direction
+                radius, //cone base radius
+                radius + 1.0f, //cone top radius
+                coneLength, //cone length
+                true, //base cap
+                false, //top cap
+                16 //divisions/resolution
+                );
+
+            var point = _anchor + _direction * (coneLength); //used for anchor for next mesh addition
+
+            mesh.AddSphere(point, radius + 1.0f);
+            mesh.AddCylinder(
+                point,
+                new Point3D(point.X, point.Y, height),
+                radius + 1.0f);
+            return BolusUtility.MeshGeometryToDMesh(mesh.ToMesh());
         }
     }
 
@@ -141,19 +209,43 @@ namespace Fabolus.Features.AirChannel {
             _height = height;
 
             Geometry = SetGeometry();
-            GeometryOffset = SetGeometry(3.2f);
+            //GeometryOffset = SetGeometry(3.2f);
             //SetMesh(); //TODO
         }
 
-        private MeshGeometry3D SetGeometry(float offset = 0.0f) {
+        private MeshGeometry3D SetGeometry() {
             if (_path == null) return null;
             if(_path.Count == 0 ) return null;
+
+            var mesh = new MeshBuilder();
+
+            mesh.AddSphere(_path[0], _radius);
+            AddCylinder(_path[0], _radius, _height,  ref mesh);
+
+            Point3D origin, end;
+            for (int i = 1; i < _path.Count; i++) {
+                origin = _path[i - 1];
+                end = _path[i];
+
+                mesh.AddSphere(end, _radius);
+                AddCylinder(end, _radius, _height, ref mesh);
+                AddChannel(origin, end, _radius, _height, ref mesh);
+            }
+
+           
+
+            return mesh.ToMesh();
+        }
+
+        public override DMesh3 MeshOffset(float offset, float height) {
+            if (_path == null) return null;
+            if (_path.Count == 0) return null;
 
             var mesh = new MeshBuilder();
             var radius = _radius + offset;
 
             mesh.AddSphere(_path[0], radius);
-            AddCylinder(_path[0], radius,  ref mesh);
+            AddCylinder(_path[0], radius, height, ref mesh);
 
             Point3D origin, end;
             for (int i = 1; i < _path.Count; i++) {
@@ -161,18 +253,15 @@ namespace Fabolus.Features.AirChannel {
                 end = _path[i];
 
                 mesh.AddSphere(end, radius);
-                AddCylinder(end, radius, ref mesh);
-                AddChannel(origin, end, radius, ref mesh);
+                AddCylinder(end, radius, height, ref mesh);
+                AddChannel(origin, end, radius, height, ref mesh);
             }
 
-           
-
-            return mesh.ToMesh();
+            return BolusUtility.MeshGeometryToDMesh( mesh.ToMesh());
         }
-        
-        private void AddSphere(int pointIndex, ref MeshBuilder mesh) => mesh.AddSphere(Path(pointIndex), _radius);
-        private void AddCylinder(Point3D point, double radius, ref MeshBuilder mesh) => mesh.AddCylinder(point, new Point3D(point.X, point.Y, _height), radius, 16, true, true);
-        private void AddChannel(Point3D origin, Point3D end, double radius, ref MeshBuilder mesh) {
+
+        private void AddCylinder(Point3D point, double radius, double height, ref MeshBuilder mesh) => mesh.AddCylinder(point, new Point3D(point.X, point.Y, height), radius, 16, true, true);
+        private void AddChannel(Point3D origin, Point3D end, double radius, double height, ref MeshBuilder mesh) {
             var direction = Direction(origin, end);
             
             var indices = new int[]{
@@ -188,13 +277,13 @@ namespace Fabolus.Features.AirChannel {
             var positions = new List<Point3D>();
 
             //points for the starting face
-            var f1 = FacePoints(origin, direction);
+            var f1 = FacePoints(origin, direction, radius, height);
             mesh.AddPolygon(f1);
 
             f1.ForEach(p => positions.Add(p));
 
             //opposite face
-            var f2 = FacePoints(end, origin);
+            var f2 = FacePoints(end, origin, radius, height);
             mesh.AddPolygon(f2);
 
             f2.ForEach(p => positions.Add(p));
@@ -239,13 +328,13 @@ namespace Fabolus.Features.AirChannel {
             return result;
         }
 
-        private List<Point3D> FacePoints(Point3D origin, Point3D end) {
+        private List<Point3D> FacePoints(Point3D origin, Point3D end, double radius, double height) {
             var direction = Direction(origin, end);
-            return FacePoints(origin, direction);
+            return FacePoints(origin, direction, radius, height);
         }
 
-        private List<Point3D> FacePoints(Point3D origin, Vector3D direction) {
-            double length = _radius;
+        private List<Point3D> FacePoints(Point3D origin, Vector3D direction, double radius, double height) {
+            double length = radius;
             var v = direction;
             v.Z = 0;
             v.Normalize();
@@ -257,13 +346,16 @@ namespace Fabolus.Features.AirChannel {
             var p1 = p0 + (v * length); //bottom left
             var p4 = p0 - (v * length); //bottom right
             var p2 = p1;
-            p2.Z = _height; //top left
+            p2.Z = height; //top left
             var p3 = p4;
-            p3.Z= _height;//top right
+            p3.Z= height;//top right
 
             return new List<Point3D> { p1, p2, p3, p4 };
         }
-        
+
+
+
+
     }
 
 }
