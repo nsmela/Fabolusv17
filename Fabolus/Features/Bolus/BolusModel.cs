@@ -12,6 +12,7 @@ namespace Fabolus.Features.Bolus {
         public const string ORIGINAL_BOLUS_LABEL = "original"; //imported model
         public const string SMOOTHED_BOLUS_LABEL = "smoothed"; //smoothed model
         public const string DISPLAY_BOLUS_LABEL = "display"; //latest model
+        public const string REFINED_BOLUS_LABEL = "refined"; //mesh has been reduced
         #endregion
 
         private Dictionary<string, DMesh3> _meshes;
@@ -28,6 +29,7 @@ namespace Fabolus.Features.Bolus {
         //the latest mesh
         public DMesh3 Mesh {
             get {
+                if (_meshes.ContainsKey(REFINED_BOLUS_LABEL)) return _meshes[REFINED_BOLUS_LABEL];
                 if (_meshes.ContainsKey(SMOOTHED_BOLUS_LABEL)) return _meshes[SMOOTHED_BOLUS_LABEL];
                 if (_meshes.ContainsKey(ORIGINAL_BOLUS_LABEL)) return _meshes[ORIGINAL_BOLUS_LABEL];
                 return null;

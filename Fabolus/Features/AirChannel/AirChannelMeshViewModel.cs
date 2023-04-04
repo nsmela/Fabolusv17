@@ -158,6 +158,8 @@ namespace Fabolus.Features.AirChannel
         }
 
         private PointCollection GetTextureCoords(MeshGeometry3D mesh, Vector3D refAxis) {
+            if (mesh == null) return new PointCollection();
+
             var refAngle = 180.0f;
             var normals = mesh.Normals;
 

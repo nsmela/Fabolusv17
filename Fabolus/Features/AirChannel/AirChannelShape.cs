@@ -232,8 +232,6 @@ namespace Fabolus.Features.AirChannel {
                 AddChannel(origin, end, _radius, _height, ref mesh);
             }
 
-           
-
             return mesh.ToMesh();
         }
 
