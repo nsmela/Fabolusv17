@@ -1,4 +1,4 @@
-﻿using Fabolus.Features.Smoothing.Tools;
+﻿using Fabolus.Features.Common;
 using g3;
 using System;
 using System.Collections.Generic;
@@ -25,6 +25,7 @@ namespace Fabolus.Features.Smoothing {
         public int Depth { get; set; }
         public float Scale { get; set; }
         public int SamplesPerNode { get; set; }
+        public float EdgeLength { get; set; }
 
         public override void Initialize(DMesh3 mesh) {
             //create output file
@@ -41,7 +42,7 @@ namespace Fabolus.Features.Smoothing {
             Directory.CreateDirectory(TEMP_FOLDER);
 
             string exportFile = TEMP_FOLDER + @"temp.ply";
-            PoissonSmoothing.SaveDMeshToPLYFile(mesh, exportFile);
+            SaveDMeshToPLYFile(mesh, exportFile);
 
             if (!File.Exists(exportFile)) {
                 MessageBox.Show(string.Format("Failed to write temp ply file at {0}!", exportFile), "Developer");
@@ -55,7 +56,8 @@ namespace Fabolus.Features.Smoothing {
 
             //load new mesh from ply in folder
             var result = ReadPLYFileToDMesh(TEMP_FOLDER + @"temp_smooth.ply");
-            return result;
+
+            return MeshRefinement.Remesh(result, EdgeLength);
         }
 
         private static void ExecutePoisson(string inputFile, string outputFile, int depth, float scale, int samples) {
@@ -87,7 +89,7 @@ namespace Fabolus.Features.Smoothing {
 
         //---------------------------------------------------------------------------------------------
         /// <summary>
-        /// This method saves the given MeshGeometry3D to the given file in the PLY format
+        /// This method saves the given DMesh3 to the given file in the PLY format
         /// Calculates vertex normals required for poisson reconstruction
         /// </summary>
         /// <param name="mesh">Trianglemesh to export</param>
