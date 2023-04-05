@@ -2,13 +2,13 @@
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using g3;
 using System.Numerics;
-
+using System.Runtime.CompilerServices;
 
 namespace Fabolus.Features.Bolus {
 
     #region Messages
     //importing file
-    public sealed record AddNewBolusMessage(string label, DMesh3 mesh);
+    public sealed record AddNewBolusMessage(string label, DMesh3 mesh, string filepath = "");
     public sealed record RemoveBolusMessage(string label);
     public sealed record ClearBolusMessage();
 
@@ -21,64 +21,65 @@ namespace Fabolus.Features.Bolus {
 
     //request messages
     public class BolusRequestMessage : RequestMessage<BolusModel> { }
+    public class BolusFilePathRequestMessage : RequestMessage<string> { }
 
     #endregion
 
     public class BolusStore {
         private BolusModel _bolus;
+        private string _bolusFilePath;
 
         public BolusStore() {
             _bolus = new BolusModel();
 
             //registering received messages
-            WeakReferenceMessenger.Default.Register<AddNewBolusMessage>(this, (r, m) => { Receive(m); });
-            WeakReferenceMessenger.Default.Register<RemoveBolusMessage>(this, (r, m) => { Receive(m); });
-            WeakReferenceMessenger.Default.Register<ClearBolusMessage>(this, (r, m) => { Receive(m); });
-            WeakReferenceMessenger.Default.Register<ApplyRotationMessage>(this, (r,m) => { Receive(m); });
-            WeakReferenceMessenger.Default.Register<ClearRotationsMessage>(this, (r,m)=> { Receive(m); });
+            WeakReferenceMessenger.Default.Register<AddNewBolusMessage>(this, (r, m) => { AddBolus(m.label, m.mesh, m.filepath); });
+            WeakReferenceMessenger.Default.Register<RemoveBolusMessage>(this, (r, m) => { RemoveBolus(m.label); });
+            WeakReferenceMessenger.Default.Register<ClearBolusMessage>(this, (r, m) => { ClearBolus(); });
+            WeakReferenceMessenger.Default.Register<ApplyRotationMessage>(this, (r,m) => { ApplyRotation(m.axis, m.angle); });
+            WeakReferenceMessenger.Default.Register<ClearRotationsMessage>(this, (r,m)=> { ClearRotations(); });
 
             //request messages
-            WeakReferenceMessenger.Default.Register<BolusStore, BolusRequestMessage>(this, (r, m) => { 
-                m.Reply(r._bolus); 
-            });
+            WeakReferenceMessenger.Default.Register<BolusStore, BolusRequestMessage>(this, (r, m) => { m.Reply(r._bolus); });
+            WeakReferenceMessenger.Default.Register<BolusStore, BolusFilePathRequestMessage>(this, (r,m) => { m.Reply(r._bolusFilePath); });
         }
 
         private void SendBolusUpdate() => WeakReferenceMessenger.Default.Send(new BolusUpdatedMessage(_bolus));
 
         //messages
-        private void Receive(AddNewBolusMessage message) {
-            var label = message.label;
-            var mesh = message.mesh;
-
+        private void AddBolus(string label, DMesh3 mesh, string filepath) {
             _bolus.AddMesh(label, mesh);
+            if(filepath != "") _bolusFilePath= filepath;
 
             SendBolusUpdate();
         }
 
-        private void Receive(RemoveBolusMessage message) {
-            _bolus.RemoveMesh(message.label);
+        private void RemoveBolus(string label) {
+            _bolus.RemoveMesh(label);
+            if (label == BolusModel.ORIGINAL_BOLUS_LABEL) _bolusFilePath = "";
+
             SendBolusUpdate();
         }
 
-        private void Receive(ClearBolusMessage message) {
+        private void ClearBolus() {
             _bolus = new BolusModel();
+            _bolusFilePath = "";
             SendBolusUpdate();
         }
 
-        private void Receive(ApplyRotationMessage message) {
-            var axis = new Vector3d {
-                x = message.axis.X,
-                y = message.axis.Y,
-                z = message.axis.Z
+        private void ApplyRotation(Vector3 axis, double angle) {
+            var a = new Vector3d {
+                x = axis.X,
+                y = axis.Y,
+                z = axis.Z
             };
-            var angle = message.angle;
 
-            _bolus.AddTransform(axis, angle);
+            _bolus.AddTransform(a, angle);
             SendBolusUpdate();
         }
 
 
-        private void Receive(ClearRotationsMessage message) {
+        private void ClearRotations() {
             _bolus.ClearTransforms();
             SendBolusUpdate();
         }

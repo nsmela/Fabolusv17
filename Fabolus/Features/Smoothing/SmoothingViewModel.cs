@@ -17,6 +17,8 @@ namespace Fabolus.Features.Smoothing {
         public override MeshViewModelBase MeshViewModel => new SmoothingMeshViewModel();
 
         #region Properties and their Events
+
+        //list of smoothing settings to use with the slider
         private List<PoissonSmoothModel> _poissonSmoothings = new List<PoissonSmoothModel> { 
             new PoissonSmoothModel{ Name = "rough", Depth = 9, Scale = 1.8f, SamplesPerNode = 2, EdgeLength = 2.5f },
             new PoissonSmoothModel{ Name = "standard", Depth = 9, Scale = 1.8f, SamplesPerNode = 1, EdgeLength = 2.5f },

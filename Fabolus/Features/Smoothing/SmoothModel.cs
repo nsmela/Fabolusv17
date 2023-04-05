@@ -8,6 +8,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using HelixToolkit.Wpf;
+using CommunityToolkit.Mvvm.Messaging;
+using Fabolus.Features.Bolus;
 
 namespace Fabolus.Features.Smoothing {
     public abstract class SmoothModel {

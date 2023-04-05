@@ -5,9 +5,15 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:import="clr-namespace:Fabolus.Features.Import" 
              d:DataContext="{d:DesignInstance Type=import:ImportViewModel}"
+             xmlns:common="clr-namespace:Fabolus.Features.Common.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="200">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="ShowAdvancedSettings" />
+    </UserControl.Resources>
+    
     <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch">
+
         <Button Content="load" 
                 Height="30"
                 HorizontalAlignment="Stretch"
@@ -15,13 +21,14 @@
                 FontWeight="Bold"
                 FontFamily="\Fonts\#Poppins"
                 Command="{Binding ImportFileCommand}" />
-        <Button Content="import" 
-                Height="30"
-                HorizontalAlignment="Stretch"
-                FontSize="14" 
-                FontWeight="Bold"
-                FontFamily="\Fonts\#Poppins"
-                />
-
+        
+        <ToggleButton Content="Advanced" 
+                      Margin="0,10,0,10"
+                      Command="{Binding ToggleAdvancedModeCommand}"/>
+        
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch"
+                    Visibility="{Binding AdvancedMode, Converter={StaticResource ShowAdvancedSettings}}">
+            <ContentControl Content="{Binding MeshInfo}" />
+        </StackPanel>
     </StackPanel>
 </UserControl>

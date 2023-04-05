@@ -6,13 +6,23 @@ using System.Threading.Tasks;
 using g3;
 using CommunityToolkit.Mvvm.Messaging;
 using Fabolus.Features.Bolus;
+using CommunityToolkit.Mvvm.ComponentModel;
+using Fabolus.Features.Common.Controls;
 
 namespace Fabolus.Features.Import {
     public partial class ImportViewModel : ViewModelBase {
         public override string ViewModelTitle => "import";
         public override MeshViewModelBase MeshViewModel => new ImportMeshViewModel();
 
+        [ObservableProperty] private bool _advancedMode = false;
+        [ObservableProperty] private MeshInfoViewModel _meshInfo;
+
+        public ImportViewModel() {
+            MeshInfo = new MeshInfoViewModel();
+        }
+
         //commands
+        #region Commands
         [RelayCommand]
         public async Task ImportFile() {
             //clear the bolus
@@ -41,9 +51,10 @@ namespace Fabolus.Features.Import {
                 return;
             }
 
-            WeakReferenceMessenger.Default.Send(new AddNewBolusMessage(BolusModel.ORIGINAL_BOLUS_LABEL, mesh));
+            WeakReferenceMessenger.Default.Send(new AddNewBolusMessage(BolusModel.ORIGINAL_BOLUS_LABEL, mesh, filepath));
         }
+        [RelayCommand] private void ToggleAdvancedMode() => AdvancedMode = !_advancedMode;
+        #endregion
 
-        
     }
 }

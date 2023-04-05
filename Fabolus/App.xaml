@@ -1,6 +1,7 @@
 ﻿<Application x:Class="Fabolus.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:common="clr-namespace:Fabolus.Features.Common.Controls"
              xmlns:import="clr-namespace:Fabolus.Features.Import"
              xmlns:smooth="clr-namespace:Fabolus.Features.Smoothing"
              xmlns:rotation="clr-namespace:Fabolus.Features.Rotation"
@@ -52,6 +53,10 @@
             </DataTemplate>
             <DataTemplate DataType="{x:Type export:ExportMeshViewModel}">
                 <export:ExportMeshView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type common:MeshInfoViewModel}">
+                <common:MeshInfoView />
             </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>
