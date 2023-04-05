@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Fabolus.Features.AirChannel;
 using Fabolus.Features.Bolus;
 using Fabolus.Features.Common;
+using Fabolus.Features.Mold.Tools;
 using HelixToolkit.Wpf;
 using System;
 using System.Collections.Generic;
@@ -15,7 +16,7 @@ using System.Windows.Media.Media3D;
 
 namespace Fabolus.Features.Mold {
     public partial class MoldMeshViewModel : MeshViewModelBase {
-        [ObservableProperty] private Model3DGroup _moldMesh, __airChannelsMesh, _finalMesh;
+        [ObservableProperty] private Model3DGroup _moldMesh, __airChannelsMesh, _finalMesh, _testMesh;
         private DiffuseMaterial _moldPreviewSkin, _moldSkin, _channelsSkin;
         private MoldShape _moldShape;
 
@@ -29,8 +30,9 @@ namespace Fabolus.Features.Mold {
             WeakReferenceMessenger.Default.Register<MoldShapeUpdatedMessage>(this, (r,m) => { UpdateMold(m.shape); });
             WeakReferenceMessenger.Default.Register<MoldFinalUpdatedMessage>(this, (r,m) => { UpdateFinalMold(m.mesh); });
 
-            AirChannelsMesh= new();
-            FinalMesh= new();
+            AirChannelsMesh = new();
+            FinalMesh = new();
+            TestMesh = new();
             
             var airChannels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
             UpdateAirchannels(airChannels);
@@ -46,6 +48,14 @@ namespace Fabolus.Features.Mold {
             var model = new GeometryModel3D(_moldShape.Geometry, _moldPreviewSkin);
             model.BackMaterial = _moldPreviewSkin;
             MoldMesh.Children.Add(model);
+
+            //testing
+            TestMesh.Children.Clear();
+            BolusModel bolus = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
+            var contour = MoldTools.ContourMesh(bolus.Mesh);
+            model = new GeometryModel3D(contour, _channelsSkin);
+            model.BackMaterial = _channelsSkin;
+            TestMesh.Children.Add(model);
         }
 
         private void UpdateAirchannels(List<AirChannelModel> airchannels) {

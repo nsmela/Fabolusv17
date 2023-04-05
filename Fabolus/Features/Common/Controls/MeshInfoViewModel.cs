@@ -27,10 +27,10 @@ namespace Fabolus.Features.Common.Controls {
         }
 
         private void Update(BolusModel bolus) {
-            var filepath = WeakReferenceMessenger.Default.Send<BolusFilePathRequestMessage>();
+            string filepath = WeakReferenceMessenger.Default.Send<BolusFilePathRequestMessage>();
             FilePath = string.Empty;
 
-            if (filepath != null && != string.Empty) {
+            if (filepath != null && filepath != string.Empty) {
                 var fileInfo = new FileInfo(filepath);
                 FileSize = (fileInfo.Length / 1000).ToString("0.00") + " KB";
                 FilePath = fileInfo.Name;

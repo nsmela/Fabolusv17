@@ -34,8 +34,9 @@
         <!-- Models -->
         <helix:MeshGeometryVisual3D Content="{Binding DisplayMesh}" />
         <helix:MeshGeometryVisual3D Content="{Binding AirChannelsMesh}" />
-        <helix:MeshGeometryVisual3D Content="{Binding MoldMesh}" />
+        <helix:MeshGeometryVisual3D Content="{Binding MoldMesh}" Visible="False"/>
         <helix:MeshGeometryVisual3D Content="{Binding FinalMesh}" />
+        <helix:MeshGeometryVisual3D Content="{Binding TestMesh}" />
 
             <!-- Visual tools for the mesh view -->
         <helix:TubeVisual3D Path="-110,0,0,110,0,0" Diameter="0.8" ThetaDiv="20" IsPathClosed="True" Fill="Red"  />

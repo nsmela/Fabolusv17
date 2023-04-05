@@ -1,4 +1,5 @@
 ﻿using g3;
+using HelixToolkit.Wpf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,93 +50,64 @@ namespace Fabolus.Features.Mold.Tools {
         }
 
         public static List<Point3D> MeshContour(DMesh3 mesh) {
-            var refNormal = Vector3d.AxisZ;
-
             var result = new DMesh3(mesh);
+            foreach(var triangle in mesh.TriangleIndices()) {
+                if(mesh.GetTriNormal(triangle).z > 0) continue; //filter out the good triangles
+                result.RemoveTriangle(triangle);
+            }
+
+            var edges = new HashSet<int>();
+            var pointSet = new List<Point3D>();
+
+            foreach(var edge in result.Edges()) {
+                if (edge.d != DMesh3.InvalidID) continue; //not a boundry edge
+                var vertf = result.GetVertexf(edge.a);
+                pointSet.Add(new Point3D(vertf.x, vertf.y, -200));
+            }
+
+            return pointSet;
+
+            //var edges = new HashSet<int>();
 
             //remove any vtx who's normal isn't positive dot to the ref axis
-            for(int i = 0; i < mesh.VertexCount; i++) {
-                if (Vector3d.Dot(refNormal, mesh.GetVertexNormal(i)) < 0)
-                    result.RemoveVertex(i);
+            for(int i = 0; i < mesh.EdgeCount; i++) {
+                var normal = mesh.GetEdgeNormal(i);
+                if (normal.z > 0) { //if the z on the normal is positive, it means the edge is visible
+                    var edgeTriangles = mesh.GetEdgeOpposingV(i);
+                    var triA = mesh.GetTriNormal(edgeTriangles.a);
+                    var triB = mesh.GetTriNormal(edgeTriangles.b);
+
+                    //if one of the two triangles has a negative normal, this edge is a boundry
+                    if (triA.z < 0 && triB.z < 0) continue;
+                    if (triA.z > 0 && triB.z > 0) continue;
+                    
+                    edges.Add(i);
+                }
             }
-
-            //remove any edge that isn't a boundry
-            int edgeCount = result.EdgeCount;
-            Index2i tris;
-            for(int i = 0; i < edgeCount; i++) {
-                tris = result.GetEdgeOpposingV(i);
-                if (tris.b != DMesh3.InvalidID)
-                    result.RemoveTriangle(tris.b);
-            }
-
-            var loop = new EdgeLoop(result);
-
-            bool isBoundry = loop.IsBoundaryLoop();
 
             var points = new List<Point3D>();
+            var index = new Index2i();
             var vert = new Vector3d();
-            foreach(var e in loop.Vertices) {
-                vert = loop.GetVertex(e);
-                points.Add(new Point3D(vert.x, vert.y, vert.z));
+            foreach(var i in edges) {
+                index = mesh.GetEdgeV(i);
+                vert = mesh.GetVertex(index.a);
+                points.Add(new Point3D(vert.x, vert.y, -200));
             }
             return points;
 
+        }
 
+        public static MeshGeometry3D ContourMesh(DMesh3 mesh) {
+            if(mesh == null) return new MeshGeometry3D();
 
+            var edgeBoundry = MeshContour(mesh);
 
-
-
-
-
-            //get visible triangles by calculating the dot product between the triangle face and the reference angle. Positive results are visible triangles
-            var visibleTriangles = new List<int>(); 
-            for(int i = 0; i < mesh.TriangleCount; i++) {
-                if (Vector3d.Dot(refNormal, mesh.GetTriNormal(i)) > 0) {
-                    visibleTriangles.Add(i);
-                }
+            var editor = new MeshBuilder(true);
+            foreach(var p in edgeBoundry) {
+                editor.AddSphere(p);
             }
 
-            //convert those visible triangles into edges
-            //collect the edge IDs
-            //remove the edge id if one or more exist
-            //edges must have two and only two triangles, so this should be efficient
-            var visibleEdges = new HashSet<int>();
-            for(int i = 0; i < visibleTriangles.Count; i++) { 
-                var edge = mesh.GetTriEdges(i).array;
-                foreach(var e in edge) {
-                    if(visibleEdges.Contains(e)) visibleEdges.Remove(e);
-                    else visibleEdges.Add(e);
-                }
-            }
-
-            //create a list of points 
-            //starts with the first edge, gets the next point
-            //gets the next edge sharing that point and gets the next point, etc
-
-            //use EdgeLoop FromEdges?
-
-
-
-            var result = new List<Point3D>();
-            int index = visibleEdges.ElementAt(0);//first edge ID
-            int startID = mesh.GetEdgeV(index).a; //first vert ID
-            int nextVert = startID;
-            while (true) {
-                //get next edge
-                var edge = mesh.Get
-                //get the vert not already stored
-
-                Index4i edge = mesh.GetEdge(index);
-                if(edge.a == nextVert) nextVert = edge.b;
-                else nextVert = edge.a;
-                mesh.Vtx
-                var vert = mesh.GetVertex(nextVert);
-                result.Add(new Point3D(vert.x, vert.y, vert.z));
-
-                if (startID == index) break;
-                
-            } 
-
+            return editor.ToMesh();
         }
     }
 }
