@@ -45,34 +45,6 @@ namespace Fabolus.Features.Mold {
 
         }
 
-        #region Fields related to the box contour
-        private List<Point3D> _bottomPoints;
-
-        #endregion
-
-
-        private List<Point3D> BottomContour() {
-            var points = MoldTools.TraceOutline(Bolus.Geometry, new Vector3D(0, 0, -1));
-            points.Reverse(); //changes direction of the normal
-            var result = new List<Point3D>();
-
-            points.ForEach(p => {
-                result.Add(new Point3D(p.X, p.Y, p.Z - Settings.OffsetBottom));
-            });
-
-
-            return result;
-        }
-
-        private List<Point3D> TopContour(List<Point3D> contour) {
-            List<Point3D> points = new();
-
-            var zHeight = Bolus.Geometry.Bounds.SizeZ + Settings.OffsetTop + Bolus.Geometry.Bounds.Location.Z;
-            foreach ( var p in contour) points.Add( new Point3D(p.X, p.Y, zHeight));
-
-            return points;
-        }
-
         private List<Point3D> OffsetContour(DMesh3 mesh) {
             //get offset mesh
             var offsetMesh = MoldTools.OffsetMeshD(mesh, Settings.OffsetXY, Settings.Resolution);

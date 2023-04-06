@@ -93,7 +93,8 @@
                             TickPlacement="TopLeft" 
                             TickFrequency="0.5" 
                             IsSnapToTickEnabled="True" 
-                            Height="30"/>
+                            Height="30"
+                            AutoToolTipPlacement="BottomRight" AutoToolTipPrecision="1"/>
                 </StackPanel>
         </StackPanel>
 
