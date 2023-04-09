@@ -15,10 +15,45 @@
                         FontSize="12" 
                         FontWeight="Bold"
                         FontFamily="\Fonts\#Poppins"/>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-            <Button Content="1" Height="30" Width="30" Margin="2" Command="{Binding SetAirChannelToolStraightCommand}"/>
-            <Button Content="2" Height="30" Width="30" Margin="2" Command="{Binding SetAirChannelToolAngledCommand}"/>
-            <Button Content="3" Height="30" Width="30" Margin="2" Command="{Binding SetAirChannelToolPathCommand}"/>
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+            <ComboBox SelectedIndex="{Binding ActiveToolIndex}">
+                <ComboBoxItem Content="vertical channel" />
+                <ComboBoxItem Content="angled channel" />
+                <ComboBoxItem Content="path channel" />
+            </ComboBox>
+            <GroupBox Header="{Binding ChannelName}" Margin="0,10,0,0">
+                <StackPanel>
+                    <Label Content="penetration depth" 
+                            HorizontalAlignment="Center" 
+                            VerticalAlignment="Center"
+                            FontSize="12" 
+                            FontWeight="Bold"
+                            FontFamily="\Fonts\#Poppins"/>
+                    <Slider Value="{Binding ChannelDiameter, Mode=TwoWay}"
+                            Minimum="2" Maximum="10" 
+                            TickFrequency="0.5" 
+                            TickPlacement="TopLeft" 
+                            AutoToolTipPlacement="TopLeft"
+                            AutoToolTipPrecision="1"
+                            IsSnapToTickEnabled="True" 
+                            Height="30"/>
+                    <Label Content="channel diameter" 
+                            HorizontalAlignment="Center" 
+                            VerticalAlignment="Center"
+                            FontSize="12" 
+                            FontWeight="Bold"
+                            FontFamily="\Fonts\#Poppins"/>
+                    <Slider Value="{Binding ChannelDiameter, Mode=TwoWay}"
+                            Minimum="2" Maximum="10" 
+                            TickFrequency="0.5" 
+                            TickPlacement="TopLeft" 
+                            AutoToolTipPlacement="TopLeft"
+                            AutoToolTipPrecision="1"
+                            IsSnapToTickEnabled="True" 
+                            Height="30"/>
+                    
+                </StackPanel>
+            </GroupBox>
         </StackPanel>
         <Label Content="channel diameter" 
                         HorizontalAlignment="Center" 

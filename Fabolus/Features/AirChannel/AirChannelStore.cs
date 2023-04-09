@@ -19,7 +19,7 @@ namespace Fabolus.Features.AirChannel {
     public class AirChannelsRequestMessage : RequestMessage<List<AirChannelModel>> { }
     public class AirChannelDiameterRequestMessage : RequestMessage<double> { }
     public class AirChannelHeightRequestMessage : RequestMessage<double> { }
-    public class AirChannelSelectedRequestMessage : RequestMessage<int?> { }
+    public class AirChannelSelectedRequestMessage : RequestMessage<int> { }
     public class AirChannelMeshRequestMessage : RequestMessage<DMesh3> { }
 
     #endregion
@@ -38,7 +38,7 @@ namespace Fabolus.Features.AirChannel {
         }
 
         private BolusModel _bolus;
-        private int? _selectedChannel;
+        private int _selectedChannel;
         private int? _currentId; //used to identify air channels
 
         public AirChannelStore() {
@@ -74,12 +74,16 @@ namespace Fabolus.Features.AirChannel {
             SendSettingsUpdate();
         }
         private void Update(int? selectedIndex) {
+            if (selectedIndex== null) {
+                selectedIndex = -1;
+                return;
+            }
             if (selectedIndex >= _channels.Count) {
-                _selectedChannel = null;
+                _selectedChannel = -1;
                 return;
             }
 
-            _selectedChannel = selectedIndex;
+            _selectedChannel = (int)selectedIndex;
 
             SendChannelsUpdate();
         }
