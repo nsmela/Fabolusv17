@@ -8,6 +8,7 @@
              xmlns:airchannel="clr-namespace:Fabolus.Features.AirChannel"
              xmlns:mold="clr-namespace:Fabolus.Features.Mold"
              xmlns:export="clr-namespace:Fabolus.Features.Export"
+             xmlns:channels="clr-namespace:Fabolus.Features.AirChannel.Channels"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
@@ -57,6 +58,11 @@
 
             <DataTemplate DataType="{x:Type common:MeshInfoViewModel}">
                 <common:MeshInfoView />
+            </DataTemplate>
+            
+            <!-- Air Channel View Models -->
+            <DataTemplate DataType="{x:Type channels:VerticalChannelViewModel}">
+                <channels:VerticalChannelView/>
             </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>

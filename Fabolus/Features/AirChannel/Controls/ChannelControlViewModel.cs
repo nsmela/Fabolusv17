@@ -6,11 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Fabolus.Features.AirChannel.Controls {
-    public class ChannelControlViewModel : ObservableObject {
-        public virtual string Name { get; }
-        //left mouse label
-        //left mouse control
-
-
+    public abstract class ChannelControlViewModel : ObservableObject {
+        protected bool _isFrozen = true; //used to prevent updating loop with channel variables
+        public abstract void Initialize();
     }
 }

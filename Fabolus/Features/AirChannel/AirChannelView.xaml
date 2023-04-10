@@ -21,65 +21,12 @@
                 <ComboBoxItem Content="angled channel" />
                 <ComboBoxItem Content="path channel" />
             </ComboBox>
-            <GroupBox Header="{Binding ChannelName}" Margin="0,10,0,0">
-                <StackPanel>
-                    <Label Content="penetration depth" 
-                            HorizontalAlignment="Center" 
-                            VerticalAlignment="Center"
-                            FontSize="12" 
-                            FontWeight="Bold"
-                            FontFamily="\Fonts\#Poppins"/>
-                    <Slider Value="{Binding ChannelDiameter, Mode=TwoWay}"
-                            Minimum="2" Maximum="10" 
-                            TickFrequency="0.5" 
-                            TickPlacement="TopLeft" 
-                            AutoToolTipPlacement="TopLeft"
-                            AutoToolTipPrecision="1"
-                            IsSnapToTickEnabled="True" 
-                            Height="30"/>
-                    <Label Content="channel diameter" 
-                            HorizontalAlignment="Center" 
-                            VerticalAlignment="Center"
-                            FontSize="12" 
-                            FontWeight="Bold"
-                            FontFamily="\Fonts\#Poppins"/>
-                    <Slider Value="{Binding ChannelDiameter, Mode=TwoWay}"
-                            Minimum="2" Maximum="10" 
-                            TickFrequency="0.5" 
-                            TickPlacement="TopLeft" 
-                            AutoToolTipPlacement="TopLeft"
-                            AutoToolTipPrecision="1"
-                            IsSnapToTickEnabled="True" 
-                            Height="30"/>
-                    
-                </StackPanel>
-            </GroupBox>
         </StackPanel>
-        <Label Content="channel diameter" 
-                        HorizontalAlignment="Center" 
-                        VerticalAlignment="Center"
-                        FontSize="12" 
-                        FontWeight="Bold"
-                        FontFamily="\Fonts\#Poppins"/>
-        <Slider         Value="{Binding ChannelDiameter, Mode=TwoWay}"
-                        Minimum="2" 
-                        Maximum="10" 
-                        TickFrequency="0.5" 
-                        TickPlacement="TopLeft" 
-                        AutoToolTipPlacement="TopLeft"
-                        AutoToolTipPrecision="1"
-                        IsSnapToTickEnabled="True" 
-                        Height="30"/>
         <StackPanel HorizontalAlignment="Stretch" 
                     VerticalAlignment="Top" 
-                    Margin="4,0,4,0">
-            <Button Content="add path" 
-                Height="30"
-                HorizontalAlignment="Stretch"
-                FontSize="14" 
-                FontWeight="Bold"
-                FontFamily="\Fonts\#Poppins"
-                Command="{Binding AddAirChannelPathCommand}" />
+                    Margin="4,8,4,0"
+                    >
+            <ContentControl Content="{Binding ChannelViewModel}" />
             <Button Content="clear" 
                 Height="30"
                 HorizontalAlignment="Stretch"

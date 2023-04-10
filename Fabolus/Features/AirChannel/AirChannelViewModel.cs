@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using Fabolus.Features.AirChannel.Channels;
+using Fabolus.Features.AirChannel.Controls;
 using Fabolus.Features.AirChannel.MouseTools;
 using Fabolus.Features.Common;
 using System.Collections.Generic;
@@ -25,13 +27,20 @@ namespace Fabolus.Features.AirChannel {
         [ObservableProperty] private double _channelDiameter; //saved in air channel store to share with mesh view
         [ObservableProperty] private double _channelDepth;
         [ObservableProperty] private string _channelName = "air channel";
+        [ObservableProperty] private ChannelControlViewModel _channelViewModel;
         partial void OnChannelDiameterChanged(double value) =>  WeakReferenceMessenger.Default.Send(new SetAirChannelDiameterMessage(value));
         partial void OnChannelDepthChanged(double value) => WeakReferenceMessenger.Default.Send(new SetAirChannelDiameterMessage(value));
 
         public AirChannelViewModel() {
-            _channelDiameter = WeakReferenceMessenger.Default.Send<AirChannelDiameterRequestMessage>();
+            ChannelDiameter = WeakReferenceMessenger.Default.Send<AirChannelDiameterRequestMessage>();
             ActiveToolIndex = (int)WeakReferenceMessenger.Default.Send<AirChannelSelectedRequestMessage>();
             ChannelName = _toolNames[ActiveToolIndex];
+
+            //viewmodel for air channel controls
+            VerticalChannel channel = WeakReferenceMessenger.Default.Send<AirChannelVerticalRequestMessage>();
+            ChannelViewModel = channel.ViewModel;
+            ChannelViewModel.Initialize(); //have to initialize instead of relying on constructor to avoid self-referencing loops
+
         }
 
         #region Commands
@@ -42,6 +51,14 @@ namespace Fabolus.Features.AirChannel {
         [RelayCommand] private void SetAirChannelToolPath() => WeakReferenceMessenger.Default.Send(new SetAirChannelTool(2));
         //testing
         [RelayCommand] private void AddAirChannelPath() => WeakReferenceMessenger.Default.Send(new AddPathAirChannelMessage());
+        #endregion
+
+        #region Private Methods
+        private void NewChannel(int index) {
+            //receive message
+            //set the new ViewModel
+            //initialize the new ViewModel
+        }
         #endregion
     }
 }

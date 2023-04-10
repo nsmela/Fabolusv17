@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using System.Windows.Input;
 using System.Windows.Media.Media3D;
 using CommunityToolkit.Mvvm.Messaging;
+using Fabolus.Features.AirChannel.Channels;
 using HelixToolkit.Wpf;
 using MouseTool = Fabolus.Features.AirChannel.MouseTools.AirChannelMouseTool;
 
@@ -23,6 +24,12 @@ namespace Fabolus.Features.AirChannel.MouseTools {
             WeakReferenceMessenger.Default.Register<AirChannelSettingsUpdatedMessage>(this, (r, m) => {
                 _diameter = m.diameter;
                 _height = m.height; 
+            });
+
+            WeakReferenceMessenger.Default.Register<ChannelUpdatedMessage>(this, (r, m) => {
+                if (m.channel.GetType() != typeof(VerticalChannel)) return;
+                var verticalChannel = m.channel as VerticalChannel;
+                _diameter = verticalChannel.ChannelDiameter;
             });
 
             _diameter = WeakReferenceMessenger.Default.Send<AirChannelDiameterRequestMessage>();

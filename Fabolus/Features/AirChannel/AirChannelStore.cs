@@ -1,8 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
+using Fabolus.Features.AirChannel.Channels;
 using Fabolus.Features.Bolus;
 using g3;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Media.Media3D;
 
 namespace Fabolus.Features.AirChannel {
@@ -15,6 +17,10 @@ namespace Fabolus.Features.AirChannel {
     public sealed record AirChannelSettingsUpdatedMessage(double diameter, double height, int? selectedIndex);
     public sealed record AirChannelSetMessage(int? channelIndex);
 
+    //air channels
+    public sealed record SetChannelMessage(ChannelBase channel);
+    public sealed record ChannelUpdatedMessage(ChannelBase channel);
+
     //requests
     public class AirChannelsRequestMessage : RequestMessage<List<AirChannelModel>> { }
     public class AirChannelDiameterRequestMessage : RequestMessage<double> { }
@@ -22,10 +28,14 @@ namespace Fabolus.Features.AirChannel {
     public class AirChannelSelectedRequestMessage : RequestMessage<int> { }
     public class AirChannelMeshRequestMessage : RequestMessage<DMesh3> { }
 
+    //air channel requests
+    public class AirChannelVerticalRequestMessage : RequestMessage<VerticalChannel> { }
+
     #endregion
 
     public class AirChannelStore : RequestMessage<List<AirChannelModel>> {
         private List<AirChannelModel> _channels;
+        private List<ChannelBase> _tools;
 
         private double _channelDiameter = 5.0f;
         private double _zHeightOffset = 20.0f;
@@ -45,6 +55,10 @@ namespace Fabolus.Features.AirChannel {
             _channels = new List<AirChannelModel>();
             _currentId = null;
 
+            _tools = new List<ChannelBase> {
+                new VerticalChannel{ChannelDiameter = (float)_channelDiameter}
+            };
+
             //registering messages
             WeakReferenceMessenger.Default.Register<AddAirChannelMessage>(this, (r, m) => { Receive(m); });
             WeakReferenceMessenger.Default.Register<AddAirChannelShapeMessage>(this, (r, m) => { AddAirChannel(m.shape); });
@@ -52,6 +66,7 @@ namespace Fabolus.Features.AirChannel {
             WeakReferenceMessenger.Default.Register<ClearAirChannelsMessage>(this, (r, m) => { Receive(m); });
             WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r,m) => { Update(m.bolus); });
             WeakReferenceMessenger.Default.Register<AirChannelSetMessage>(this, (r, m) => {Update(m.channelIndex); });
+            WeakReferenceMessenger.Default.Register<SetChannelMessage>(this, (r, m) => { UpdateChannel(m.channel); });
 
             //request messages
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelsRequestMessage>(this, (r, m) => { m.Reply(r._channels); });
@@ -59,6 +74,10 @@ namespace Fabolus.Features.AirChannel {
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelHeightRequestMessage>(this, (r, m) => { m.Reply(r._maxZHeight); });
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelSelectedRequestMessage>(this, (r,m) => { m.Reply(r._selectedChannel); });
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelMeshRequestMessage>(this, (r, m) => { m.Reply(r.ToMesh()); });
+
+            //air channel types
+            WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelVerticalRequestMessage>(this, (r, m) => { m.Reply((VerticalChannel)_tools[0]); });
+
         }
 
         private void SendChannelsUpdate() => WeakReferenceMessenger.Default.Send(new AirChannelsUpdatedMessage(_channels, _selectedChannel));
@@ -111,6 +130,12 @@ namespace Fabolus.Features.AirChannel {
             return airHole.Mesh;
         }
 
+        private void UpdateChannel(ChannelBase channel) {
+            int index = _tools.FindIndex(t => t.GetType == channel.GetType);
+            _tools[index] = channel;
+            WeakReferenceMessenger.Default.Send(new ChannelUpdatedMessage(channel));
+        }
+
         private void Receive(AddAirChannelMessage message) {
             var point = message.point;
 
@@ -134,6 +159,7 @@ namespace Fabolus.Features.AirChannel {
 
             SendChannelsUpdate();
         }
+
         #endregion
     }
 }
