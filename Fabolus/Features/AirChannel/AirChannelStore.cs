@@ -5,6 +5,7 @@ using Fabolus.Features.Bolus;
 using g3;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Channels;
 using System.Windows.Media.Media3D;
 
 namespace Fabolus.Features.AirChannel {
@@ -18,6 +19,7 @@ namespace Fabolus.Features.AirChannel {
 
     //air channels
     public sealed record SetChannelMessage(ChannelBase channel);
+    public sealed record SetChannelTypeMessage(int index);
     public sealed record ChannelUpdatedMessage(ChannelBase channel);
 
     //requests
@@ -29,6 +31,7 @@ namespace Fabolus.Features.AirChannel {
 
     //air channel requests
     public class AirChannelVerticalRequestMessage : RequestMessage<VerticalChannel> { }
+    public class AirChannelAngledRequestMessage : RequestMessage<AngledChannel> { }
 
     #endregion
 
@@ -55,7 +58,8 @@ namespace Fabolus.Features.AirChannel {
             _currentId = null;
 
             _tools = new List<ChannelBase> {
-                new VerticalChannel{ChannelDiameter = (float)_channelDiameter}
+                new VerticalChannel {ChannelDiameter = (float)_channelDiameter},
+                new AngledChannel { ChannelDiameter = (float)_channelDiameter}
             };
 
             //registering messages
@@ -65,6 +69,7 @@ namespace Fabolus.Features.AirChannel {
             WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r,m) => { Update(m.bolus); });
             WeakReferenceMessenger.Default.Register<AirChannelSetMessage>(this, (r, m) => {Update(m.channelIndex); });
             WeakReferenceMessenger.Default.Register<SetChannelMessage>(this, (r, m) => { UpdateChannel(m.channel); });
+            WeakReferenceMessenger.Default.Register<SetChannelTypeMessage>(this, (r, m) => { ChangeChannelType(m.index); });
 
             //request messages
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelsRequestMessage>(this, (r, m) => { m.Reply(r._channels); });
@@ -75,6 +80,7 @@ namespace Fabolus.Features.AirChannel {
 
             //air channel types
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelVerticalRequestMessage>(this, (r, m) => { m.Reply((VerticalChannel)_tools[0]); });
+            WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelAngledRequestMessage>(this, (r,m) => { m.Reply((AngledChannel)_tools[1]); });
 
         }
 
@@ -132,6 +138,16 @@ namespace Fabolus.Features.AirChannel {
             int index = _tools.FindIndex(t => t.GetType == channel.GetType);
             _tools[index] = channel;
             WeakReferenceMessenger.Default.Send(new ChannelUpdatedMessage(channel));
+        }
+
+        private void ChangeChannelType(int index) {
+            if (index == _selectedChannel) return;
+            if(index >= _tools.Count) return;
+
+            _selectedChannel = index;
+            //update air channel view model
+            //update air channel mesh view model
+            WeakReferenceMessenger.Default.Send(new ChannelUpdatedMessage(_tools[_selectedChannel]));
         }
 
         private void Receive(SetAirChannelDiameterMessage message) {

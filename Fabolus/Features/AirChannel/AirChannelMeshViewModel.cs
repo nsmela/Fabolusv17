@@ -14,6 +14,7 @@ using CommunityToolkit.Mvvm.Input;
 using System.Windows.Media;
 using HelixToolkit.Wpf;
 using Fabolus.Features.AirChannel.MouseTools;
+using Fabolus.Features.AirChannel.Channels;
 
 namespace Fabolus.Features.AirChannel
 {
@@ -42,6 +43,7 @@ namespace Fabolus.Features.AirChannel
             WeakReferenceMessenger.Default.Register<AirChannelsUpdatedMessage>(this, (r, m) => { Update(m.channels, m.selectedIndex); });
             WeakReferenceMessenger.Default.Register<AirChannelSettingsUpdatedMessage>(this, (r, m) => { Update(m.diameter, m.height, m.selectedIndex); });
             WeakReferenceMessenger.Default.Register<SetAirChannelTool>(this, (r, m) => { _mouseTool = MouseTools[(int)m.toolIndex]; });
+            WeakReferenceMessenger.Default.Register<ChannelUpdatedMessage>(this, (r, m) => { ChannelChanged(m.channel); });
 
             //parse existing info when switching to this new MeshViewModel
             List<AirChannelModel> channels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
@@ -54,6 +56,16 @@ namespace Fabolus.Features.AirChannel
             Update(diameter, height, selectedIndex);
 
         }
+
+        #region Reveiving Messeges
+        private void ChannelChanged(ChannelBase channel) {
+            if (channel.MouseToolType == _mouseTool.GetType()) return;
+            var mouseTool = Activator.CreateInstance(channel.MouseToolType);
+
+            _mouseTool = (AirChannelMouseTool)mouseTool;
+        }
+
+        #endregion
 
         #region Private Methods
         private void Initialize() {

@@ -20,7 +20,8 @@ namespace Fabolus.Features.AirChannel {
 
         [ObservableProperty] private int _activeToolIndex;
         partial void OnActiveToolIndexChanged(int value) {
-            WeakReferenceMessenger.Default.Send(new SetAirChannelTool(value));
+            //WeakReferenceMessenger.Default.Send(new SetAirChannelTool(value));
+            WeakReferenceMessenger.Default.Send(new SetChannelTypeMessage(value));
             ChannelName = _toolNames[value];
         }
 
@@ -35,6 +36,9 @@ namespace Fabolus.Features.AirChannel {
             ChannelDiameter = WeakReferenceMessenger.Default.Send<AirChannelDiameterRequestMessage>();
             ActiveToolIndex = (int)WeakReferenceMessenger.Default.Send<AirChannelSelectedRequestMessage>();
             ChannelName = _toolNames[ActiveToolIndex];
+
+            //messaging receiving
+            WeakReferenceMessenger.Default.Register<ChannelUpdatedMessage>(this, (r, m) => { NewChannel(m.channel); });
 
             //viewmodel for air channel controls
             VerticalChannel channel = WeakReferenceMessenger.Default.Send<AirChannelVerticalRequestMessage>();
@@ -54,10 +58,13 @@ namespace Fabolus.Features.AirChannel {
         #endregion
 
         #region Private Methods
-        private void NewChannel(int index) {
+        private void NewChannel(ChannelBase channel) {
             //receive message
             //set the new ViewModel
             //initialize the new ViewModel
+            ChannelViewModel = channel.ViewModel;
+            ChannelViewModel.Initialize();
+            ChannelName = channel.Name;
         }
         #endregion
     }

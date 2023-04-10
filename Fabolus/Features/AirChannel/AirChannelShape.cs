@@ -128,7 +128,7 @@ namespace Fabolus.Features.AirChannel {
     }
 
     public class AirChannelAngled : AirChannelShape {
-        private double _diameter;
+        private double _depth, _diameter;
         private double _radius => _diameter / 2;
         private double _height;
         private Point3D _anchor { get; set; }

@@ -64,6 +64,11 @@
             <DataTemplate DataType="{x:Type channels:VerticalChannelViewModel}">
                 <channels:VerticalChannelView/>
             </DataTemplate>
+
+            <DataTemplate DataType="{x:Type channels:AngledChannelViewModel}">
+                <channels:AngledChannelView/>
+            </DataTemplate>
+            
         </ResourceDictionary>
     </Application.Resources>
 </Application>
