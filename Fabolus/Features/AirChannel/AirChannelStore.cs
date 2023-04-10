@@ -9,7 +9,6 @@ using System.Windows.Media.Media3D;
 
 namespace Fabolus.Features.AirChannel {
     #region Messages
-    public sealed record AddAirChannelMessage(Point3D point);
     public sealed record AddAirChannelShapeMessage(AirChannelShape shape);
     public sealed record SetAirChannelDiameterMessage(double diameter);
     public sealed record ClearAirChannelsMessage();
@@ -60,7 +59,6 @@ namespace Fabolus.Features.AirChannel {
             };
 
             //registering messages
-            WeakReferenceMessenger.Default.Register<AddAirChannelMessage>(this, (r, m) => { Receive(m); });
             WeakReferenceMessenger.Default.Register<AddAirChannelShapeMessage>(this, (r, m) => { AddAirChannel(m.shape); });
             WeakReferenceMessenger.Default.Register<SetAirChannelDiameterMessage>(this, (r, m) => { Receive(m); });
             WeakReferenceMessenger.Default.Register<ClearAirChannelsMessage>(this, (r, m) => { Receive(m); });
@@ -134,17 +132,6 @@ namespace Fabolus.Features.AirChannel {
             int index = _tools.FindIndex(t => t.GetType == channel.GetType);
             _tools[index] = channel;
             WeakReferenceMessenger.Default.Send(new ChannelUpdatedMessage(channel));
-        }
-
-        private void Receive(AddAirChannelMessage message) {
-            var point = message.point;
-
-            if (_currentId == null) _currentId = 0;
-            else _currentId++;
-
-            _channels.Add(new AirChannelModel(new AirChannelStraight(point, _channelDiameter, _maxZHeight), _currentId));
-
-            SendChannelsUpdate();
         }
 
         private void Receive(SetAirChannelDiameterMessage message) {

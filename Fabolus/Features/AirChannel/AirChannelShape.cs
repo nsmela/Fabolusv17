@@ -53,19 +53,25 @@ namespace Fabolus.Features.AirChannel {
     }
 
     public class AirChannelStraight : AirChannelShape {
-        private double _diameter;
+        private double  _depth, _diameter;
         private double _radius => _diameter / 2;
         private double _height;
         private double _length => _height - _dAnchor.z;
         private Point3D _anchor { get; set; }
+        private Point3D BottomAnchor { get; set; }
+        private Point3D TopAnchor { get; set; }
         private Point3D _topAnchor => new Point3D(_anchor.X, _anchor.Y, _height);
         private Vector3d _dAnchor => new Vector3d(_anchor.X, _anchor.Y, _anchor.Z);
         private Vector3d _dTop => new Vector3d(_topAnchor.X, _topAnchor.Y, _topAnchor.Z);
 
-        public AirChannelStraight(Point3D anchor, double diameter, double height) {
-            _anchor = new Point3D(anchor.X, anchor.Y, anchor.Z - 1);
+        public AirChannelStraight(Point3D anchor, double depth, double diameter, double height) {
+            _anchor = new Point3D(anchor.X, anchor.Y, anchor.Z);
+            _depth = depth;
             _diameter = diameter;
             _height = height;
+
+            BottomAnchor = new Point3D(_anchor.X, _anchor.Y, _anchor.Z - _depth);
+            TopAnchor = new Point3D(_anchor.X, _anchor.Y, _height);
 
             Geometry = SetGeometry();
             Mesh = BolusUtility.MeshGeometryToDMesh(Geometry);
@@ -74,10 +80,10 @@ namespace Fabolus.Features.AirChannel {
         private MeshGeometry3D SetGeometry() {
             var mesh = new MeshBuilder();
 
-            mesh.AddSphere(_anchor, _radius);
+            mesh.AddSphere(BottomAnchor, _radius);
             mesh.AddCylinder(
-                _anchor,
-                new Point3D(_topAnchor.X, _topAnchor.Y, _topAnchor.Z),
+                BottomAnchor,
+                TopAnchor,
                 _radius);
             return mesh.ToMesh();
         }
@@ -112,10 +118,10 @@ namespace Fabolus.Features.AirChannel {
             var mesh = new MeshBuilder();
             var radius = _radius + offset;
 
-            mesh.AddSphere(_anchor, radius);
+            mesh.AddSphere(BottomAnchor, radius);
             mesh.AddCylinder(
-                _anchor,
-                new Point3D(_topAnchor.X, _topAnchor.Y, height),
+                BottomAnchor,
+                new Point3D(TopAnchor.X, TopAnchor.Y, height),
                 radius);
             return BolusUtility.MeshGeometryToDMesh( mesh.ToMesh());
         }

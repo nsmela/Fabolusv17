@@ -17,7 +17,7 @@ namespace Fabolus.Features.AirChannel.Channels {
             MouseToolType = typeof(VerticalAirChannelMouseTool);
 
             //values
-            ChannelDepth = 2.0f;
+            ChannelDepth = 1.0f;
             ChannelDiameter = 5.0f;
         }
 

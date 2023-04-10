@@ -13,10 +13,7 @@ using System.Windows.Media.Media3D;
 using CommunityToolkit.Mvvm.Input;
 using System.Windows.Media;
 using HelixToolkit.Wpf;
-using g3;
 using Fabolus.Features.AirChannel.MouseTools;
-using Fabolus.Features.Rotation;
-using Fabolus.Features.AirChannel.Channels;
 
 namespace Fabolus.Features.AirChannel
 {
