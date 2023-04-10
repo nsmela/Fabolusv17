@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Messaging.Messages;
 using Fabolus.Features.AirChannel.Channels;
 using Fabolus.Features.Bolus;
 using g3;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Channels;
@@ -30,6 +31,7 @@ namespace Fabolus.Features.AirChannel {
     public class AirChannelMeshRequestMessage : RequestMessage<DMesh3> { }
 
     //air channel requests
+    public class AirChannelToolRequestMessage : RequestMessage<ChannelBase> { }
     public class AirChannelVerticalRequestMessage : RequestMessage<VerticalChannel> { }
     public class AirChannelAngledRequestMessage : RequestMessage<AngledChannel> { }
 
@@ -79,6 +81,7 @@ namespace Fabolus.Features.AirChannel {
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelMeshRequestMessage>(this, (r, m) => { m.Reply(r.ToMesh()); });
 
             //air channel types
+            WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelToolRequestMessage>(this, (r, m) => { m.Reply(_tools[_selectedChannel]); });
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelVerticalRequestMessage>(this, (r, m) => { m.Reply((VerticalChannel)_tools[0]); });
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelAngledRequestMessage>(this, (r,m) => { m.Reply((AngledChannel)_tools[1]); });
 

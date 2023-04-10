@@ -15,6 +15,7 @@ using System.Windows.Media;
 using HelixToolkit.Wpf;
 using Fabolus.Features.AirChannel.MouseTools;
 using Fabolus.Features.AirChannel.Channels;
+using System.Threading.Channels;
 
 namespace Fabolus.Features.AirChannel
 {
@@ -41,7 +42,7 @@ namespace Fabolus.Features.AirChannel
         public AirChannelMeshViewModel() : base() {
             //messages
             WeakReferenceMessenger.Default.Register<AirChannelsUpdatedMessage>(this, (r, m) => { Update(m.channels, m.selectedIndex); });
-            WeakReferenceMessenger.Default.Register<AirChannelSettingsUpdatedMessage>(this, (r, m) => { Update(m.diameter, m.height, m.selectedIndex); });
+            //WeakReferenceMessenger.Default.Register<AirChannelSettingsUpdatedMessage>(this, (r, m) => { Update(m.diameter, m.height, m.selectedIndex); });
             WeakReferenceMessenger.Default.Register<SetAirChannelTool>(this, (r, m) => { _mouseTool = MouseTools[(int)m.toolIndex]; });
             WeakReferenceMessenger.Default.Register<ChannelUpdatedMessage>(this, (r, m) => { ChannelChanged(m.channel); });
 
@@ -53,13 +54,14 @@ namespace Fabolus.Features.AirChannel
             double diameter = WeakReferenceMessenger.Default.Send<AirChannelDiameterRequestMessage>();
             double height = WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
             int? selectedIndex = null;
-            Update(diameter, height, selectedIndex);
+            //Update(diameter, height, selectedIndex);
 
         }
 
-        #region Reveiving Messeges
+        #region Receiving Messeges
         private void ChannelChanged(ChannelBase channel) {
-            if (channel.MouseToolType == _mouseTool.GetType()) return;
+            
+            if (_mouseTool != null && channel.MouseToolType == _mouseTool.GetType()) return;
             var mouseTool = Activator.CreateInstance(channel.MouseToolType);
 
             _mouseTool = (AirChannelMouseTool)mouseTool;
@@ -75,13 +77,10 @@ namespace Fabolus.Features.AirChannel
             ShowMesh = true;
 
             MouseHit = new Point3D();
-            //mouse tools
-            MouseTools = new();
-            MouseTools.Add(new VerticalAirChannelMouseTool());
-            MouseTools.Add(new AngledAirChannelMouseTool());
-            MouseTools.Add(new PathAirChannelMouseTool());
 
-            _mouseTool = MouseTools[0];
+            //mouse tools
+            ChannelBase channel = WeakReferenceMessenger.Default.Send<AirChannelToolRequestMessage>();
+            ChannelChanged(channel);
 
             //skin colours
             _toolSkin = SetSkin(Colors.MediumPurple, 0.5f);
@@ -135,6 +134,7 @@ namespace Fabolus.Features.AirChannel
         }
 
         //to update the settings
+        /*
         private void Update(double diameter, double height, int? selectedIndex) {
             //tool needs to be updated
             Diameter = diameter;
@@ -142,7 +142,7 @@ namespace Fabolus.Features.AirChannel
             
             //update mouse tool mesh
             OnMouseMove();
-        }
+        }*/
 
         private DiffuseMaterial SetSkin(Color colour, double opacity) {
             var brush = new SolidColorBrush(colour);

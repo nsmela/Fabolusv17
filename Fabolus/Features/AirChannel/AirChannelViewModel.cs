@@ -20,31 +20,21 @@ namespace Fabolus.Features.AirChannel {
 
         [ObservableProperty] private int _activeToolIndex;
         partial void OnActiveToolIndexChanged(int value) {
-            //WeakReferenceMessenger.Default.Send(new SetAirChannelTool(value));
             WeakReferenceMessenger.Default.Send(new SetChannelTypeMessage(value));
-            //ChannelName = _toolNames[value];
         }
 
-        [ObservableProperty] private double _channelDiameter; //saved in air channel store to share with mesh view
-        [ObservableProperty] private double _channelDepth;
-        [ObservableProperty] private string _channelName = "air channel";
         [ObservableProperty] private ChannelControlViewModel _channelViewModel;
-        partial void OnChannelDiameterChanged(double value) =>  WeakReferenceMessenger.Default.Send(new SetAirChannelDiameterMessage(value));
-        partial void OnChannelDepthChanged(double value) => WeakReferenceMessenger.Default.Send(new SetAirChannelDiameterMessage(value));
 
         public AirChannelViewModel() {
-            ChannelDiameter = WeakReferenceMessenger.Default.Send<AirChannelDiameterRequestMessage>();
             ActiveToolIndex = (int)WeakReferenceMessenger.Default.Send<AirChannelSelectedRequestMessage>();
-            ChannelName = _toolNames[ActiveToolIndex];
 
             //messaging receiving
             WeakReferenceMessenger.Default.Register<ChannelUpdatedMessage>(this, (r, m) => { NewChannel(m.channel); });
 
             //viewmodel for air channel controls
-            VerticalChannel channel = WeakReferenceMessenger.Default.Send<AirChannelVerticalRequestMessage>();
+            ChannelBase channel = WeakReferenceMessenger.Default.Send<AirChannelToolRequestMessage>();
             ChannelViewModel = channel.ViewModel;
             ChannelViewModel.Initialize(); //have to initialize instead of relying on constructor to avoid self-referencing loops
-
         }
 
         #region Commands
@@ -64,7 +54,6 @@ namespace Fabolus.Features.AirChannel {
             //initialize the new ViewModel
             ChannelViewModel = channel.ViewModel;
             ChannelViewModel.Initialize();
-            ChannelName = channel.Name;
         }
         #endregion
     }

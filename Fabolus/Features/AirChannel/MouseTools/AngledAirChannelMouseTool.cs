@@ -20,31 +20,36 @@ namespace Fabolus.Features.AirChannel.MouseTools {
         private Point3D _lastMousePosition;
         private Vector3D _normal;
 
+        private AirChannelShape Shape => new AirChannelAngled(_lastMousePosition, _normal, _depth, _diameter, _coneLength, _coneDiameter, _height);
+
         public override Geometry3D? ToolMesh =>
             _lastMousePosition == null || _lastMousePosition == new Point3D() ?
-            null : new AirChannelAngled(_lastMousePosition, _normal, _diameter, _height).Geometry;
+            null : Shape.Geometry;
 
         public AngledAirChannelMouseTool() {
-
             //messages
             WeakReferenceMessenger.Default.Register<AirChannelSettingsUpdatedMessage>(this, (r, m) => {
                 _diameter = m.diameter;
                 _height = m.height;
             });
 
-            WeakReferenceMessenger.Default.Register<ChannelUpdatedMessage>(this, (r, m) => {
-                if (m.channel.GetType() != typeof(AngledChannel)) return;
-                var angledChannel = m.channel as AngledChannel;
-                _depth = angledChannel.ChannelDepth;
-                _diameter = angledChannel.ChannelDiameter;
-                _coneLength = angledChannel.ConeLength;
-                _coneDiameter = angledChannel.ConeDiameter;
-            });
+            WeakReferenceMessenger.Default.Register<ChannelUpdatedMessage>(this, (r, m) => { ChannelUpdated(m.channel);});
 
-            _diameter = WeakReferenceMessenger.Default.Send<AirChannelDiameterRequestMessage>();
             _height = WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
+            ChannelBase channel = WeakReferenceMessenger.Default.Send<AirChannelToolRequestMessage>();
+            ChannelUpdated(channel);
         }
 
+        private void ChannelUpdated(ChannelBase channel) {
+            if (channel.GetType() != typeof(AngledChannel)) return;
+            var angledChannel = channel as AngledChannel;
+            _depth = angledChannel.ChannelDepth;
+            _diameter = angledChannel.ChannelDiameter;
+            _coneLength = angledChannel.ConeLength;
+            _coneDiameter = angledChannel.ConeDiameter;
+        }
+
+        #region Mouse Events
         public override void MouseDown(MouseEventArgs mouse) {
             if (mouse.RightButton == MouseButtonState.Pressed) return;
             _lastMousePosition = new Point3D(); //clears position, a successful hit will recreate it
@@ -63,7 +68,7 @@ namespace Fabolus.Features.AirChannel.MouseTools {
                 if (name == BOLUS_LABEL) { //if clicked on bolus
                     _lastMousePosition = result.Position;
                     _normal= result.Normal;
-                    var shape = new AirChannelAngled(_lastMousePosition, _normal, _diameter, _height);
+                    var shape = Shape;
                     WeakReferenceMessenger.Default.Send(new AddAirChannelShapeMessage(shape));
                     return;
                 }
@@ -95,6 +100,9 @@ namespace Fabolus.Features.AirChannel.MouseTools {
         public override void MouseUp(MouseEventArgs mouse) {
 
         }
+
+        #endregion
+
 
     }
 }

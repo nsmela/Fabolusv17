@@ -128,7 +128,7 @@ namespace Fabolus.Features.AirChannel {
     }
 
     public class AirChannelAngled : AirChannelShape {
-        private double _depth, _diameter;
+        private double _depth, _diameter, _coneLength, _coneDiameter;
         private double _radius => _diameter / 2;
         private double _height;
         private Point3D _anchor { get; set; }
@@ -137,10 +137,12 @@ namespace Fabolus.Features.AirChannel {
         private Vector3d _dAnchor => new Vector3d(_anchor.X, _anchor.Y, _anchor.Z);
         private Vector3d _dTop => new Vector3d(_topAnchor.X, _topAnchor.Y, _topAnchor.Z);
 
-        public AirChannelAngled(Point3D anchor, Vector3D direction, double diameter, double height) {
-            _anchor = anchor + direction * -0.5f; //moving the anchor deep 2.0 mm deep within the model
+        public AirChannelAngled(Point3D anchor, Vector3D direction, double depth, double diameter, double coneLength, double coneDiameter, double height) {
+            _anchor = anchor + direction * -depth; 
             _direction = direction;
             _diameter = diameter;
+            _coneLength = coneLength;
+            _coneDiameter = coneDiameter;
             _height = height;
 
             Geometry = SetGeometry();
@@ -149,27 +151,25 @@ namespace Fabolus.Features.AirChannel {
         }
 
         private MeshGeometry3D SetGeometry() {
-            float coneLength = 10.0f;
-
             var mesh = new MeshBuilder();
 
             mesh.AddCone(
                 _anchor, //cone tip position
                 _direction, //cone direction
-                _radius, //cone base radius
-                _radius + 1.0f, //cone top radius
-                coneLength, //cone length
+                _coneDiameter, //cone base radius
+                _diameter, //cone top radius
+                _coneLength, //cone length
                 true, //base cap
                 false, //top cap
                 16 //divisions/resolution
                 );
 
-            var point = _anchor + _direction * (coneLength); //used for anchor for next mesh addition
-            mesh.AddSphere(point, _radius + 1.0f);
+            var point = _anchor + _direction * (_coneLength); //used for anchor for next mesh addition
+            mesh.AddSphere(point, _diameter);
             mesh.AddCylinder(
                 point,
-                new Point3D(point.X, point.Y, _height),
-                _radius + 1.0f);
+                _topAnchor,
+                _diameter);
             return mesh.ToMesh();
         }
 
@@ -178,28 +178,26 @@ namespace Fabolus.Features.AirChannel {
         }
 
         public override DMesh3 MeshOffset(float offset, float height) {
-            float coneLength = 10.0f;
-
             var mesh = new MeshBuilder();
-            var radius = _radius + offset;
+            var radius = _diameter + offset;
             mesh.AddCone(
                 _anchor, //cone tip position
                 _direction, //cone direction
-                radius, //cone base radius
-                radius + 1.0f, //cone top radius
-                coneLength, //cone length
+                _coneDiameter + offset, //cone base radius
+                radius, //cone top radius
+                _coneLength, //cone length
                 true, //base cap
                 false, //top cap
                 16 //divisions/resolution
                 );
 
-            var point = _anchor + _direction * (coneLength); //used for anchor for next mesh addition
+            var point = _anchor + _direction * (_coneLength); //used for anchor for next mesh addition
 
-            mesh.AddSphere(point, radius + 1.0f);
+            mesh.AddSphere(point, radius);
             mesh.AddCylinder(
                 point,
-                new Point3D(point.X, point.Y, height),
-                radius + 1.0f);
+                _topAnchor,
+                radius);
             return BolusUtility.MeshGeometryToDMesh(mesh.ToMesh());
         }
     }
