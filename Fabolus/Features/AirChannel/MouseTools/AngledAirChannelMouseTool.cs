@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
+using Fabolus.Features.AirChannel.Channels;
 using Fabolus.Features.Common;
 using HelixToolkit.Wpf;
 using System;
@@ -15,7 +16,7 @@ namespace Fabolus.Features.AirChannel.MouseTools {
         private string BOLUS_LABEL => AirChannelMeshViewModel.BOLUS_LABEL;
         private string AIRCHANNEL_LABEL => AirChannelMeshViewModel.AIRCHANNEL_LABEL;
 
-        private double _diameter, _height;
+        private double _depth, _diameter, _height, _coneLength, _coneDiameter;
         private Point3D _lastMousePosition;
         private Vector3D _normal;
 
@@ -29,6 +30,15 @@ namespace Fabolus.Features.AirChannel.MouseTools {
             WeakReferenceMessenger.Default.Register<AirChannelSettingsUpdatedMessage>(this, (r, m) => {
                 _diameter = m.diameter;
                 _height = m.height;
+            });
+
+            WeakReferenceMessenger.Default.Register<ChannelUpdatedMessage>(this, (r, m) => {
+                if (m.channel.GetType() != typeof(AngledChannel)) return;
+                var angledChannel = m.channel as AngledChannel;
+                _depth = angledChannel.ChannelDepth;
+                _diameter = angledChannel.ChannelDiameter;
+                _coneLength = angledChannel.ConeLength;
+                _coneDiameter = angledChannel.ConeDiameter;
             });
 
             _diameter = WeakReferenceMessenger.Default.Send<AirChannelDiameterRequestMessage>();

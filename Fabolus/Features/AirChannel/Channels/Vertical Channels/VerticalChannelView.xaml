@@ -7,7 +7,7 @@
              d:DataContext="{d:DesignInstance Type=local:VerticalChannelViewModel}"
              mc:Ignorable="d" 
              d:DesignHeight="160" d:DesignWidth="200">
-    <GroupBox Header=" vertical channels " Margin="0,10,0,0">
+    <GroupBox Header="{Binding ChannelName}" Margin="0,10,0,0">
         <StackPanel>
             <Label Content="penetration depth" 
                             HorizontalAlignment="Center" 
@@ -20,7 +20,7 @@
                             TickFrequency="0.25" 
                             TickPlacement="TopLeft" 
                             AutoToolTipPlacement="TopLeft"
-                            AutoToolTipPrecision="1"
+                            AutoToolTipPrecision="2"
                             IsSnapToTickEnabled="True" 
                             Height="30"/>
             <Label Content="channel diameter" 

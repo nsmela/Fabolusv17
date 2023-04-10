@@ -22,7 +22,7 @@ namespace Fabolus.Features.AirChannel {
         partial void OnActiveToolIndexChanged(int value) {
             //WeakReferenceMessenger.Default.Send(new SetAirChannelTool(value));
             WeakReferenceMessenger.Default.Send(new SetChannelTypeMessage(value));
-            ChannelName = _toolNames[value];
+            //ChannelName = _toolNames[value];
         }
 
         [ObservableProperty] private double _channelDiameter; //saved in air channel store to share with mesh view

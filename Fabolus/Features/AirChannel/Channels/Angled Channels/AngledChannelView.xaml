@@ -6,8 +6,8 @@
              xmlns:local="clr-namespace:Fabolus.Features.AirChannel.Channels"
              d:DataContext="{d:DesignInstance Type=local:AngledChannelViewModel}"
              mc:Ignorable="d" 
-             d:DesignHeight="160" d:DesignWidth="200">
-    <GroupBox Header=" vertical channels " Margin="0,10,0,0">
+             d:DesignHeight="240" d:DesignWidth="200">
+    <GroupBox Header="{Binding ChannelName}" Margin="0,10,0,0">
         <StackPanel>
             <Label Content="penetration depth" 
                             HorizontalAlignment="Center" 
@@ -18,6 +18,34 @@
             <Slider Value="{Binding ChannelDepth, Mode=TwoWay}"
                             Minimum=".25" Maximum="4.0" 
                             TickFrequency="0.25" 
+                            TickPlacement="TopLeft" 
+                            AutoToolTipPlacement="TopLeft"
+                            AutoToolTipPrecision="2"
+                            IsSnapToTickEnabled="True" 
+                            Height="30"/>
+            <Label Content="cone diameter" 
+                            HorizontalAlignment="Center" 
+                            VerticalAlignment="Center"
+                            FontSize="12" 
+                            FontWeight="Bold"
+                            FontFamily="\Fonts\#Poppins"/>
+            <Slider Value="{Binding ConeDiameter, Mode=TwoWay}"
+                            Minimum="0.5" Maximum="8.0" 
+                            TickFrequency="0.5" 
+                            TickPlacement="TopLeft" 
+                            AutoToolTipPlacement="TopLeft"
+                            AutoToolTipPrecision="2"
+                            IsSnapToTickEnabled="True" 
+                            Height="30"/>
+            <Label Content="cone length" 
+                            HorizontalAlignment="Center" 
+                            VerticalAlignment="Center"
+                            FontSize="12" 
+                            FontWeight="Bold"
+                            FontFamily="\Fonts\#Poppins"/>
+            <Slider Value="{Binding ConeLength, Mode=TwoWay}"
+                            Minimum="2" Maximum="16.0" 
+                            TickFrequency="1.0" 
                             TickPlacement="TopLeft" 
                             AutoToolTipPlacement="TopLeft"
                             AutoToolTipPrecision="1"
