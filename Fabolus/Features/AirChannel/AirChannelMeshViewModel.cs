@@ -42,7 +42,6 @@ namespace Fabolus.Features.AirChannel
         public AirChannelMeshViewModel() : base() {
             //messages
             WeakReferenceMessenger.Default.Register<AirChannelsUpdatedMessage>(this, (r, m) => { Update(m.channels, m.selectedIndex); });
-            //WeakReferenceMessenger.Default.Register<AirChannelSettingsUpdatedMessage>(this, (r, m) => { Update(m.diameter, m.height, m.selectedIndex); });
             WeakReferenceMessenger.Default.Register<SetAirChannelTool>(this, (r, m) => { _mouseTool = MouseTools[(int)m.toolIndex]; });
             WeakReferenceMessenger.Default.Register<ChannelUpdatedMessage>(this, (r, m) => { ChannelChanged(m.channel); });
 
@@ -84,7 +83,7 @@ namespace Fabolus.Features.AirChannel
             //skin colours
             _toolSkin = SetSkin(Colors.MediumPurple, 0.5f);
             _channelsSkin = SetSkin(Colors.Purple, 1.0f);
-            _selectedSkin = SetSkin(Colors.BlueViolet, 1.0f);
+            _selectedSkin = SetSkin(Colors.Cyan, 1.0f);
             _overhangsSkin = OverhangSettings.OVERHANG_SKIN;
 
             Update(_bolus);

@@ -33,15 +33,15 @@ namespace Fabolus.Features.AirChannel.MouseTools {
         }
 
         #region Mouse Events
-        public override void MouseDown(MouseEventArgs mouse) {
-            if (mouse.RightButton == MouseButtonState.Pressed) return;
+        public override void MouseDown(MouseEventArgs mouse) {  
             _lastMousePosition = new Point3D(); //clears position, a successful hit will recreate it
+            if (mouse.RightButton == MouseButtonState.Pressed) return;
 
             //get all hits
             var hits = GetHits(mouse);
             if (hits == null || hits.Count == 0) {
                 //if nothing is clicked on
-                WeakReferenceMessenger.Default.Send(new AirChannelSetMessage(null));
+                WeakReferenceMessenger.Default.Send(new AirChannelSelectedMessage(null));
                 return; //nothing was struck
             }
             foreach (var result in hits) {
@@ -61,7 +61,7 @@ namespace Fabolus.Features.AirChannel.MouseTools {
                     //number at end is the channel's index
                     var number = Regex.Match(result.Model.GetName(), @"\d+$", RegexOptions.RightToLeft).Value;
                     int index = int.Parse(number);
-                    WeakReferenceMessenger.Default.Send(new AirChannelSetMessage(index));
+                    WeakReferenceMessenger.Default.Send(new AirChannelSelectedMessage(index));
                     return;
                 }
 
@@ -73,9 +73,20 @@ namespace Fabolus.Features.AirChannel.MouseTools {
             //abort if any mouse buttons are down
             if (mouse.LeftButton == MouseButtonState.Pressed) return;
             if (mouse.RightButton == MouseButtonState.Pressed) return;
+            _lastMousePosition = new Point3D(); //resets the value if nothing is hit
 
-            //calculate mouse hit and which model
-            _lastMousePosition = MouseTool.GetHitSpot(mouse, BOLUS_LABEL);
+            //which spot on the bolus is the mouse over, if not on an air channel
+            //the first one hit is the important one
+            var hits = GetHits(mouse);
+            foreach (var h in hits) {
+                if (h.Model == null || h.Model.GetName() == null) continue;
+                if (h.Model.GetName().Contains(AIRCHANNEL_LABEL)) return;
+                
+                if (h.Model.GetName() == BOLUS_LABEL) {
+                    _lastMousePosition = h.Position;
+                    return;
+                }
+            }
         }
 
         public override void MouseUp(MouseEventArgs mouse) {

@@ -69,7 +69,7 @@ namespace Fabolus.Features.AirChannel.MouseTools {
                 _pathPoints.Clear();
                 _pathTriangles.Clear();
                 _mesh = ToMesh();
-                WeakReferenceMessenger.Default.Send(new AirChannelSetMessage(null));
+                WeakReferenceMessenger.Default.Send(new AirChannelSelectedMessage(null));
                 return; //nothing was struck
             }
 
@@ -91,7 +91,7 @@ namespace Fabolus.Features.AirChannel.MouseTools {
                     _lastMousePosition= null;
                     var number = Regex.Match(result.Model.GetName(), @"\d+$", RegexOptions.RightToLeft).Value;
                     int index = int.Parse(number);
-                    WeakReferenceMessenger.Default.Send(new AirChannelSetMessage(index));
+                    WeakReferenceMessenger.Default.Send(new AirChannelSelectedMessage(index));
                     return;
                 }
 

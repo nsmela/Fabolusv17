@@ -14,7 +14,7 @@ namespace Fabolus.Features.AirChannel {
     public sealed record AddAirChannelShapeMessage(AirChannelShape shape);
     public sealed record ClearAirChannelsMessage();
     public sealed record AirChannelsUpdatedMessage(List<AirChannelModel> channels, int? selectedIndex);
-    public sealed record AirChannelSetMessage(int? channelIndex);
+    public sealed record AirChannelSelectedMessage(int? channelIndex);
 
     //air channels
     public sealed record SetChannelMessage(ChannelBase channel);
@@ -51,8 +51,7 @@ namespace Fabolus.Features.AirChannel {
         }
 
         private BolusModel _bolus;
-        private int _selectedChannel;
-        private int _activeTool;
+        private int _selectedChannel, _activeTool; //indexes 
         private int? _currentId; //used to identify air channels
 
         public AirChannelStore() {
@@ -66,8 +65,9 @@ namespace Fabolus.Features.AirChannel {
 
             //registering messages
             WeakReferenceMessenger.Default.Register<AddAirChannelShapeMessage>(this, (r, m) => { AddAirChannel(m.shape); });
+            WeakReferenceMessenger.Default.Register<AirChannelSelectedMessage>(this, (r, m) => { SetSelectedChannel(m.channelIndex); });
             WeakReferenceMessenger.Default.Register<ClearAirChannelsMessage>(this, (r, m) => { ClearChannels(); });
-            WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r,m) => { Update(m.bolus); });
+            WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r,m) => { UpdateBolus(m.bolus); });
             WeakReferenceMessenger.Default.Register<SetChannelMessage>(this, (r, m) => { UpdateChannel(m.channel); });
             WeakReferenceMessenger.Default.Register<SetChannelTypeMessage>(this, (r, m) => { SetActiveTool(m.index); });
 
@@ -94,7 +94,7 @@ namespace Fabolus.Features.AirChannel {
         private void SendSettingsUpdate() => WeakReferenceMessenger.Default.Send(new ChannelUpdatedMessage(_tools[_activeTool]));
 
         #region Receiving
-        private void Update(BolusModel bolus) {
+        private void UpdateBolus(BolusModel bolus) {
             _channels.Clear(); //changing the bolus means airholes no longer valid
             _currentId = null; //clear id count
 
@@ -104,19 +104,21 @@ namespace Fabolus.Features.AirChannel {
             SendChannelsUpdate();
             SendSettingsUpdate();
         }
-        private void Update(int? selectedIndex) {
-            if (selectedIndex== null) {
-                selectedIndex = -1;
-                return;
-            }
-            if (selectedIndex >= _channels.Count) {
-                _selectedChannel = -1;
-                return;
-            }
+        private void SetSelectedChannel(int? selectedIndex) {
+            if (selectedIndex== null || selectedIndex >= _channels.Count) selectedIndex = -1; ;
 
             _selectedChannel = (int)selectedIndex;
 
             SendChannelsUpdate();
+
+            //automatically set active tool to the type of the selected channel
+            if (_selectedChannel < 0) return; //if no channels are selected, then don't do anything else
+
+            var channel = _channels[_selectedChannel];
+            var type = channel.Shape;
+            //if channel.channelbasetype != activetool.channelbasetype
+            //get toolIndex of the proper tool
+            //create a new temp channelbase to send that has the shape's settings
         }
 
         private void SetActiveTool(int toolIndex) {
@@ -150,6 +152,8 @@ namespace Fabolus.Features.AirChannel {
 
         private void UpdateChannel(ChannelBase channel) {
             int index = _tools.FindIndex(t => t.GetType == channel.GetType);
+            //TODO: if _selectedIndex isn't -1, there's a channel selected
+            //set the temp channel instead and send that
             _tools[index] = channel;
             WeakReferenceMessenger.Default.Send(new ChannelUpdatedMessage(channel));
         }
