@@ -66,7 +66,7 @@ namespace Fabolus.Features.AirChannel {
 
             //registering messages
             WeakReferenceMessenger.Default.Register<AddAirChannelShapeMessage>(this, (r, m) => { AddAirChannel(m.shape); });
-            WeakReferenceMessenger.Default.Register<ClearAirChannelsMessage>(this, (r, m) => { Receive(m); });
+            WeakReferenceMessenger.Default.Register<ClearAirChannelsMessage>(this, (r, m) => { ClearChannels(); });
             WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r,m) => { Update(m.bolus); });
             WeakReferenceMessenger.Default.Register<SetChannelMessage>(this, (r, m) => { UpdateChannel(m.channel); });
             WeakReferenceMessenger.Default.Register<SetChannelTypeMessage>(this, (r, m) => { SetActiveTool(m.index); });
@@ -159,13 +159,12 @@ namespace Fabolus.Features.AirChannel {
             if(index >= _tools.Count) return;
 
             _selectedChannel = index;
-            //update air channel view model
-            //update air channel mesh view model
+
             WeakReferenceMessenger.Default.Send(new ChannelUpdatedMessage(_tools[_selectedChannel]));
         }
 
 
-        private void Receive(ClearAirChannelsMessage message) {
+        private void ClearChannels() {
             _channels.Clear();
             _currentId = null;
 

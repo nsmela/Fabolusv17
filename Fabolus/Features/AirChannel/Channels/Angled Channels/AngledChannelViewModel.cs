@@ -22,9 +22,6 @@ namespace Fabolus.Features.AirChannel.Channels
 
         public override void Initialize() {
             //Messages
-
-
-            //weak ref grab values from airchannel store
             _channel = WeakReferenceMessenger.Default.Send<AirChannelAngledRequestMessage>();
 
             //fill out
@@ -39,12 +36,14 @@ namespace Fabolus.Features.AirChannel.Channels
 
         private void SendChannelUpdate() {
             if (_isFrozen) return;
+
             _isFrozen = true;
             _channel.ChannelDepth = ChannelDepth;
             _channel.ChannelDiameter = ChannelDiameter;
             _channel.ConeLength = ConeLength;
             _channel.ConeDiameter = ConeDiameter;
             WeakReferenceMessenger.Default.Send(new SetChannelMessage(_channel));
+
             _isFrozen = false;
         }
     }
