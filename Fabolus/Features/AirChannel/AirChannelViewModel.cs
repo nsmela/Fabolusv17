@@ -6,14 +6,12 @@ using Fabolus.Features.AirChannel.Controls;
 using Fabolus.Features.AirChannel.MouseTools;
 using Fabolus.Features.Common;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Windows.Controls;
 using System.Windows.Documents;
 
 namespace Fabolus.Features.AirChannel {
     public partial class AirChannelViewModel : ViewModelBase {
-        private List<string> _toolNames = new List<string> {
-            "vertical channel", "angled channel", "path channel"
-        };
-
         public override string ViewModelTitle => "air channels";
         public override string? LeftMouseLabel => "Add/Edit Air Channel";
         public override MeshViewModelBase MeshViewModel => new AirChannelMeshViewModel();
@@ -25,8 +23,13 @@ namespace Fabolus.Features.AirChannel {
 
         [ObservableProperty] private ChannelControlViewModel _channelViewModel;
 
+        public ObservableCollection<string> ToolNames;
+
         public AirChannelViewModel() {
-            ActiveToolIndex = (int)WeakReferenceMessenger.Default.Send<AirChannelSelectedRequestMessage>();
+            List<string> names = WeakReferenceMessenger.Default.Send<AirChannelsListRequestMessage>();
+            ToolNames = new();
+            names.ForEach(n => ToolNames.Add(n));
+            ActiveToolIndex = (int)WeakReferenceMessenger.Default.Send<AirChannelToolIndexRequestMessage>();
 
             //messaging receiving
             WeakReferenceMessenger.Default.Register<ChannelUpdatedMessage>(this, (r, m) => { NewChannel(m.channel); });

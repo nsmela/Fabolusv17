@@ -12,10 +12,8 @@ using System.Windows.Media.Media3D;
 namespace Fabolus.Features.AirChannel {
     #region Messages
     public sealed record AddAirChannelShapeMessage(AirChannelShape shape);
-    public sealed record SetAirChannelDiameterMessage(double diameter);
     public sealed record ClearAirChannelsMessage();
     public sealed record AirChannelsUpdatedMessage(List<AirChannelModel> channels, int? selectedIndex);
-    public sealed record AirChannelSettingsUpdatedMessage(double diameter, double height, int? selectedIndex);
     public sealed record AirChannelSetMessage(int? channelIndex);
 
     //air channels
@@ -24,14 +22,16 @@ namespace Fabolus.Features.AirChannel {
     public sealed record ChannelUpdatedMessage(ChannelBase channel);
 
     //requests
+    public class AirChannelsListRequestMessage : RequestMessage<List<string>> { }
     public class AirChannelsRequestMessage : RequestMessage<List<AirChannelModel>> { }
-    public class AirChannelDiameterRequestMessage : RequestMessage<double> { }
     public class AirChannelHeightRequestMessage : RequestMessage<double> { }
     public class AirChannelSelectedRequestMessage : RequestMessage<int> { }
     public class AirChannelMeshRequestMessage : RequestMessage<DMesh3> { }
+    
 
     //air channel requests
     public class AirChannelToolRequestMessage : RequestMessage<ChannelBase> { }
+    public class AirChannelToolIndexRequestMessage : RequestMessage<int> { }
     public class AirChannelVerticalRequestMessage : RequestMessage<VerticalChannel> { }
     public class AirChannelAngledRequestMessage : RequestMessage<AngledChannel> { }
 
@@ -41,7 +41,6 @@ namespace Fabolus.Features.AirChannel {
         private List<AirChannelModel> _channels;
         private List<ChannelBase> _tools;
 
-        private double _channelDiameter = 5.0f;
         private double _zHeightOffset = 20.0f;
 
         private double _maxZHeight {
@@ -53,6 +52,7 @@ namespace Fabolus.Features.AirChannel {
 
         private BolusModel _bolus;
         private int _selectedChannel;
+        private int _activeTool;
         private int? _currentId; //used to identify air channels
 
         public AirChannelStore() {
@@ -60,35 +60,40 @@ namespace Fabolus.Features.AirChannel {
             _currentId = null;
 
             _tools = new List<ChannelBase> {
-                new VerticalChannel {ChannelDiameter = (float)_channelDiameter},
-                new AngledChannel { ChannelDiameter = (float)_channelDiameter}
+                new VerticalChannel(),
+                new AngledChannel()
             };
 
             //registering messages
             WeakReferenceMessenger.Default.Register<AddAirChannelShapeMessage>(this, (r, m) => { AddAirChannel(m.shape); });
-            WeakReferenceMessenger.Default.Register<SetAirChannelDiameterMessage>(this, (r, m) => { Receive(m); });
             WeakReferenceMessenger.Default.Register<ClearAirChannelsMessage>(this, (r, m) => { Receive(m); });
             WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r,m) => { Update(m.bolus); });
-            WeakReferenceMessenger.Default.Register<AirChannelSetMessage>(this, (r, m) => {Update(m.channelIndex); });
             WeakReferenceMessenger.Default.Register<SetChannelMessage>(this, (r, m) => { UpdateChannel(m.channel); });
-            WeakReferenceMessenger.Default.Register<SetChannelTypeMessage>(this, (r, m) => { ChangeChannelType(m.index); });
+            WeakReferenceMessenger.Default.Register<SetChannelTypeMessage>(this, (r, m) => { SetActiveTool(m.index); });
 
             //request messages
+            WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelsListRequestMessage>(this, (r, m) => {
+                var result = new List<string>();
+                r._tools.ForEach(t => result.Add(t.Name));
+                m.Reply(result);
+            });
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelsRequestMessage>(this, (r, m) => { m.Reply(r._channels); });
-            WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelDiameterRequestMessage>(this, (r, m) => { m.Reply(r._channelDiameter); });
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelHeightRequestMessage>(this, (r, m) => { m.Reply(r._maxZHeight); });
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelSelectedRequestMessage>(this, (r,m) => { m.Reply(r._selectedChannel); });
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelMeshRequestMessage>(this, (r, m) => { m.Reply(r.ToMesh()); });
 
             //air channel types
-            WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelToolRequestMessage>(this, (r, m) => { m.Reply(_tools[_selectedChannel]); });
+            WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelToolRequestMessage>(this, (r, m) => { m.Reply(_tools[_activeTool]); });
+            WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelToolIndexRequestMessage>(this, (r, m) => { m.Reply(_activeTool); });
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelVerticalRequestMessage>(this, (r, m) => { m.Reply((VerticalChannel)_tools[0]); });
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelAngledRequestMessage>(this, (r,m) => { m.Reply((AngledChannel)_tools[1]); });
 
         }
 
         private void SendChannelsUpdate() => WeakReferenceMessenger.Default.Send(new AirChannelsUpdatedMessage(_channels, _selectedChannel));
-        private void SendSettingsUpdate() => WeakReferenceMessenger.Default.Send(new AirChannelSettingsUpdatedMessage(_channelDiameter, _maxZHeight, _selectedChannel));
+        private void SendSettingsUpdate() => WeakReferenceMessenger.Default.Send(new ChannelUpdatedMessage(_tools[_activeTool]));
+
+        #region Receiving
         private void Update(BolusModel bolus) {
             _channels.Clear(); //changing the bolus means airholes no longer valid
             _currentId = null; //clear id count
@@ -114,7 +119,13 @@ namespace Fabolus.Features.AirChannel {
             SendChannelsUpdate();
         }
 
-        #region Receiving
+        private void SetActiveTool(int toolIndex) {
+            if (toolIndex < 0 || toolIndex >= _tools.Count()) return;
+
+            _activeTool = toolIndex;
+            SendSettingsUpdate();
+        }
+
         private void AddAirChannel(AirChannelShape shape) {
             if (_channels == null) _channels = new List<AirChannelModel>();
 
@@ -153,11 +164,6 @@ namespace Fabolus.Features.AirChannel {
             WeakReferenceMessenger.Default.Send(new ChannelUpdatedMessage(_tools[_selectedChannel]));
         }
 
-        private void Receive(SetAirChannelDiameterMessage message) {
-            _channelDiameter = message.diameter;
-
-            SendSettingsUpdate();
-        }
 
         private void Receive(ClearAirChannelsMessage message) {
             _channels.Clear();

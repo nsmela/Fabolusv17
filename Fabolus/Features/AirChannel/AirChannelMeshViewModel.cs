@@ -51,7 +51,6 @@ namespace Fabolus.Features.AirChannel
             Update(channels, null);
 
             //parsing required info
-            double diameter = WeakReferenceMessenger.Default.Send<AirChannelDiameterRequestMessage>();
             double height = WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
             int? selectedIndex = null;
             //Update(diameter, height, selectedIndex);

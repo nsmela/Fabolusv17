@@ -40,10 +40,10 @@ namespace Fabolus.Features.AirChannel.MouseTools {
             _pathTriangles = new();
 
             //messages
-            WeakReferenceMessenger.Default.Register<AirChannelSettingsUpdatedMessage>(this, (r, m) => {
-                _diameter = m.diameter;
-                _height = m.height;
-            });
+            //WeakReferenceMessenger.Default.Register<AirChannelSettingsUpdatedMessage>(this, (r, m) => {
+            //    _diameter = m.diameter;
+            //    _height = m.height;
+            //});
 
             WeakReferenceMessenger.Default.Register<ClearAirChannelsMessage>(this, (r, m) => {
                 //if nothing is clicked on
@@ -53,8 +53,6 @@ namespace Fabolus.Features.AirChannel.MouseTools {
             });
 
             WeakReferenceMessenger.Default.Register<AddPathAirChannelMessage>(this, (r, m) => { AddAirChannelPath(); });
-
-            _diameter = WeakReferenceMessenger.Default.Send<AirChannelDiameterRequestMessage>();
             _height = WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
             
         }

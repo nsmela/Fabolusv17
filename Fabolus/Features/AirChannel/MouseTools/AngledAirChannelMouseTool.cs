@@ -28,11 +28,6 @@ namespace Fabolus.Features.AirChannel.MouseTools {
 
         public AngledAirChannelMouseTool() {
             //messages
-            WeakReferenceMessenger.Default.Register<AirChannelSettingsUpdatedMessage>(this, (r, m) => {
-                _diameter = m.diameter;
-                _height = m.height;
-            });
-
             WeakReferenceMessenger.Default.Register<ChannelUpdatedMessage>(this, (r, m) => { ChannelUpdated(m.channel);});
 
             _height = WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();

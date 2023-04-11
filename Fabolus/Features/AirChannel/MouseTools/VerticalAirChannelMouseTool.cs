@@ -18,25 +18,21 @@ namespace Fabolus.Features.AirChannel.MouseTools {
             _lastMousePosition == null || _lastMousePosition == new Point3D() ? 
             null : new AirChannelStraight((Point3D)_lastMousePosition, _depth, _diameter, _height).Geometry;
 
-        public VerticalAirChannelMouseTool() { 
+        public VerticalAirChannelMouseTool() {
+            WeakReferenceMessenger.Default.Register<ChannelUpdatedMessage>(this, (r, m) => { ChannelUpdated(m.channel); });
 
-            //messages
-            WeakReferenceMessenger.Default.Register<AirChannelSettingsUpdatedMessage>(this, (r, m) => {
-                _diameter = m.diameter;
-                _height = m.height; 
-            });
-
-            WeakReferenceMessenger.Default.Register<ChannelUpdatedMessage>(this, (r, m) => {
-                if (m.channel.GetType() != typeof(VerticalChannel)) return;
-                var verticalChannel = m.channel as VerticalChannel;
-                _depth = verticalChannel.ChannelDepth;
-                _diameter = verticalChannel.ChannelDiameter;
-            });
-
-            _diameter = WeakReferenceMessenger.Default.Send<AirChannelDiameterRequestMessage>();
             _height = WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
+            ChannelBase channel = WeakReferenceMessenger.Default.Send<AirChannelToolRequestMessage>();
+            ChannelUpdated(channel);
+        }
+        private void ChannelUpdated(ChannelBase channel) {
+            if (channel.GetType() != typeof(VerticalChannel)) return;
+            var verticalChannel = channel as VerticalChannel;
+            _depth = verticalChannel.ChannelDepth;
+            _diameter = verticalChannel.ChannelDiameter;
         }
 
+        #region Mouse Events
         public override void MouseDown(MouseEventArgs mouse) {
             if (mouse.RightButton == MouseButtonState.Pressed) return;
             _lastMousePosition = new Point3D(); //clears position, a successful hit will recreate it
@@ -85,6 +81,7 @@ namespace Fabolus.Features.AirChannel.MouseTools {
         public override void MouseUp(MouseEventArgs mouse) {
             
         }
+        #endregion
 
     }
 }
