@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 namespace Fabolus.Features.AirChannel.Channels {
     public abstract class ChannelBase {
         public virtual string Name => "air channel base";
+        public float Height { get; set; }
         
         //view model and view
         public virtual ChannelControlViewModel ViewModel { get; protected set; }
