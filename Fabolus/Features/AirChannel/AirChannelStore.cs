@@ -54,6 +54,7 @@ namespace Fabolus.Features.AirChannel {
         private BolusModel _bolus;
         private int _selectedChannel, _activeTool; //indexes 
         private int? _currentId; //used to identify air channels
+        private ChannelBase _editChannel;
 
         public AirChannelStore() {
             _channels = new List<AirChannelModel>();
@@ -107,6 +108,8 @@ namespace Fabolus.Features.AirChannel {
             SendChannelsUpdate();
             SendSettingsUpdate();
         }
+
+        //when clicking on an existing air channel or on empty air
         private void SetSelectedChannel(int? selectedIndex) {
             if (selectedIndex== null || selectedIndex >= _channels.Count) selectedIndex = -1; ;
 
@@ -116,12 +119,16 @@ namespace Fabolus.Features.AirChannel {
 
             //automatically set active tool to the type of the selected channel
             if (_selectedChannel < 0) return; //if no channels are selected, then don't do anything else
-
-            var channel = _channels[_selectedChannel];
-            var type = channel.Shape;
-            //if channel.channelbasetype != activetool.channelbasetype
-            //get toolIndex of the proper tool
-            //create a new temp channelbase to send that has the shape's settings
+            //should this also return a tool view back to the default values?
+            Type channelType = _channels[_selectedChannel].Shape.ChannelType;
+            int index = _tools.FindIndex(t => t.GetType() == channelType);
+            _activeTool= (int)index;
+            _tools[_activeTool] = _channels[_selectedChannel].Shape.GetChannelSettings();
+            SendSettingsUpdate();
+            //from the selected channel, figure out the ChannelBase type
+            //create a channelbase with the settings from the selected air channel shape
+            //set the active tool index to that ChannelBase in _tools
+            //the channel in _tools is updated with the settings from the selected channel model
         }
 
         private void SetActiveTool(int toolIndex) {
@@ -129,6 +136,10 @@ namespace Fabolus.Features.AirChannel {
 
             _activeTool = toolIndex;
             SendSettingsUpdate();
+
+            //removing the selected channel for editing
+            _selectedChannel = -1;
+            SendChannelsUpdate();
         }
 
         private void AddAirChannel(AirChannelShape shape) {
@@ -154,11 +165,16 @@ namespace Fabolus.Features.AirChannel {
         }
 
         private void UpdateChannel(ChannelBase channel) {
-            int index = _tools.FindIndex(t => t.GetType == channel.GetType);
+            int index = _tools.FindIndex(t => t.GetType() == channel.GetType());
             //TODO: if _selectedIndex isn't -1, there's a channel selected
             //set the temp channel instead and send that
             _tools[index] = channel;
             WeakReferenceMessenger.Default.Send(new ChannelUpdatedMessage(channel));
+
+            if (_selectedChannel >= 0) {
+                _channels[_selectedChannel].Shape.UpdateSettings(channel);
+                WeakReferenceMessenger.Default.Send(new AirChannelsUpdatedMessage(_channels, _selectedChannel));
+            }
         }
 
         private void ChangeChannelType(int index) {

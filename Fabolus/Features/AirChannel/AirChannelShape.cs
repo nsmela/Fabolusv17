@@ -1,6 +1,8 @@
-﻿using Fabolus.Features.Bolus;
+﻿using Fabolus.Features.AirChannel.Channels;
+using Fabolus.Features.Bolus;
 using g3;
 using HelixToolkit.Wpf;
+using System;
 using System.Collections.Generic;
 using System.Windows.Controls;
 using System.Windows.Media.Media3D;
@@ -8,9 +10,12 @@ using System.Windows.Media.Media3D;
 namespace Fabolus.Features.AirChannel {
 
     public abstract class AirChannelShape {
+        public virtual Type ChannelType => typeof(ChannelBase);
         public virtual MeshGeometry3D Geometry { get; protected set; }
         public virtual DMesh3 Mesh { get; protected set; }
         public abstract DMesh3 MeshOffset(float offset, float height);
+        public abstract ChannelBase GetChannelSettings();
+        public abstract void UpdateSettings(ChannelBase channel);
 
         //mesh methods
         protected DMesh3 Sphere(double radius, int edgeVerts, Vector3d anchor) {
@@ -53,6 +58,23 @@ namespace Fabolus.Features.AirChannel {
     }
 
     public class AirChannelStraight : AirChannelShape {
+        public override Type ChannelType => typeof(VerticalChannel);
+        public override ChannelBase GetChannelSettings() => new VerticalChannel { ChannelDepth = (float)_depth, ChannelDiameter = (float)_diameter };
+        public override void UpdateSettings(ChannelBase channel) {
+            if (channel.GetType() != ChannelType) return;
+
+            var vertChannel = channel as VerticalChannel;
+            _depth = vertChannel.ChannelDepth;
+            _diameter = vertChannel.ChannelDiameter;
+            //_height = vertChannel.Height;
+
+            BottomAnchor = new Point3D(_anchor.X, _anchor.Y, _anchor.Z - _depth);
+            TopAnchor = new Point3D(_anchor.X, _anchor.Y, _height);
+
+            Geometry = SetGeometry();
+            Mesh = BolusUtility.MeshGeometryToDMesh(Geometry);
+        }
+
         private double  _depth, _diameter;
         private double _radius => _diameter / 2;
         private double _height;
@@ -128,30 +150,53 @@ namespace Fabolus.Features.AirChannel {
     }
 
     public class AirChannelAngled : AirChannelShape {
-        private double _depth, _diameter, _coneLength, _coneDiameter;
-        private double _radius => _diameter / 2;
-        private double _height;
+        public override Type ChannelType => typeof(AngledChannel);
+        public override ChannelBase GetChannelSettings() => new AngledChannel { ChannelDepth = (float)_depth, ChannelDiameter = (float)_diameter, ConeDiameter = (float)_coneDiameter, ConeLength = (float)_coneLength };
+        public override void UpdateSettings(ChannelBase channel) {
+            if (channel.GetType() != ChannelType) return;
+
+            var angleChannel = channel as AngledChannel;
+            _depth = angleChannel.ChannelDepth;
+            _diameter = angleChannel.ChannelDiameter;
+            _coneLength = angleChannel.ConeLength;
+            _coneDiameter = angleChannel.ConeDiameter;
+            //_height = angleChannel.Height;
+
+            _coneAnchor = _anchor + _direction * -_depth;
+            _bottomAnchor = _coneAnchor + _direction * (_coneLength);
+            _topAnchor = new Point3D(_bottomAnchor.X, _bottomAnchor.Y, _height);
+
+            Geometry = SetGeometry();
+            Mesh = BolusUtility.MeshGeometryToDMesh(Geometry);
+        }
+
+        private Point3D _coneAnchor, _bottomAnchor, _topAnchor;
+
+        private double _depth, _diameter, _coneLength, _coneDiameter, _height;
         private Point3D _anchor { get; set; }
         private Vector3D _direction { get; set; }
 
         public AirChannelAngled(Point3D anchor, Vector3D direction, double depth, double diameter, double coneLength, double coneDiameter, double height) {
-            _anchor = anchor + direction * -depth; 
+            _anchor = anchor;
+            _depth = depth;
             _direction = direction;
             _diameter = diameter;
             _coneLength = coneLength;
             _coneDiameter = coneDiameter;
             _height = height;
 
+            _coneAnchor = _anchor + _direction * -_depth;
+            _bottomAnchor = _coneAnchor + _direction * (_coneLength);
+            _topAnchor = new Point3D(_bottomAnchor.X, _bottomAnchor.Y, _height);
+
             Geometry = SetGeometry();
-            //SetMesh();
             Mesh = BolusUtility.MeshGeometryToDMesh(Geometry);
         }
 
         private MeshGeometry3D SetGeometry() {
             var mesh = new MeshBuilder();
-
             mesh.AddCone(
-                _anchor, //cone tip position
+                _coneAnchor, //cone tip position
                 _direction, //cone direction
                 _coneDiameter / 2, //cone base radius
                 _diameter / 2, //cone top radius
@@ -161,11 +206,10 @@ namespace Fabolus.Features.AirChannel {
                 16 //divisions/resolution
                 );
 
-            var point = _anchor + _direction * (_coneLength); //used for anchor for next mesh addition
-            mesh.AddSphere(point, _diameter / 2);
+            mesh.AddSphere(_bottomAnchor, _diameter / 2);
             mesh.AddCylinder(
-                point,
-                new Point3D(point.X, point.Y, _height),
+                _bottomAnchor,
+                _topAnchor,
                 _diameter / 2);
             return mesh.ToMesh();
         }
@@ -176,9 +220,12 @@ namespace Fabolus.Features.AirChannel {
 
         public override DMesh3 MeshOffset(float offset, float height) {
             var mesh = new MeshBuilder();
+
+            var anchor = _anchor + _direction * -_depth;
             var radius = _diameter / 2 + offset;
+
             mesh.AddCone(
-                _anchor, //cone tip position
+                anchor, //cone tip position
                 _direction, //cone direction
                 _coneDiameter / 2 + offset, //cone base radius
                 radius, //cone top radius
@@ -188,7 +235,7 @@ namespace Fabolus.Features.AirChannel {
                 16 //divisions/resolution
                 );
 
-            var point = _anchor + _direction * (_coneLength); //used for anchor for next mesh addition
+            var point = anchor + _direction * (_coneLength); //used for anchor for next mesh addition
 
             mesh.AddSphere(point, radius);
             mesh.AddCylinder(
@@ -200,7 +247,13 @@ namespace Fabolus.Features.AirChannel {
     }
 
     public class AirChannelPath : AirChannelShape {
-        private double _diameter, _height;
+        public override Type ChannelType => typeof(AngledChannel);
+        public override ChannelBase GetChannelSettings() => new AngledChannel { ChannelDepth = (float)_depth, ChannelDiameter = (float)_diameter };
+        public override void UpdateSettings(ChannelBase channel) {
+            throw new NotImplementedException();
+        }
+
+        private double _depth, _diameter, _height;
         private double _radius => _diameter / 2;
         private List<Point3D> _path { get; set; }
 
