@@ -68,6 +68,10 @@
             <DataTemplate DataType="{x:Type channels:AngledChannelViewModel}">
                 <channels:AngledChannelView/>
             </DataTemplate>
+
+            <DataTemplate DataType="{x:Type channels:PathChannelViewModel}">
+                <channels:PathChannelView/>
+            </DataTemplate>
             
         </ResourceDictionary>
     </Application.Resources>

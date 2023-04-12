@@ -34,6 +34,7 @@ namespace Fabolus.Features.AirChannel {
     public class AirChannelToolIndexRequestMessage : RequestMessage<int> { }
     public class AirChannelVerticalRequestMessage : RequestMessage<VerticalChannel> { }
     public class AirChannelAngledRequestMessage : RequestMessage<AngledChannel> { }
+    public class AirChannelPathRequestMessage : RequestMessage<PathChannel> { }
 
     #endregion
 
@@ -60,7 +61,8 @@ namespace Fabolus.Features.AirChannel {
 
             _tools = new List<ChannelBase> {
                 new VerticalChannel(),
-                new AngledChannel()
+                new AngledChannel(),
+                new PathChannel()
             };
 
             //registering messages
@@ -87,6 +89,7 @@ namespace Fabolus.Features.AirChannel {
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelToolIndexRequestMessage>(this, (r, m) => { m.Reply(_activeTool); });
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelVerticalRequestMessage>(this, (r, m) => { m.Reply((VerticalChannel)_tools[0]); });
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelAngledRequestMessage>(this, (r,m) => { m.Reply((AngledChannel)_tools[1]); });
+            WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelPathRequestMessage>(this, (r, m) => { m.Reply((PathChannel)_tools[2]); });
 
         }
 

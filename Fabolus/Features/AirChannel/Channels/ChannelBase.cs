@@ -1,5 +1,4 @@
-﻿using Fabolus.Features.AirChannel.Controls;
-using Fabolus.Features.AirChannel.MouseTools;
+﻿using Fabolus.Features.AirChannel.MouseTools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +10,7 @@ namespace Fabolus.Features.AirChannel.Channels {
         public virtual string Name => "air channel base";
         
         //view model and view
-        public virtual ChannelControlViewModel ViewModel { get; protected set; }
+        public virtual ChannelViewModelBase ViewModel { get; protected set; }
 
         //mouse tools
         public virtual Type MouseToolType { get; protected set; }
