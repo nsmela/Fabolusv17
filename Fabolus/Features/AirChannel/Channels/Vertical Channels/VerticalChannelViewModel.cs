@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
-using Fabolus.Features.AirChannel.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Fabolus.Features.AirChannel.Channels {
-    public partial class VerticalChannelViewModel : ChannelControlViewModel {
+    public partial class VerticalChannelViewModel : ChannelViewModelBase {
         [ObservableProperty] private string _channelName;
         [ObservableProperty] private float _channelDepth, _channelDiameter;
 

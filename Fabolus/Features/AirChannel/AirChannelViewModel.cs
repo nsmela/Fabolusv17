@@ -2,7 +2,6 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fabolus.Features.AirChannel.Channels;
-using Fabolus.Features.AirChannel.Controls;
 using Fabolus.Features.AirChannel.MouseTools;
 using Fabolus.Features.Common;
 using System.Collections.Generic;
@@ -21,7 +20,7 @@ namespace Fabolus.Features.AirChannel {
             WeakReferenceMessenger.Default.Send(new SetChannelTypeMessage(value));
         }
 
-        [ObservableProperty] private ChannelControlViewModel _channelViewModel;
+        [ObservableProperty] private ChannelViewModelBase _channelViewModel;
 
         public ObservableCollection<string> ToolNames;
 
