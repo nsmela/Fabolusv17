@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using Fabolus.Features.AirChannel.MouseTools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,6 +25,8 @@ namespace Fabolus.Features.AirChannel.Channels {
         public override void Initialize() {
             //Messages
             _channel = WeakReferenceMessenger.Default.Send<AirChannelPathRequestMessage>();
+            //testing
+
 
             PathPoints = _channel.PathPoints;
 
@@ -51,5 +55,7 @@ namespace Fabolus.Features.AirChannel.Channels {
 
             _isFrozen = false;
         }
+
+        [RelayCommand] private void AddAirChannelPath() => WeakReferenceMessenger.Default.Send(new AddPathAirChannelMessage());
     }
 }

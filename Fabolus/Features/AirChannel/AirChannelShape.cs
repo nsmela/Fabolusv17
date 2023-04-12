@@ -4,6 +4,7 @@ using g3;
 using HelixToolkit.Wpf;
 using System;
 using System.Collections.Generic;
+using System.Threading.Channels;
 using System.Windows.Controls;
 using System.Windows.Media.Media3D;
 
@@ -247,24 +248,37 @@ namespace Fabolus.Features.AirChannel {
     }
 
     public class AirChannelPath : AirChannelShape {
-        public override Type ChannelType => typeof(AngledChannel);
-        public override ChannelBase GetChannelSettings() => new AngledChannel { ChannelDepth = (float)_depth, ChannelDiameter = (float)_diameter };
+        public override Type ChannelType => typeof(PathChannel);
+        public override ChannelBase GetChannelSettings() => new PathChannel { ChannelDepth = (float)_depth, ChannelDiameter = (float)_diameter };
         public override void UpdateSettings(ChannelBase channel) {
-            throw new NotImplementedException();
-        }
+            if (channel.GetType() != ChannelType) return;
+            var pathChannel = (PathChannel)channel;
 
-        private double _depth, _diameter, _height;
-        private double _radius => _diameter / 2;
-        private List<Point3D> _path { get; set; }
-
-        public AirChannelPath(List<Point3D> path, double diameter, double height) {
-            _path = path;
-            _diameter = diameter;
-            _height = height;
+            //fill out
+            _depth = pathChannel.ChannelDepth;
+            _diameter = pathChannel.ChannelDiameter;
+            _upperDiameter = pathChannel.UpperDiameter;
+            _upperHeight = pathChannel.UpperHeight;
 
             Geometry = SetGeometry();
-            //GeometryOffset = SetGeometry(3.2f);
-            //SetMesh(); //TODO
+            Mesh = BolusUtility.MeshGeometryToDMesh(Geometry);
+        }
+
+        private double _depth, _diameter, _height, _upperHeight, _upperDiameter;
+        private double Radius => _diameter / 2;
+        private double UppderRadius => _upperDiameter / 2;
+        private List<Point3D> _path { get; set; }
+
+        public AirChannelPath(List<Point3D> path, double depth, double diameter, double height, double upperDiameter, double upperHeight) {
+            _path = path;
+            _depth = depth;
+            _diameter = diameter;
+            _height = height;
+            _upperDiameter= upperDiameter;
+            _upperHeight = upperHeight;
+
+            Geometry = SetGeometry();
+            Mesh = BolusUtility.MeshGeometryToDMesh(Geometry);
         }
 
         private MeshGeometry3D SetGeometry() {
@@ -273,17 +287,32 @@ namespace Fabolus.Features.AirChannel {
 
             var mesh = new MeshBuilder();
 
-            mesh.AddSphere(_path[0], _radius);
-            AddCylinder(_path[0], _radius, _height,  ref mesh);
+            mesh.AddSphere(BottomPoint(_path[0]), Radius);
+            AddCylinder(BottomPoint(_path[0]), Radius, _height,  ref mesh);
 
             Point3D origin, end;
             for (int i = 1; i < _path.Count; i++) {
                 origin = _path[i - 1];
                 end = _path[i];
 
-                mesh.AddSphere(end, _radius);
-                AddCylinder(end, _radius, _height, ref mesh);
-                AddChannel(origin, end, _radius, _height, ref mesh);
+                mesh.AddSphere(BottomPoint(end), Radius);
+                AddCylinder(BottomPoint(end), Radius, _height, ref mesh);
+                AddChannel(BottomPoint(origin), BottomPoint(end), Radius, _height, ref mesh);
+            }
+
+            if(_upperDiameter <= _diameter)  return mesh.ToMesh();
+
+            //add enlarged upper channels
+
+            mesh.AddSphere(MiddlePoint(_path[0]), _upperDiameter / 2);
+            AddCylinder(MiddlePoint(_path[0]), _upperDiameter / 2, _height, ref mesh);
+            for (int i = 1; i < _path.Count; i++) {
+                origin = _path[i - 1];
+                end = _path[i];
+
+                mesh.AddSphere(MiddlePoint(end), _upperDiameter / 2);
+                AddCylinder(MiddlePoint(end), _upperDiameter / 2, _height, ref mesh);
+                AddChannel(MiddlePoint(origin), MiddlePoint(end), _upperDiameter / 2, _height, ref mesh);
             }
 
             return mesh.ToMesh();
@@ -294,24 +323,27 @@ namespace Fabolus.Features.AirChannel {
             if (_path.Count == 0) return null;
 
             var mesh = new MeshBuilder();
-            var radius = _radius + offset;
+            var radius = Radius + offset;
 
-            mesh.AddSphere(_path[0], radius);
-            AddCylinder(_path[0], radius, height, ref mesh);
+            mesh.AddSphere(BottomPoint(_path[0]), radius);
+            AddCylinder(BottomPoint(_path[0]), radius, height, ref mesh);
 
             Point3D origin, end;
             for (int i = 1; i < _path.Count; i++) {
                 origin = _path[i - 1];
                 end = _path[i];
 
-                mesh.AddSphere(end, radius);
-                AddCylinder(end, radius, height, ref mesh);
-                AddChannel(origin, end, radius, height, ref mesh);
+                mesh.AddSphere(BottomPoint(end), radius);
+                AddCylinder(BottomPoint(end), radius, height, ref mesh);
+                AddChannel(BottomPoint(origin), BottomPoint(end), radius, height, ref mesh);
             }
 
             return BolusUtility.MeshGeometryToDMesh( mesh.ToMesh());
         }
 
+        private Point3D BottomPoint(Point3D point) =>  new Point3D(point.X, point.Y, point.Z - _depth);
+        private Point3D MiddlePoint(Point3D point) => new Point3D(point.X, point.Y, point.Z + _upperHeight);
+        private Point3D UpperPoint(Point3D point) => new Point3D(point.X, point.Y, _height);
         private void AddCylinder(Point3D point, double radius, double height, ref MeshBuilder mesh) => mesh.AddCylinder(point, new Point3D(point.X, point.Y, height), radius, 16, true, true);
         private void AddChannel(Point3D origin, Point3D end, double radius, double height, ref MeshBuilder mesh) {
             var direction = Direction(origin, end);

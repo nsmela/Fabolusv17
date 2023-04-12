@@ -52,17 +52,19 @@ namespace Fabolus.Features.AirChannel
             //parsing required info
             double height = WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
             int? selectedIndex = null;
-            //Update(diameter, height, selectedIndex);
-
         }
 
         #region Receiving Messeges
         private void ChannelChanged(ChannelBase channel) {
-            
-            if (_mouseTool != null && channel.MouseToolType == _mouseTool.GetType()) return;
+
+            if (_mouseTool != null && channel.MouseToolType == _mouseTool.GetType()) {
+                OnMouseMove();
+                return;
+            }
             var mouseTool = Activator.CreateInstance(channel.MouseToolType);
 
             _mouseTool = (AirChannelMouseTool)mouseTool;
+            OnMouseMove();//updates the tool if needed
         }
 
         #endregion
@@ -130,17 +132,6 @@ namespace Fabolus.Features.AirChannel
                 }
             }
         }
-
-        //to update the settings
-        /*
-        private void Update(double diameter, double height, int? selectedIndex) {
-            //tool needs to be updated
-            Diameter = diameter;
-            Height = height;
-            
-            //update mouse tool mesh
-            OnMouseMove();
-        }*/
 
         private DiffuseMaterial SetSkin(Color colour, double opacity) {
             var brush = new SolidColorBrush(colour);

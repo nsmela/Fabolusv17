@@ -10,6 +10,8 @@ using CommunityToolkit.Mvvm.Messaging;
 using HelixToolkit.Wpf;
 using Fabolus.Features.Common;
 using Fabolus.Features.Bolus;
+using Fabolus.Features.AirChannel.Channels;
+using CommunityToolkit.Mvvm.Input;
 
 namespace Fabolus.Features.AirChannel.MouseTools {
     public sealed record AddPathAirChannelMessage();
@@ -18,56 +20,81 @@ namespace Fabolus.Features.AirChannel.MouseTools {
         private string BOLUS_LABEL => AirChannelMeshViewModel.BOLUS_LABEL;
         private string AIRCHANNEL_LABEL => AirChannelMeshViewModel.AIRCHANNEL_LABEL;
 
-        private double _diameter, _height;
+        private double _depth, _diameter, _height, _upperDiameter, _upperHeight;
         private List<Point3D> _pathPoints;
-        private List<Point3D>? _path;
-        private List<int> _pathTriangles; //triangles closest to the path point. used to set up pat finding
         private Point3D? _lastMousePosition;
-        private BolusModel _bolus;
         private MeshGeometry3D _mesh;
 
         public override Geometry3D? ToolMesh { 
             get {
+                if (_lastMousePosition == null || _lastMousePosition == new Point3D()) return _mesh;
+                var point = new Point3D(
+                    ((Point3D)_lastMousePosition).X,
+                    ((Point3D)_lastMousePosition).Y,
+                    ((Point3D)_lastMousePosition).Z - _depth
+                );
+
                 var mesh = new MeshBuilder();
+                mesh.AddSphere(point, _diameter / 2);
                 if(_mesh != null) mesh.Append(_mesh);
-                if (_lastMousePosition != null) mesh.AddSphere((Point3D)_lastMousePosition, _diameter / 2);
                 return mesh.ToMesh();
             } 
         }
 
         public PathAirChannelMouseTool() {
             _pathPoints = new();
-            _pathTriangles = new();
 
             //messages
-            //WeakReferenceMessenger.Default.Register<AirChannelSettingsUpdatedMessage>(this, (r, m) => {
-            //    _diameter = m.diameter;
-            //    _height = m.height;
-            //});
-
+            WeakReferenceMessenger.Default.Register<ChannelUpdatedMessage>(this, (r, m) => { ChannelUpdated(m.channel); });
+            WeakReferenceMessenger.Default.Register<AddPathAirChannelMessage>(this, (r, m) => { AddAirChannelPath(); });
             WeakReferenceMessenger.Default.Register<ClearAirChannelsMessage>(this, (r, m) => {
-                //if nothing is clicked on
                 _pathPoints.Clear();
-                _pathTriangles.Clear();
                 _mesh = ToMesh();
             });
 
-            WeakReferenceMessenger.Default.Register<AddPathAirChannelMessage>(this, (r, m) => { AddAirChannelPath(); });
             _height = WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
-            
+            ChannelBase channel = WeakReferenceMessenger.Default.Send<AirChannelToolRequestMessage>();
+            ChannelUpdated(channel);
         }
+
+        #region Receiving Messages
+        private void ChannelUpdated(ChannelBase channel) {
+            if (channel.GetType() != typeof(PathChannel)) return;
+
+            var pathChannel = (PathChannel)channel;
+            _pathPoints = pathChannel.PathPoints;
+            _depth = pathChannel.ChannelDepth;
+            _diameter = pathChannel.ChannelDiameter;
+            _upperDiameter = pathChannel.UpperDiameter;
+            _upperHeight = pathChannel.UpperHeight;
+            _mesh = ToMesh();
+        }
+
+        private void AddAirChannelPath() {
+            //create shape
+            var path = new List<Point3D>();
+            _pathPoints.ForEach(p => path.Add(new Point3D(p.X, p.Y, p.Z - _depth))); //for testing bottom render
+            var mesh = new AirChannelPath(path, _depth, _diameter, _height, _upperDiameter, _upperHeight);
+
+            //clear relevant variables
+            _pathPoints.Clear();
+            _mesh = ToMesh();
+
+            //add it to air channel store
+            WeakReferenceMessenger.Default.Send(new AddAirChannelShapeMessage(mesh));
+
+        }
+        #endregion
 
         #region Mouse Commands
         public override void MouseDown(MouseEventArgs mouse) {
             if (mouse.RightButton == MouseButtonState.Pressed) return;
-            _bolus = (BolusModel)WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
 
             //get all hits
             var hits = GetHits(mouse);
             if (hits == null || hits.Count == 0) {
                 //if nothing is clicked on
                 _pathPoints.Clear();
-                _pathTriangles.Clear();
                 _mesh = ToMesh();
                 WeakReferenceMessenger.Default.Send(new AirChannelSelectedMessage(null));
                 return; //nothing was struck
@@ -103,9 +130,20 @@ namespace Fabolus.Features.AirChannel.MouseTools {
             //abort if any mouse buttons are down
             if (mouse.LeftButton == MouseButtonState.Pressed) return;
             if (mouse.RightButton == MouseButtonState.Pressed) return;
+            _lastMousePosition = new Point3D(); //resets the value if nothing is hit
 
-            //calculate mouse hit and which model
-            _lastMousePosition = MouseTool.GetHitSpot(mouse, BOLUS_LABEL);
+            //which spot on the bolus is the mouse over, if not on an air channel
+            //the first one hit is the important one
+            var hits = GetHits(mouse);
+            foreach (var h in hits) {
+                if (h.Model == null || h.Model.GetName() == null) continue;
+                if (h.Model.GetName().Contains(AIRCHANNEL_LABEL)) return;
+
+                if (h.Model.GetName() == BOLUS_LABEL) {
+                    _lastMousePosition = h.Position;
+                    return;
+                }
+            }
         }
 
         public override void MouseUp(MouseEventArgs mouse) {
@@ -127,55 +165,7 @@ namespace Fabolus.Features.AirChannel.MouseTools {
                     mesh.AddCylinder(_pathPoints[i], _pathPoints[i + 1], 0.5f);
                 }
             }
-
-            /*
-            if(_pathPoints.Count > 1 ) {
-                var path = GetPath();
-                if (path != null && path.Count > 0) {
-                    for(int i = 1; i < path.Count; i++) {
-                        mesh.AddCylinder(path[i - 1], path[i], 0.5f, 8);
-                    }
-                } 
-            }
-            */
             return mesh.ToMesh();
-
-        }
-
-        private List<Point3D> GetPath() {
-            if (_pathPoints.Count <= 1) return new List<Point3D>();
-
-            var paths = new List<Point3D>();
-
-            for(int i = 1; i < _pathPoints.Count; i++) {
-                Point3D start = _pathPoints[i-1];
-                Point3D end = _pathPoints[i];
-                int startTri = _pathTriangles[i - 1];
-                int endTri = _pathTriangles[i];
-
-                var path = _bolus.GetGeoDist(start, startTri, end, endTri);
-                if (path == null) continue;
-
-                path.Add(start);
-                path.ForEach(paths.Add);
-                path.Add(end);
-            }
-
-            return paths;
-        }
-
-        private void AddAirChannelPath() {
-            //create shape
-            var path = new List<Point3D>();
-            _pathPoints.ForEach(p => path.Add(new Point3D(p.X, p.Y, p.Z - _diameter/2))); //for testing bottom render
-            var mesh = new AirChannelPath(path, _diameter, _height);
-
-            //clear relevant variables
-            _pathPoints.Clear();
-            _mesh = ToMesh();
-
-            //add it to air channel store
-            WeakReferenceMessenger.Default.Send(new AddAirChannelShapeMessage(mesh));
 
         }
 
