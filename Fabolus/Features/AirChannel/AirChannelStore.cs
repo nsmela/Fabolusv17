@@ -12,6 +12,7 @@ using System.Windows.Media.Media3D;
 namespace Fabolus.Features.AirChannel {
     #region Messages
     public sealed record AddAirChannelShapeMessage(AirChannelShape shape);
+    public sealed record RemoveSelectedChannelMessage();
     public sealed record ClearAirChannelsMessage();
     public sealed record AirChannelsUpdatedMessage(List<AirChannelModel> channels, int? selectedIndex);
     public sealed record AirChannelSelectedMessage(int? channelIndex);
@@ -68,6 +69,7 @@ namespace Fabolus.Features.AirChannel {
 
             //registering messages
             WeakReferenceMessenger.Default.Register<AddAirChannelShapeMessage>(this, (r, m) => { AddAirChannel(m.shape); });
+            WeakReferenceMessenger.Default.Register<RemoveSelectedChannelMessage>(this, (r, m) => { RemoveChannel(_selectedChannel); });
             WeakReferenceMessenger.Default.Register<AirChannelSelectedMessage>(this, (r, m) => { SetSelectedChannel(m.channelIndex); });
             WeakReferenceMessenger.Default.Register<ClearAirChannelsMessage>(this, (r, m) => { ClearChannels(); });
             WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r,m) => { UpdateBolus(m.bolus); });
@@ -129,6 +131,15 @@ namespace Fabolus.Features.AirChannel {
             //create a channelbase with the settings from the selected air channel shape
             //set the active tool index to that ChannelBase in _tools
             //the channel in _tools is updated with the settings from the selected channel model
+        }
+
+        //delete an air shape from the channels list
+        private void RemoveChannel(int index) {
+            if(index < 0 || index >= _channels.Count) return;
+            if(index == _selectedChannel) _selectedChannel= -1;
+
+            _channels.RemoveAt(index);
+            SendChannelsUpdate();
         }
 
         private void SetActiveTool(int toolIndex) {

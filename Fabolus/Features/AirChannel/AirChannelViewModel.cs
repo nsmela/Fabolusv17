@@ -45,7 +45,7 @@ namespace Fabolus.Features.AirChannel {
         [RelayCommand] private void SetAirChannelToolStraight() => WeakReferenceMessenger.Default.Send(new SetAirChannelTool(0));
         [RelayCommand] private void SetAirChannelToolAngled() => WeakReferenceMessenger.Default.Send(new SetAirChannelTool(1));
         [RelayCommand] private void SetAirChannelToolPath() => WeakReferenceMessenger.Default.Send(new SetAirChannelTool(2));
-
+        [RelayCommand] private void DeleteSelectedChannel() => WeakReferenceMessenger.Default.Send(new RemoveSelectedChannelMessage());
         #endregion
 
         #region Private Methods

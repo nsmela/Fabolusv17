@@ -28,13 +28,24 @@
                     Margin="4,8,4,0"
                     >
             <ContentControl Content="{Binding ChannelViewModel}" />
-            <Button Content="clear" 
-                Height="30"
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="4">
+                <Button Content="delete" 
+                Height="30" Width="80"
                 HorizontalAlignment="Stretch"
                 FontSize="14" 
                 FontWeight="Bold"
                 FontFamily="\Fonts\#Poppins"
+                Margin="2"
+                Command="{Binding DeleteSelectedChannelCommand}" />
+                <Button Content="clear" 
+                Height="30" Width="80"
+                HorizontalAlignment="Stretch"
+                FontSize="14" 
+                FontWeight="Bold"
+                FontFamily="\Fonts\#Poppins"
+                        Margin="2"
                 Command="{Binding ClearAirChannelsCommand}" />
+            </StackPanel>
         </StackPanel>
     </StackPanel>
 </UserControl>
