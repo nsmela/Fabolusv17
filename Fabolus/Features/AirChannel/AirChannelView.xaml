@@ -17,10 +17,9 @@
                         FontFamily="\Fonts\#Poppins"/>
         <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch" VerticalAlignment="Center">
             <ComboBox SelectedIndex="{Binding ActiveToolIndex}"
-                      ItemsSource="{Binding ToolNames}">
-                <ComboBoxItem Content="vertical channel" />
-                <ComboBoxItem Content="angled channel" />
-                <ComboBoxItem Content="path channel" />
+                      ItemsSource="{Binding ToolNames}"
+                      IsSynchronizedWithCurrentItem="True"
+                      Width="164">
             </ComboBox>
         </StackPanel>
         <StackPanel HorizontalAlignment="Stretch" 

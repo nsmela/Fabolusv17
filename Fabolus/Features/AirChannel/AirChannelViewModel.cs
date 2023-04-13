@@ -22,12 +22,12 @@ namespace Fabolus.Features.AirChannel {
 
         [ObservableProperty] private ChannelViewModelBase _channelViewModel;
 
-        public ObservableCollection<string> ToolNames;
+        [ObservableProperty] private List<string> _toolNames;
 
         public AirChannelViewModel() {
             List<string> names = WeakReferenceMessenger.Default.Send<AirChannelsListRequestMessage>();
-            ToolNames = new();
-            names.ForEach(n => ToolNames.Add(n));
+            _toolNames = new();
+            names.ForEach(n => _toolNames.Add(n));
             ActiveToolIndex = (int)WeakReferenceMessenger.Default.Send<AirChannelToolIndexRequestMessage>();
 
             //messaging receiving
