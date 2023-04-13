@@ -10,6 +10,7 @@ using Fabolus.Features.Mold;
 using Fabolus.Features.Rotation;
 using Fabolus.Features.Smoothing;
 using HelixToolkit.Wpf;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
 
@@ -31,6 +32,8 @@ namespace Fabolus.Features.MainWindow {
         [ObservableProperty] private string? _rightMouseLabel;
         [ObservableProperty] private string? _centreMouseLabel;
 
+        //mesh info
+        [ObservableProperty] private string _filePath, _fileSize, _triangleCount, _volumeText;
 
         #region Messages
         public sealed record NavigateToMessage(ViewModelBase viewModel);
@@ -44,6 +47,12 @@ namespace Fabolus.Features.MainWindow {
 
             //messages
             WeakReferenceMessenger.Default.Register<NavigateToMessage>(this, (r,m) => { NavigateTo(m.viewModel); });
+            WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r, m) => { BolusUpdated(m.bolus); });
+
+            FilePath = string.Empty;
+            FileSize = "No model loaded";
+            TriangleCount = "No model loaded";
+            VolumeText = "No model loaded";
         }
 
         private void NavigateTo(ViewModelBase viewModel) {
@@ -63,6 +72,25 @@ namespace Fabolus.Features.MainWindow {
             LeftMouseLabel= viewModel.LeftMouseLabel;
             RightMouseLabel= viewModel.RightMouseLabel;
             CentreMouseLabel = viewModel.CentreMouseLabel;
+        }
+
+        private void BolusUpdated(BolusModel bolus) {
+            string filepath = WeakReferenceMessenger.Default.Send<BolusFilePathRequestMessage>();
+            FilePath = string.Empty;
+
+            if (filepath != null && filepath != string.Empty) {
+                var fileInfo = new FileInfo(filepath);
+                FileSize = (fileInfo.Length / 1000).ToString("0.00") + " KB";
+                FilePath = fileInfo.Name;
+            }
+            else FileSize = "N/A";
+
+            if (bolus.Mesh != null) TriangleCount = bolus.Mesh.TriangleCount.ToString("N0");
+            else TriangleCount = "N/A";
+
+            //volumes
+            if (bolus.Mesh != null) VolumeText = "107 mL / 110 mL";
+            else VolumeText = "No Mesh loaded";
         }
 
         #region Commands

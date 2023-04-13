@@ -16,7 +16,6 @@
     </Window.DataContext>
 
     <Grid>
-
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200"/>
             <ColumnDefinition Width="*" />
@@ -110,5 +109,23 @@
                 <Label Content="{Binding RightMouseLabel}" Panel.ZIndex="3" VerticalAlignment="Center" Margin="5,0,0,0" Background="White" Width="140"/>
             </StackPanel>
         </StackPanel>
+        
+        <!-- Info Pane-->
+        <GroupBox Header="Mesh Info" BorderBrush="Black" Background="White" BorderThickness="2"   
+                 Grid.Row="1" Grid.Column="1"
+                 Margin="0,8,10,0" 
+                 HorizontalAlignment="Right" 
+                 VerticalAlignment="Top" >
+            <StackPanel Orientation="Vertical" Width="140" MinWidth="140" MaxWidth="200" >
+                <Label Content="File Name" Margin="0,-8,0,0"/>
+                <Label Content="{Binding FileName}" Margin="10,-8,0,0"/>
+                <Label Content="File Size" Margin="0,-8,0,0"/>
+                <Label Content="{Binding FileSize}" Margin="10,-8,0,0"/>
+                <Label Content="Triangles" Margin="0,-8,0,0"/>
+                <Label Content="{Binding TriangleCount}" Margin="10,-8,0,0"/>
+                <Label Content="Volume(s)" Margin="0,-8,0,0"/>
+                <Label Content="{Binding VolumeText}" Margin="10,-8,0,0"/>
+            </StackPanel>
+        </GroupBox>
     </Grid>
 </Window>

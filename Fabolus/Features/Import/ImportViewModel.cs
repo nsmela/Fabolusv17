@@ -7,7 +7,6 @@ using g3;
 using CommunityToolkit.Mvvm.Messaging;
 using Fabolus.Features.Bolus;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Fabolus.Features.Common.Controls;
 
 namespace Fabolus.Features.Import {
     public partial class ImportViewModel : ViewModelBase {
@@ -15,11 +14,6 @@ namespace Fabolus.Features.Import {
         public override MeshViewModelBase MeshViewModel => new ImportMeshViewModel();
 
         [ObservableProperty] private bool _advancedMode = false;
-        [ObservableProperty] private MeshInfoViewModel _meshInfo;
-
-        public ImportViewModel() {
-            MeshInfo = new MeshInfoViewModel();
-        }
 
         //commands
         #region Commands
