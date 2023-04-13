@@ -1,67 +1,52 @@
-﻿using Fabolus.Features.Bolus;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Fabolus.Features.Bolus;
 using Fabolus.Features.Mold.Tools;
 using g3;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
-namespace Fabolus.Features.Mold {
-    public class MoldBox : MoldShape {
-        public override string Name => "mold box";
+namespace Fabolus.Features.Mold.Contours {
+    public class BoxContour : ContourBase {
+        public override string Name => "contoured box";
+        public override MeshGeometry3D Geometry { get; protected set; }
+        public override DMesh3 Mesh { get; protected set; }
+        public BolusModel Bolus { get; set; }
+        public float OffsetXY { get; set; }
+        public float OffsetBottom { get; set; }
+        public float OffsetTop { get; set; }
+        public float Resolution { get; set; } //size of the cells when doing marching cubes, in mm
 
-        public MoldBox(MoldStore.MoldSettings settings, BolusModel bolus = null) {
-            Bolus = bolus;
-            Settings = settings;
-
-            //should this subscribe to the bolusupdated and moldsettings update messages?
-            //No, models are meant to be data storage object.
-            //Let MoldStore update the current mold shape
-        }
-
-        public override void ToMesh() {
+        public override void Calculate() {
+            Geometry = new MeshGeometry3D();
+            Mesh = new DMesh3();
+            BolusModel bolus = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
             if (Bolus == null || Bolus.Mesh == null || Bolus.Mesh.VertexCount == 0) return;
+            var numberOfCells = (int)Math.Ceiling(Bolus.TransformedMesh.CachedBounds.MaxDim / Resolution);
+            var offsetMesh = MoldUtility.OffsetMeshD(Bolus.TransformedMesh, OffsetXY);
 
-            var offsetMesh = MoldUtility.OffsetMeshD(Bolus.TransformedMesh, Settings.OffsetXY);
-
-            Bitmap3 bmp = BolusUtility.MeshBitmap(offsetMesh, Settings.Resolution);
+            Bitmap3 bmp = BolusUtility.MeshBitmap(offsetMesh, numberOfCells);
 
             //turn it into a voxilized mesh
             VoxelSurfaceGenerator voxGen = new VoxelSurfaceGenerator();
             voxGen.Voxels = BitmapBox(bmp);
             voxGen.Generate();
-            var result = new DMesh3(MoldUtility.MarchingCubesSmoothing(voxGen.Meshes[0], Settings.Resolution));
+            var result = new DMesh3(MoldUtility.MarchingCubesSmoothing(voxGen.Meshes[0], numberOfCells));
 
             //mesh is small and not aligned
-            var scale = offsetMesh.CachedBounds.MaxDim / Settings.Resolution;
+            var scale = offsetMesh.CachedBounds.MaxDim / Resolution;
             MeshTransforms.Scale(result, scale);
             BolusUtility.CentreMesh(result, offsetMesh);
 
-            Geometry = BolusUtility.DMeshToMeshGeometry(result);
-            return;
+            Mesh = result;
+            Geometry = BolusUtility.DMeshToMeshGeometry(Mesh);
         }
 
-        public override void UpdateMesh() {
-            if (Bolus == null || Bolus.Mesh == null || Bolus.Mesh.VertexCount == 0) return;
-
-
-        }
-
-        private List<Point3D> OffsetContour(DMesh3 mesh) {
-            //get offset mesh
-            var offsetMesh = MoldUtility.OffsetMeshD(mesh, Settings.OffsetXY, Settings.Resolution);
-
-            //get bitmap for that offset
-            var bitmap = BolusUtility.MeshBitmap(offsetMesh, Settings.Resolution);
-
-            //convert it into a box bitmap
-            var bmp = BitmapBox(bitmap);
-
-            //get points around bitmap
-
-
-            return new List<Point3D>();
-        }
-
-        static Bitmap3 BitmapBox(Bitmap3 bmp) {
+        private Bitmap3 BitmapBox(Bitmap3 bmp) {
             int[,,] grid = new int[bmp.Dimensions.x, bmp.Dimensions.y, bmp.Dimensions.z];
 
             //getting the top and bottoms
@@ -112,6 +97,5 @@ namespace Fabolus.Features.Mold {
 
             return bmp;
         }
-
     }
 }

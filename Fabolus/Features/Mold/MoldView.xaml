@@ -4,89 +4,19 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Fabolus.Features.Mold"
-              d:DataContext="{d:DesignInstance Type=local:MoldViewModel}"
+             d:DataContext="{d:DesignInstance Type=local:MoldViewModel}"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="200">
     <StackPanel HorizontalAlignment="Stretch" 
                 VerticalAlignment="Top" 
                 Margin="4,0,4,0">
-
-        <Label Content="mold offset" 
-                        HorizontalAlignment="Center" 
-                        VerticalAlignment="Center"
-                        FontSize="12" 
-                        FontWeight="Bold"
-                        FontFamily="\Fonts\#Poppins"/>
-        <Slider
-                        Value="{Binding OffsetXY, Mode=TwoWay}"
-                        Minimum="2" 
-                        Maximum="8" 
-                        TickFrequency="0.5" 
-                        TickPlacement="TopLeft" 
-                        AutoToolTipPlacement="BottomRight"
-                        AutoToolTipPrecision="1"
-                        IsSnapToTickEnabled="True" 
-                        Height="30" />
-        <Label Content="mold bottom offset" 
-                        HorizontalAlignment="Center" 
-                        VerticalAlignment="Center"
-                        FontSize="12" 
-                        FontWeight="Bold"
-                        FontFamily="\Fonts\#Poppins"/>
-        <Slider
-                        Value="{Binding OffsetBottom, Mode=TwoWay}"
-                        Minimum="2" 
-                        Maximum="8" 
-                        TickFrequency="0.5" 
-                        TickPlacement="TopLeft" 
-                        AutoToolTipPlacement="BottomRight"
-                        AutoToolTipPrecision="1"
-                        IsSnapToTickEnabled="True" 
-                        Height="30" />
-        <Label Content="mold top offset" 
-                        HorizontalAlignment="Center" 
-                        VerticalAlignment="Center"
-                        FontSize="12" 
-                        FontWeight="Bold"
-                        FontFamily="\Fonts\#Poppins"/>
-        <Slider
-                        Value="{Binding OffsetTop, Mode=TwoWay}"
-                        Minimum="2" 
-                        Maximum="8" 
-                        TickFrequency="0.5" 
-                        TickPlacement="TopLeft" 
-                        AutoToolTipPlacement="BottomRight"
-                        AutoToolTipPrecision="1"
-                        IsSnapToTickEnabled="True" 
-                        Height="30" />
-        <Label Content="mold resolution" 
-                        HorizontalAlignment="Center" 
-                        VerticalAlignment="Center"
-                        FontSize="12" 
-                        FontWeight="Bold"
-                        FontFamily="\Fonts\#Poppins"/>
-        <Slider Value="{Binding Resolution, Mode=TwoWay}"
-                        Minimum="64" 
-                        Maximum="192" 
-                        Ticks="64, 96, 128, 160, 192"
-                        TickPlacement="TopLeft" 
-                        AutoToolTipPlacement="BottomRight"
-                        IsSnapToTickEnabled="True" 
-                        Height="30"/>
-        <Label Content="{Binding ShapeName}" 
-                        HorizontalAlignment="Center" 
-                        VerticalAlignment="Center"
-                        FontSize="12" 
-                        FontWeight="Bold"
-                        FontFamily="\Fonts\#Poppins"/>
-        <Slider Value="{Binding ShapeIndex, Mode=TwoWay}"
-                        Minimum="0" 
-                        Maximum="{Binding ShapeMax}" 
-                        TickFrequency="1" 
-                        TickPlacement="TopLeft" 
-                        IsSnapToTickEnabled="True" 
-                        Height="30"/>
-    <Button Content="generate" 
+        <ComboBox SelectedIndex="{Binding ActiveContourIndex}"
+                      ItemsSource="{Binding ShapeNames}"
+                      IsSynchronizedWithCurrentItem="True"
+                      Width="164">
+        </ComboBox>
+        <ContentControl Content="{Binding ContourViewModel}" />
+        <Button Content="generate" 
                 Height="30"
                 HorizontalAlignment="Stretch"
                 FontSize="14" 

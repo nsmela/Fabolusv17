@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Fabolus.Features.Mold.Tools {
-    public static partial class MoldTools {
+    public static partial class MoldUtility {
         public static DMesh3 MarchingCubesSmoothing(DMesh3 mesh, int numcells) {
             double cell_size = mesh.CachedBounds.MaxDim / (numcells);
 

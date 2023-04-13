@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Fabolus.Features.Mold.Tools {
-    public static partial class MoldTools {
+    public static partial class MoldUtility {
         public static DMesh3 BooleanUnion(DMesh3 mesh1, DMesh3 mesh2) {
             BoundedImplicitFunction3d meshA = meshToImplicitF(mesh1, 128, 0.2f);
             BoundedImplicitFunction3d meshB = meshToImplicitF(mesh2, 128, 0.2f);

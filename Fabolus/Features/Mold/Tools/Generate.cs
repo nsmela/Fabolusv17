@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
 
 namespace Fabolus.Features.Mold.Tools {
-    public static partial class MoldTools {
+    public static partial class MoldUtility {
         public static MeshGeometry3D GenerateMold(MoldShape shape) {
             //grab meshes for the preview mold and the bolus
             var mold = BolusUtility.MeshGeometryToDMesh(shape.Geometry as MeshGeometry3D);

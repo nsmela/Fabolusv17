@@ -21,7 +21,7 @@ namespace Fabolus.Features.Mold.Shapes {
         public override void ToMesh() {
             if (Bolus == null || Bolus.Mesh == null || Bolus.Mesh.VertexCount == 0) return;
 
-            var offsetMesh = MoldTools.OffsetMeshD(Bolus.TransformedMesh, Settings.OffsetXY);
+            var offsetMesh = MoldUtility.OffsetMeshD(Bolus.TransformedMesh, Settings.OffsetXY);
             
             List<AirChannelModel> airchannels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
 
@@ -32,8 +32,8 @@ namespace Fabolus.Features.Mold.Shapes {
                         channels.AppendMesh((a.Shape.MeshOffset(3.2f, (float)(Bolus.Mesh.CachedBounds.Max.z + 10))));
                 }
                 if (channels.Mesh != null && channels.Mesh.TriangleCount > 3) {
-                    var mesh = MoldTools.OffsetMeshD(channels.Mesh, Settings.OffsetXY);
-                    offsetMesh = MoldTools.BooleanUnion(offsetMesh, mesh);
+                    var mesh = MoldUtility.OffsetMeshD(channels.Mesh, Settings.OffsetXY);
+                    offsetMesh = MoldUtility.BooleanUnion(offsetMesh, mesh);
                 }
             }
 
@@ -47,7 +47,7 @@ namespace Fabolus.Features.Mold.Shapes {
             voxGen.Voxels = processedBmp;
             voxGen.Generate();
             
-            var result = new DMesh3(MoldTools.MarchingCubesSmoothing(voxGen.Meshes[0], cells));
+            var result = new DMesh3(MoldUtility.MarchingCubesSmoothing(voxGen.Meshes[0], cells));
 
             //mesh is small and not aligned
             var scale = offsetMesh.CachedBounds.MaxDim / cells;

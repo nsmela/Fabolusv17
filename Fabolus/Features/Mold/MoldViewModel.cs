@@ -1,7 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using Fabolus.Features.AirChannel.Channels;
+using Fabolus.Features.AirChannel;
 using Fabolus.Features.Common;
+using Fabolus.Features.Mold.Contours;
 using Fabolus.Features.Mold.Shapes;
 using Fabolus.Features.Mold.Tools;
 using System;
@@ -15,71 +18,32 @@ namespace Fabolus.Features.Mold {
         public override string? ViewModelTitle => "mold";
         public override MeshViewModelBase MeshViewModel => new MoldMeshViewModel();
 
-        [ObservableProperty] private double _offsetXY;
-        [ObservableProperty] private double _offsetTop;
-        [ObservableProperty] private double _offsetBottom;
-        [ObservableProperty] private int _resolution;
-        [ObservableProperty] private bool _isBusy = false;
-        [ObservableProperty] private Action[] _shapesList;
-        [ObservableProperty] private int _shapeIndex, _shapeMax;
-        [ObservableProperty] private string _shapeName;
-
-        partial void OnOffsetXYChanged(double value) => UpdateMoldSettings();
-        partial void OnOffsetTopChanged(double value) => UpdateMoldSettings();
-        partial void OnOffsetBottomChanged(double value) => UpdateMoldSettings();
-        partial void OnResolutionChanged(int value) => UpdateMoldSettings();
-        partial void OnShapeIndexChanged(int value) => ShapesList[value].Invoke();
-
-        private MoldStore.MoldSettings _settings;
+        [ObservableProperty] private ContourViewModelBase _contourViewModel;
+        [ObservableProperty] private int _activeContourIndex;
+        [ObservableProperty] private List<string> _shapeNames;
+        private ContourModelBase _contour;
 
         public MoldViewModel() {
-            //list of shapes ot choose from
-            ShapesList = new Action[] {
-                () => SetShape(new MoldBox(_settings)),
-                () => SetShape(new MoldRisingContour(_settings)),
-            };
+            ShapeNames = WeakReferenceMessenger.Default.Send<MoldShapesRequestMessage>();
+            _contour = WeakReferenceMessenger.Default.Send<MoldContourRequestMessage>();
+            ActiveContourIndex = ShapeNames.FindIndex(s => s == _contour.Name);
+            ContourViewModel = _contour.ViewModel;
 
-            ShapeMax = ShapesList.Length - 1;
-
-            _settings = WeakReferenceMessenger.Default.Send<MoldSettingsRequestMessage>();
-            UpdateSettings(_settings);
-
-            //to parse the name and settings automatically
-            ShapeIndex = 0;
-            ShapesList[ShapeIndex].Invoke();
+            //messaging receiving
+            WeakReferenceMessenger.Default.Register<MoldContourUpdatedMessage>(this, (r, m) => {
+                _contour = m.contour;
+                ContourViewModel = _contour.ViewModel;
+            });
         }
 
         #region Messages
-        private void UpdateSettings(MoldStore.MoldSettings settings) {
-            if (IsBusy) return;
-            IsBusy= true;
-            OffsetXY = settings.OffsetXY;
-            OffsetTop = settings.OffsetTop; 
-            OffsetBottom = settings.OffsetBottom;
-            Resolution = settings.Resolution;
-            IsBusy= false;
-        }
-
-        private void SetShape(MoldShape shape) {
-            ShapeName = shape.Name;
-            WeakReferenceMessenger.Default.Send(new MoldSetShapeMessage(shape));
-        }
+        private void SetContour(int index) => WeakReferenceMessenger.Default.Send(new MoldSetContourMessage(index));
+        
         
         #endregion
 
         #region Private Methods
-        /// <summary>
-        /// Updates the Mold Settings in the Mold Store
-        /// </summary>
-        private void UpdateMoldSettings() {
-            if(IsBusy) return;
-            _settings.OffsetXY= OffsetXY;
-            _settings.OffsetTop= OffsetTop;
-            _settings.OffsetBottom= OffsetBottom;
-            _settings.Resolution= Resolution;
 
-            WeakReferenceMessenger.Default.Send(new MoldSetSettingsMessage(_settings));
-        }
 
         #endregion
 
@@ -90,7 +54,7 @@ namespace Fabolus.Features.Mold {
             //does the shape hold it?
             //mesh view needs to know if one exists when opening
             MoldShape shape = WeakReferenceMessenger.Default.Send<MoldShapeRequestMessage>();
-            var mesh = MoldTools.GenerateMold(shape);
+            var mesh = MoldUtility.GenerateMold(shape);
             WeakReferenceMessenger.Default.Send(new MoldSetFinalShapeMessage(mesh));
         }
 
