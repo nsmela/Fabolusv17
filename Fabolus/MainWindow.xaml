@@ -14,7 +14,11 @@
     <Window.DataContext>
         <viewmodel:MainViewModel />
     </Window.DataContext>
-
+    
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="ShowInfoWindow" />
+    </Window.Resources>
+    
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200"/>
@@ -115,7 +119,8 @@
                  Grid.Row="1" Grid.Column="1"
                  Margin="0,8,10,0" 
                  HorizontalAlignment="Right" 
-                 VerticalAlignment="Top" >
+                 VerticalAlignment="Top" 
+                  Visibility="{Binding InfoVisible, Converter={StaticResource ShowInfoWindow}}">
             <StackPanel Orientation="Vertical" Width="140" MinWidth="140" MaxWidth="200" >
                 <Label Content="File Name" Margin="0,-8,0,0"/>
                 <Label Content="{Binding FileName}" Margin="10,-8,0,0"/>
