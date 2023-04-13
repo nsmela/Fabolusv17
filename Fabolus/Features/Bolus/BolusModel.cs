@@ -36,6 +36,7 @@ namespace Fabolus.Features.Bolus {
             }
         }
 
+        public DMesh3 RawMesh => _meshes.ContainsKey(ORIGINAL_BOLUS_LABEL) ? _meshes[ORIGINAL_BOLUS_LABEL] : new DMesh3();
         private DMesh3 _transformedMesh;
         public DMesh3 TransformedMesh => _transformedMesh;
 
