@@ -20,15 +20,15 @@ namespace Fabolus.Features.Smoothing {
 
         //list of smoothing settings to use with the slider
         private List<PoissonSmoothModel> _poissonSmoothings = new List<PoissonSmoothModel> { 
-            new PoissonSmoothModel{ Name = "rough", Depth = 9, Scale = 1.8f, SamplesPerNode = 2, EdgeLength = 2.5f },
-            new PoissonSmoothModel{ Name = "standard", Depth = 9, Scale = 1.8f, SamplesPerNode = 1, EdgeLength = 2.5f },
-            new PoissonSmoothModel{ Name = "smooth", Depth = 8, Scale = 1.4f, SamplesPerNode = 4, EdgeLength = 2.5f }
+            new PoissonSmoothModel{ Name = "rough", Depth = 9, Scale = 1.8f, SamplesPerNode = 2, EdgeLength = 1.0f },
+            new PoissonSmoothModel{ Name = "standard", Depth = 9, Scale = 1.8f, SamplesPerNode = 1, EdgeLength = 0.6f },
+            new PoissonSmoothModel{ Name = "smooth", Depth = 8, Scale = 1.4f, SamplesPerNode = 4, EdgeLength = 0.4f }
         };
 
         private PoissonSmoothModel Smoothing => _poissonSmoothings[SmoothingIndex];
 
         [ObservableProperty] private string _smoothingLabel;
-        [ObservableProperty] private int _smoothingIndex = -1;
+        [ObservableProperty] private int _smoothingIndex;
         [ObservableProperty] private int _depth, _samplesPerNode;
         [ObservableProperty] private float _smoothScale, _edgeLength;
         [ObservableProperty] private bool _advancedMode = false;
@@ -53,7 +53,7 @@ namespace Fabolus.Features.Smoothing {
 
             _bolus = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
 
-            SmoothingIndex = 0;
+            SmoothingIndex = 1; //starts at standard
             Smoothing.Initialize(_bolus.Mesh);
 
         }
