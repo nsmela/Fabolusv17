@@ -13,14 +13,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace Fabolus.Features.Mold.Shapes
+namespace Fabolus.Features.Mold.Contours
 {
     /// <summary>
-    /// Interaction logic for ContourBoxView.xaml
+    /// Interaction logic for RisingContourView.xaml
     /// </summary>
-    public partial class ContourBoxView : UserControl
+    public partial class RisingContourView : UserControl
     {
-        public ContourBoxView()
+        public RisingContourView()
         {
             InitializeComponent();
         }

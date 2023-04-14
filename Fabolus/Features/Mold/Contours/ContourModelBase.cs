@@ -10,7 +10,7 @@ namespace Fabolus.Features.Mold.Contours {
     /// </summary>
     public abstract class ContourModelBase {
         public virtual string Name { get; }
-        public virtual Type ContourType { get; }
+        public virtual Type ContourType { get; protected set; }
         public virtual ContourBase Contour { get; set; }
         public virtual ContourViewModelBase ViewModel { get; protected set; }
     }

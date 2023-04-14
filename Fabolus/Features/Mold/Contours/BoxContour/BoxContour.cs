@@ -13,9 +13,6 @@ using System.Windows.Media.Media3D;
 namespace Fabolus.Features.Mold.Contours {
     public class BoxContour : ContourBase {
         public override string Name => "contoured box";
-        public override MeshGeometry3D Geometry { get; protected set; }
-        public override DMesh3 Mesh { get; protected set; }
-        //public BolusModel Bolus { get; set; }
         public float OffsetXY { get; set; }
         public float OffsetBottom { get; set; }
         public float OffsetTop { get; set; }

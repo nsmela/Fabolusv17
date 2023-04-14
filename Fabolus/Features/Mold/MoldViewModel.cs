@@ -1,17 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using Fabolus.Features.AirChannel.Channels;
-using Fabolus.Features.AirChannel;
 using Fabolus.Features.Common;
 using Fabolus.Features.Mold.Contours;
-using Fabolus.Features.Mold.Shapes;
 using Fabolus.Features.Mold.Tools;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Fabolus.Features.Bolus;
 
 namespace Fabolus.Features.Mold {
@@ -25,7 +18,7 @@ namespace Fabolus.Features.Mold {
         private ContourModelBase _contour;
 
         public MoldViewModel() {
-            ShapeNames = WeakReferenceMessenger.Default.Send<MoldShapesRequestMessage>();
+            ShapeNames = WeakReferenceMessenger.Default.Send<MoldListRequestMessage>();
             _contour = WeakReferenceMessenger.Default.Send<MoldContourRequestMessage>();
             ActiveContourIndex = ShapeNames.FindIndex(s => s == _contour.Name);
             ContourViewModel = _contour.ViewModel;

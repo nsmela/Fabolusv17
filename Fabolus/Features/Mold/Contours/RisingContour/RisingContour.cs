@@ -8,59 +8,57 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media.Media3D;
 
-namespace Fabolus.Features.Mold.Shapes {
-    public class MoldRisingContour : MoldShape {
+namespace Fabolus.Features.Mold.Contours
+{
+    public class RisingContour : ContourBase {
         public override string Name => "rising contour";
+        public float OffsetXY { get; set; }
+        public float OffsetBottom { get; set; }
+        public float OffsetTop { get; set; }
+        public float Resolution { get; set; } //size of the cells when doing marching cubes, in mm
 
-        public MoldRisingContour(MoldStore.MoldSettings settings, BolusModel bolus = null) {
-            Bolus = bolus;
-            Settings = settings;
-        }
+        public override void Calculate() {
+            Geometry = new MeshGeometry3D();
+            Mesh = new DMesh3();
+            BolusModel bolus = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
+            if (bolus == null || bolus.Mesh == null || bolus.Mesh.VertexCount == 0) return;
+            var numberOfCells = (int)Math.Ceiling(bolus.TransformedMesh.CachedBounds.MaxDim / Resolution);
+            var offsetMesh = MoldUtility.OffsetMeshD(bolus.TransformedMesh, OffsetXY);
 
-        public override void ToMesh() {
-            if (Bolus == null || Bolus.Mesh == null || Bolus.Mesh.VertexCount == 0) return;
-
-            var offsetMesh = MoldUtility.OffsetMeshD(Bolus.TransformedMesh, Settings.OffsetXY);
-            
             List<AirChannelModel> airchannels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
 
             if (airchannels != null && airchannels.Count >= 1) {
                 var channels = new MeshEditor(new DMesh3());
                 foreach (var a in airchannels) {
                     if (a != null && a.Geometry != null)
-                        channels.AppendMesh((a.Shape.MeshOffset(3.2f, (float)(Bolus.Mesh.CachedBounds.Max.z + 10))));
+                        channels.AppendMesh((a.Shape.MeshOffset(3.2f, (float)(bolus.Mesh.CachedBounds.Max.z + 10))));
                 }
                 if (channels.Mesh != null && channels.Mesh.TriangleCount > 3) {
-                    var mesh = MoldUtility.OffsetMeshD(channels.Mesh, Settings.OffsetXY);
+                    var mesh = MoldUtility.OffsetMeshD(channels.Mesh, OffsetXY);
                     offsetMesh = MoldUtility.BooleanUnion(offsetMesh, mesh);
                 }
             }
 
-            var resolution = 2.5f;
-            var cells = (int)(offsetMesh.CachedBounds.MaxDim / resolution);
-            Bitmap3 bmp = BolusUtility.MeshBitmap(offsetMesh, cells);
+            Bitmap3 bmp = BolusUtility.MeshBitmap(offsetMesh, numberOfCells);
             var processedBmp = BitmapExtendedToFloor(bmp);
 
             //turn it into a voxilized mesh
             VoxelSurfaceGenerator voxGen = new VoxelSurfaceGenerator();
             voxGen.Voxels = processedBmp;
             voxGen.Generate();
-            
-            var result = new DMesh3(MoldUtility.MarchingCubesSmoothing(voxGen.Meshes[0], cells));
+
+            var result = new DMesh3(MoldUtility.MarchingCubesSmoothing(voxGen.Meshes[0], numberOfCells));
 
             //mesh is small and not aligned
-            var scale = offsetMesh.CachedBounds.MaxDim / cells;
+            var scale = offsetMesh.CachedBounds.MaxDim / numberOfCells;
 
             MeshTransforms.Scale(result, scale);
             BolusUtility.CentreMesh(result, offsetMesh);
 
-            Geometry = BolusUtility.DMeshToMeshGeometry(result);
-            return;
-        }
-
-        public override void UpdateMesh() {
-            if (Bolus == null || Bolus.Mesh == null || Bolus.Mesh.VertexCount == 0) return;
+            Mesh = result;
+            Geometry = BolusUtility.DMeshToMeshGeometry(Mesh);
         }
 
         private static Bitmap3 BitmapExtendedToFloor(Bitmap3 bmp, int z_height = 0) {
