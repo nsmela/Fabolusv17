@@ -19,7 +19,6 @@ namespace Fabolus.Features.Mold {
     public partial class MoldMeshViewModel : MeshViewModelBase {
         [ObservableProperty] private Model3DGroup _moldMesh, __airChannelsMesh, _finalMesh;
         private DiffuseMaterial _moldPreviewSkin, _moldSkin, _channelsSkin;
-        private MoldShape _moldShape;
 
         public MoldMeshViewModel() : base () {
             MoldMesh = new();
@@ -43,6 +42,13 @@ namespace Fabolus.Features.Mold {
         #region Receiving Messages
         private void UpdateContour(ContourModelBase contour) {
             var geometry = contour.Contour.Geometry;
+
+            BolusModel bolus = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
+            Update(bolus);
+            FinalMesh.Children.Clear();
+
+            var airChannels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
+            UpdateAirchannels(airChannels);
 
             MoldMesh.Children.Clear();
             var model = new GeometryModel3D(geometry, _moldPreviewSkin);
@@ -68,12 +74,11 @@ namespace Fabolus.Features.Mold {
                 BolusModel bolus = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
                 Update(bolus);
 
-                var airChannels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
+                List<AirChannelModel> airChannels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
                 UpdateAirchannels(airChannels);
 
-                //var shape = WeakReferenceMessenger.Default.Send<MoldShapeRequestMessage>();
-                //UpdateMold(shape);
-
+                ContourModelBase contour = WeakReferenceMessenger.Default.Send<MoldContourRequestMessage>();
+                UpdateContour(contour);
                 return;
             }
 

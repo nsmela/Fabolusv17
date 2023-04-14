@@ -40,6 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Features\Common\MeshTools\" />
     <Folder Include="Features\Mold\MoldUtilities\" />
   </ItemGroup>
 

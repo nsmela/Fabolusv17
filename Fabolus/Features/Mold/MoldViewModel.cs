@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Fabolus.Features.Bolus;
 
 namespace Fabolus.Features.Mold {
     public partial class MoldViewModel : ViewModelBase {
@@ -54,9 +55,10 @@ namespace Fabolus.Features.Mold {
             //mold store has a generate mold message? it stores it? /clears it if airholes, rotation, smoothing, or mold settings change?
             //does the shape hold it?
             //mesh view needs to know if one exists when opening
-            MoldShape shape = WeakReferenceMessenger.Default.Send<MoldShapeRequestMessage>();
-            var mesh = MoldUtility.GenerateMold(shape);
-            WeakReferenceMessenger.Default.Send(new MoldSetFinalShapeMessage(mesh));
+            //MoldShape shape = WeakReferenceMessenger.Default.Send<MoldShapeRequestMessage>();
+            var mesh = MoldUtility.GenerateMold(_contour.Contour);
+            var geometry = BolusUtility.DMeshToMeshGeometry(mesh);
+            WeakReferenceMessenger.Default.Send(new MoldSetFinalShapeMessage(geometry));
         }
 
         #endregion
