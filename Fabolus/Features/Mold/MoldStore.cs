@@ -33,7 +33,8 @@ namespace Fabolus.Features.Mold
         private int _activeContour;
         public MoldStore() {  
             _contours = new List<ContourModelBase> {
-                new BoxContourModel()
+                new BoxContourModel(),
+                new RisingContourModel()
             };
             _activeContour = 0;
             _geometry = null;
