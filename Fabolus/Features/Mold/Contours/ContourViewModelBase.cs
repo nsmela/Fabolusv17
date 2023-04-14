@@ -8,6 +8,6 @@ using System.Threading.Tasks;
 namespace Fabolus.Features.Mold.Contours
 {
     public abstract class ContourViewModelBase : ObservableObject {
-        public abstract void Initialize(BoxContour contour = null);
+        public abstract void Initialize(ContourBase contour = null);
     }
 }

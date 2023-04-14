@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Fabolus.Features.AirChannel;
 using Fabolus.Features.Bolus;
 using Fabolus.Features.Common;
+using Fabolus.Features.Mold.Contours;
 using Fabolus.Features.Mold.Tools;
 using HelixToolkit.Wpf;
 using System;
@@ -27,7 +28,7 @@ namespace Fabolus.Features.Mold {
             _moldSkin = SetSkin(Colors.Red, 0.8f);
             _channelsSkin = SetSkin(Colors.Purple);
 
-            WeakReferenceMessenger.Default.Register<MoldShapeUpdatedMessage>(this, (r,m) => { UpdateMold(m.shape); });
+            WeakReferenceMessenger.Default.Register<MoldContourUpdatedMessage>(this, (r, m) => { UpdateContour(m.contour); });
             WeakReferenceMessenger.Default.Register<MoldFinalUpdatedMessage>(this, (r,m) => { UpdateFinalMold(m.mesh); });
 
             AirChannelsMesh = new();
@@ -35,16 +36,16 @@ namespace Fabolus.Features.Mold {
             
             var airChannels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
             UpdateAirchannels(airChannels);
-            var shape = WeakReferenceMessenger.Default.Send<MoldShapeRequestMessage>();
-            UpdateMold(shape);
+            ContourModelBase contour = WeakReferenceMessenger.Default.Send<MoldContourRequestMessage>();
+            UpdateContour(contour);
         }
 
         #region Receiving Messages
-        private void UpdateMold(MoldShape shape) {
-            _moldShape = shape;
+        private void UpdateContour(ContourModelBase contour) {
+            var geometry = contour.Contour.Geometry;
 
             MoldMesh.Children.Clear();
-            var model = new GeometryModel3D(_moldShape.Geometry, _moldPreviewSkin);
+            var model = new GeometryModel3D(geometry, _moldPreviewSkin);
             model.BackMaterial = _moldPreviewSkin;
             MoldMesh.Children.Add(model);
         }
@@ -70,8 +71,8 @@ namespace Fabolus.Features.Mold {
                 var airChannels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
                 UpdateAirchannels(airChannels);
 
-                var shape = WeakReferenceMessenger.Default.Send<MoldShapeRequestMessage>();
-                UpdateMold(shape);
+                //var shape = WeakReferenceMessenger.Default.Send<MoldShapeRequestMessage>();
+                //UpdateMold(shape);
 
                 return;
             }

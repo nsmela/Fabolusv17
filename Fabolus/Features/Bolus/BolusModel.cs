@@ -23,7 +23,8 @@ namespace Fabolus.Features.Bolus {
         private DiffuseMaterial _meshSkinMaterial;
 
         //experiemental, used to quicken spatial inquiries
-        private DMeshAABBTree3 _spatial;
+        //private DMeshAABBTree3 _spatial;
+        public Bitmap3 Map { get; private set; }
 
         #region Properties and Fields
         //the latest mesh
@@ -136,12 +137,15 @@ namespace Fabolus.Features.Bolus {
             _geometry = BolusUtility.DMeshToMeshGeometry(TransformedMesh);
             GenerateModel();
 
+            //generate a bitmap for mold generations
+            Map = BolusUtility.MeshBitmap(TransformedMesh, 1.0f);
+
             //updated node map for pathfinding
-            GenerateNodeMap(new Vector3d(0,0,0));
+            //GenerateNodeMap(new Vector3d(0,0,0));
 
             //update spatial structure
-            _spatial = new DMeshAABBTree3(_transformedMesh);
-            _spatial.Build();
+            ///_spatial = new DMeshAABBTree3(_transformedMesh);
+            //_spatial.Build();
         }
 
         private void GenerateModel() {

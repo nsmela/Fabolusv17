@@ -12,7 +12,8 @@ namespace Fabolus.Features.Mold
     #region Messages
     //set messages
     public sealed record MoldSetShapeMessage(MoldShape shape);
-    public sealed record MoldSetContourMessage(int index);
+    public sealed record MoldSetContourIndexMessage(int index);
+    public sealed record MoldSetContourMessage(ContourBase contour);
     public sealed record MoldSetSettingsMessage(MoldStore.MoldSettings settings);
     public sealed record MoldSetFinalShapeMessage(MeshGeometry3D? mesh = null);
 
@@ -67,8 +68,13 @@ namespace Fabolus.Features.Mold
             WeakReferenceMessenger.Default.Register<MoldSetShapeMessage>(this, (r, m) => { NewShape(m.shape); });
             WeakReferenceMessenger.Default.Register<MoldSetSettingsMessage>(this, (r, m) => { NewSettings(m.settings); });
             WeakReferenceMessenger.Default.Register<MoldSetFinalShapeMessage>(this, (r, m) => { NewFinalMold(m.mesh); });
-            WeakReferenceMessenger.Default.Register<MoldSetContourMessage>(this, (r, m) => {
+            WeakReferenceMessenger.Default.Register<MoldSetContourIndexMessage>(this, (r, m) => {
                 _activeContour = m.index;
+                WeakReferenceMessenger.Default.Send(new MoldContourUpdatedMessage(_contours[_activeContour]));
+            });
+            WeakReferenceMessenger.Default.Register<MoldSetContourMessage>(this, (r, m) => {
+                var index = _contours.FindIndex(c => c.ContourType == m.contour.GetType());
+                _contours[index].Contour = m.contour;
                 WeakReferenceMessenger.Default.Send(new MoldContourUpdatedMessage(_contours[_activeContour]));
             });
 

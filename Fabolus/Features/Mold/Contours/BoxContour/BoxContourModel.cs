@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Fabolus.Features.Mold.Contours {
     public class BoxContourModel : ContourModelBase {
         public override Type ContourType => typeof(BoxContour);
-        public override ContourBase Contour { get; protected set; }
+        public override ContourBase Contour { get; set; }
         public override ContourViewModelBase ViewModel { get; protected set; }
 
         public BoxContourModel() {

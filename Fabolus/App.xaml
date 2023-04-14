@@ -8,6 +8,7 @@
              xmlns:mold="clr-namespace:Fabolus.Features.Mold"
              xmlns:export="clr-namespace:Fabolus.Features.Export"
              xmlns:channels="clr-namespace:Fabolus.Features.AirChannel.Channels"
+             xmlns:contours="clr-namespace:Fabolus.Features.Mold.Contours"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
@@ -66,6 +67,11 @@
 
             <DataTemplate DataType="{x:Type channels:PathChannelViewModel}">
                 <channels:PathChannelView/>
+            </DataTemplate>
+            
+            <!-- Mold Contour View Models -->
+            <DataTemplate DataType="{x:Type contours:BoxContourViewModel}">
+                <contours:BoxContourView/>
             </DataTemplate>
             
         </ResourceDictionary>

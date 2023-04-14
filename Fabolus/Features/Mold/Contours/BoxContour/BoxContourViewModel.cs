@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,18 +17,23 @@ namespace Fabolus.Features.Mold.Contours {
         partial void OnOffsetBottomChanged(float value) => UpdateSettings();
         partial void OnResolutionChanged(float value) => UpdateSettings();
 
-        public override void Initialize(BoxContour contour = null) {
-            if (contour == null) return; //TODO: contour = WeakReferenceMessenger.Default.Send<ContourRequestMessage>();
-            _contour = contour;
+        public override void Initialize(ContourBase contour = null) {
+            if (contour == null) return;
+            if (contour.GetType() != typeof(BoxContour)) return; 
+
+            _contour = contour as BoxContour;
             _isFrozen = true;
-            OffsetXY = contour.OffsetXY; 
-            OffsetBottom = contour.OffsetBottom;
-            OffsetTop = contour.OffsetTop;
-            Resolution = contour.Resolution;
+            OffsetXY = _contour.OffsetXY; 
+            OffsetBottom = _contour.OffsetBottom;
+            OffsetTop = _contour.OffsetTop;
+            Resolution = _contour.Resolution;
+            _contour.Calculate();
 
             _isFrozen = false;
         }
 
+        //TODO: convert to an async task? cancelable if the same request is made?
+        //moving the slider would cancel the existing calculation
         private void UpdateSettings() {
             if(_isFrozen) return;
             _isFrozen = true;
@@ -36,8 +42,9 @@ namespace Fabolus.Features.Mold.Contours {
             _contour.OffsetTop = OffsetTop;
             _contour.OffsetBottom = OffsetBottom;
             _contour.Resolution = Resolution;
+            _contour.Calculate();
 
-            //send update WeakReferenceMessenger.Default.Send();
+            WeakReferenceMessenger.Default.Send(new MoldSetContourMessage(_contour));
 
             _isFrozen= false;
         }

@@ -28,6 +28,7 @@ namespace Fabolus.Features.Mold {
             _contour = WeakReferenceMessenger.Default.Send<MoldContourRequestMessage>();
             ActiveContourIndex = ShapeNames.FindIndex(s => s == _contour.Name);
             ContourViewModel = _contour.ViewModel;
+            ContourViewModel.Initialize(_contour.Contour);
 
             //messaging receiving
             WeakReferenceMessenger.Default.Register<MoldContourUpdatedMessage>(this, (r, m) => {
@@ -37,7 +38,7 @@ namespace Fabolus.Features.Mold {
         }
 
         #region Messages
-        private void SetContour(int index) => WeakReferenceMessenger.Default.Send(new MoldSetContourMessage(index));
+        private void SetContour(int index) => WeakReferenceMessenger.Default.Send(new MoldSetContourIndexMessage(index));
         
         
         #endregion

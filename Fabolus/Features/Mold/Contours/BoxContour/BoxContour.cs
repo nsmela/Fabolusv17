@@ -15,7 +15,7 @@ namespace Fabolus.Features.Mold.Contours {
         public override string Name => "contoured box";
         public override MeshGeometry3D Geometry { get; protected set; }
         public override DMesh3 Mesh { get; protected set; }
-        public BolusModel Bolus { get; set; }
+        //public BolusModel Bolus { get; set; }
         public float OffsetXY { get; set; }
         public float OffsetBottom { get; set; }
         public float OffsetTop { get; set; }
@@ -25,9 +25,9 @@ namespace Fabolus.Features.Mold.Contours {
             Geometry = new MeshGeometry3D();
             Mesh = new DMesh3();
             BolusModel bolus = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
-            if (Bolus == null || Bolus.Mesh == null || Bolus.Mesh.VertexCount == 0) return;
-            var numberOfCells = (int)Math.Ceiling(Bolus.TransformedMesh.CachedBounds.MaxDim / Resolution);
-            var offsetMesh = MoldUtility.OffsetMeshD(Bolus.TransformedMesh, OffsetXY);
+            if (bolus == null || bolus.Mesh == null || bolus.Mesh.VertexCount == 0) return;
+            var numberOfCells = (int)Math.Ceiling(bolus.TransformedMesh.CachedBounds.MaxDim / Resolution);
+            var offsetMesh = MoldUtility.OffsetMeshD(bolus.TransformedMesh, OffsetXY);
 
             Bitmap3 bmp = BolusUtility.MeshBitmap(offsetMesh, numberOfCells);
 
@@ -38,7 +38,7 @@ namespace Fabolus.Features.Mold.Contours {
             var result = new DMesh3(MoldUtility.MarchingCubesSmoothing(voxGen.Meshes[0], numberOfCells));
 
             //mesh is small and not aligned
-            var scale = offsetMesh.CachedBounds.MaxDim / Resolution;
+            var scale = offsetMesh.CachedBounds.MaxDim / numberOfCells;
             MeshTransforms.Scale(result, scale);
             BolusUtility.CentreMesh(result, offsetMesh);
 
