@@ -16,11 +16,11 @@ namespace Fabolus.Features.Mold.Tools {
     public static partial class MoldUtility {
         public static DMesh3 GenerateMold(ContourBase contour) {
             //grab meshes for the preview mold and the bolus
-            DMesh3 mold = contour.Mesh;
+            var mold = contour.Mesh;
 
             //invert bolus mesh and add preview mold mesh
             BolusModel bolusModel = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
-            DMesh3 bolus = bolusModel.TransformedMesh;
+            var bolus = new DMesh3(bolusModel.TransformedMesh);
             var editor = new MeshEditor(bolus);
             editor.ReverseTriangles(bolus.TriangleIndices(), true);
             editor.AppendMesh(mold);

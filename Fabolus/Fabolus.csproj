@@ -8,6 +8,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Features\Common\MeshTools\**" />
+    <Compile Remove="Features\Mold\MoldUtilities\**" />
+    <EmbeddedResource Remove="Features\Common\MeshTools\**" />
+    <EmbeddedResource Remove="Features\Mold\MoldUtilities\**" />
+    <None Remove="Features\Common\MeshTools\**" />
+    <None Remove="Features\Mold\MoldUtilities\**" />
+    <Page Remove="Features\Common\MeshTools\**" />
+    <Page Remove="Features\Mold\MoldUtilities\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Images\left-mouse-button-click-active.jpg" />
     <None Remove="Images\mouse-wheel-button-click-active.jpg" />
     <None Remove="Images\right-mouse-button-click-active.jpg" />
@@ -37,11 +48,6 @@
     <None Update="Files\PoissonRecon.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Features\Common\MeshTools\" />
-    <Folder Include="Features\Mold\MoldUtilities\" />
   </ItemGroup>
 
 </Project>
