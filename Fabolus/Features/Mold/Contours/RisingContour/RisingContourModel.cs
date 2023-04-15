@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace Fabolus.Features.Mold.Contours {
     public class RisingContourModel : ContourModelBase {
+        public override float Offset => ((RisingContour)Contour).OffsetXY;
+
         public RisingContourModel() {
             ContourType = typeof(RisingContour);
 

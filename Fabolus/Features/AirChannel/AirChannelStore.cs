@@ -2,6 +2,8 @@
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using Fabolus.Features.AirChannel.Channels;
 using Fabolus.Features.Bolus;
+using Fabolus.Features.Mold;
+using Fabolus.Features.Mold.Tools;
 using g3;
 using System;
 using System.Collections.Generic;
@@ -28,7 +30,7 @@ namespace Fabolus.Features.AirChannel {
     public class AirChannelHeightRequestMessage : RequestMessage<double> { }
     public class AirChannelSelectedRequestMessage : RequestMessage<int> { }
     public class AirChannelMeshRequestMessage : RequestMessage<DMesh3> { }
-    
+    public class AirChannelsOffsetMeshRequestMessage : RequestMessage<DMesh3> { }
 
     //air channel requests
     public class AirChannelToolRequestMessage : RequestMessage<ChannelBase> { }
@@ -56,6 +58,7 @@ namespace Fabolus.Features.AirChannel {
         private int _selectedChannel, _activeTool; //indexes 
         private int? _currentId; //used to identify air channels
         private ChannelBase _editChannel;
+        private float _offset;
 
         public AirChannelStore() {
             _channels = new List<AirChannelModel>();
@@ -75,6 +78,7 @@ namespace Fabolus.Features.AirChannel {
             WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r,m) => { UpdateBolus(m.bolus); });
             WeakReferenceMessenger.Default.Register<SetChannelMessage>(this, (r, m) => { UpdateChannel(m.channel); });
             WeakReferenceMessenger.Default.Register<SetChannelTypeMessage>(this, (r, m) => { SetActiveTool(m.index); });
+            WeakReferenceMessenger.Default.Register<MoldContourUpdatedMessage>(this, (r, m) => { _offset = m.contour.Offset; });
 
             //request messages
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelsListRequestMessage>(this, (r, m) => {
@@ -86,6 +90,7 @@ namespace Fabolus.Features.AirChannel {
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelHeightRequestMessage>(this, (r, m) => { m.Reply(r._maxZHeight); });
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelSelectedRequestMessage>(this, (r,m) => { m.Reply(r._selectedChannel); });
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelMeshRequestMessage>(this, (r, m) => { m.Reply(r.ToMesh()); });
+            WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelsOffsetMeshRequestMessage>(this, (r, m) => { m.Reply(r.ToOffsetMesh()); });
 
             //air channel types
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelToolRequestMessage>(this, (r, m) => { m.Reply(_tools[_activeTool]); });
@@ -175,7 +180,17 @@ namespace Fabolus.Features.AirChannel {
             return airHole.Mesh;
         }
 
-        private void UpdateChannel(ChannelBase channel) {
+        private DMesh3 ToOffsetMesh() {
+        if (_channels == null || _channels.Count <= 0) return null;
+
+        var airHole = new MeshEditor(new DMesh3());
+        foreach (var channel in _channels)
+            if (channel.Geometry != null) airHole.AppendMesh(channel.Shape.MeshOffset(_offset, (float)_maxZHeight)); //some reason, first channel is null
+
+        return airHole.Mesh;
+    }
+
+    private void UpdateChannel(ChannelBase channel) {
             int index = _tools.FindIndex(t => t.GetType() == channel.GetType());
             //TODO: if _selectedIndex isn't -1, there's a channel selected
             //set the temp channel instead and send that

@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
+using Fabolus.Features.AirChannel;
 using Fabolus.Features.Bolus;
 using Fabolus.Features.Mold.Tools;
 using g3;
@@ -6,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
@@ -25,6 +27,13 @@ namespace Fabolus.Features.Mold.Contours {
             if (bolus == null || bolus.Mesh == null || bolus.Mesh.VertexCount == 0) return;
             var numberOfCells = (int)Math.Ceiling(bolus.TransformedMesh.CachedBounds.MaxDim / Resolution);
             var offsetMesh = MoldUtility.OffsetMeshD(bolus.TransformedMesh, OffsetXY);
+
+            //add air channels as offset mesh 
+            DMesh3 channels = WeakReferenceMessenger.Default.Send<AirChannelsOffsetMeshRequestMessage>();
+            if (channels != null && channels.TriangleCount > 3) {
+                var mesh = MoldUtility.OffsetMeshD(channels, OffsetXY);
+                offsetMesh = MoldUtility.BooleanUnion(offsetMesh, mesh);
+            }
 
             Bitmap3 bmp = BolusUtility.MeshBitmap(offsetMesh, numberOfCells);
 
