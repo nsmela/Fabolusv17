@@ -161,7 +161,6 @@ namespace Fabolus.Features.AirChannel {
             _diameter = angleChannel.ChannelDiameter;
             _coneLength = angleChannel.ConeLength;
             _coneDiameter = angleChannel.ConeDiameter;
-            //_height = angleChannel.Height;
 
             _coneAnchor = _anchor + _direction * -_depth;
             _bottomAnchor = _coneAnchor + _direction * (_coneLength);
@@ -213,10 +212,6 @@ namespace Fabolus.Features.AirChannel {
                 _topAnchor,
                 _diameter / 2);
             return mesh.ToMesh();
-        }
-
-        private void SetMesh() {
-            BolusUtility.MeshGeometryToDMesh(Geometry); //temp solution
         }
 
         public override DMesh3 MeshOffset(float offset, float height) {
@@ -399,9 +394,6 @@ namespace Fabolus.Features.AirChannel {
             var o = new Point3D(origin.X, origin.Y, origin.Z);
             var e = new Point3D(end.X, end.Y, end.Z);
             mesh.AddCylinder(o, e, radius, 16, true, true);
-            return;
-
-            
         }
 
         private Point3D Path(int pointIndex) => new Point3D(_path[pointIndex].X, _path[pointIndex].Y, _path[pointIndex].Z - 2.5f);
@@ -436,10 +428,6 @@ namespace Fabolus.Features.AirChannel {
 
             return new List<Point3D> { p1, p2, p3, p4 };
         }
-
-
-
-
     }
 
 }

@@ -12,7 +12,6 @@ namespace Fabolus.Features.Mold.Tools {
         public static DMesh3 OffsetMeshD(DMesh3 mesh, double offset, int resolution = 64) {
             BoundedImplicitFunction3d meshImplicit = meshToImplicitF(mesh, resolution, offset);
             return generatMeshF(new ImplicitOffset3d() { A = meshImplicit, Offset = offset }, resolution);
-
         }
 
         public static MeshGeometry3D OffsetMesh(DMesh3 mesh, double offset, int resolution = 64) {

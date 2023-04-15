@@ -20,7 +20,7 @@ namespace Fabolus.Features.Mold.Tools {
 
             //invert bolus mesh and add preview mold mesh
             BolusModel bolusModel = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
-            var bolus = new DMesh3(bolusModel.TransformedMesh);
+            var bolus = new DMesh3(bolusModel.TransformedMesh); //new because otherwise it'd affect the original mesh
             var editor = new MeshEditor(bolus);
             editor.ReverseTriangles(bolus.TriangleIndices(), true);
             editor.AppendMesh(mold);

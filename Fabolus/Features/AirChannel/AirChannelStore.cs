@@ -170,7 +170,7 @@ namespace Fabolus.Features.AirChannel {
 
             var airHole = new MeshEditor(new DMesh3());
             foreach (var channel in _channels)
-                if (channel.Geometry != null) airHole.AppendMesh(BolusUtility.MeshGeometryToDMesh(channel.Geometry)); //some reason, first channel is null
+                if (channel.Geometry != null) airHole.AppendMesh(channel.Mesh); //some reason, first channel is null
 
             return airHole.Mesh;
         }
