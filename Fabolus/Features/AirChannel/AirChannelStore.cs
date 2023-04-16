@@ -183,9 +183,9 @@ namespace Fabolus.Features.AirChannel {
         private DMesh3 ToOffsetMesh() {
         if (_channels == null || _channels.Count <= 0) return null;
 
-        var airHole = new MeshEditor(new DMesh3());
+            var airHole = new MeshEditor(new DMesh3());
         foreach (var channel in _channels)
-            if (channel.Geometry != null) airHole.AppendMesh(channel.Shape.MeshOffset(_offset, (float)_maxZHeight)); //some reason, first channel is null
+            if (channel.Geometry != null) airHole.AppendMesh(channel.Shape.MeshOffset(_offset, 0.0f)); //some reason, first channel is null
 
         return airHole.Mesh;
     }

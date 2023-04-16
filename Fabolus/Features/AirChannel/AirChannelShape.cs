@@ -144,7 +144,7 @@ namespace Fabolus.Features.AirChannel {
             mesh.AddSphere(BottomAnchor, radius);
             mesh.AddCylinder(
                 BottomAnchor,
-                new Point3D(TopAnchor.X, TopAnchor.Y, height),
+                new Point3D(TopAnchor.X, TopAnchor.Y, height - offset),
                 radius);
             return BolusUtility.MeshGeometryToDMesh( mesh.ToMesh());
         }
@@ -236,7 +236,7 @@ namespace Fabolus.Features.AirChannel {
             mesh.AddSphere(point, radius);
             mesh.AddCylinder(
                 point,
-                new Point3D(point.X, point.Y, _height),
+                new Point3D(point.X, point.Y, height - offset),
                 radius);
             return BolusUtility.MeshGeometryToDMesh(mesh.ToMesh());
         }
@@ -313,9 +313,10 @@ namespace Fabolus.Features.AirChannel {
             return mesh.ToMesh();
         }
 
-        public override DMesh3 MeshOffset(float offset, float height) {
+        public override DMesh3 MeshOffset(float offset, float zHeight) {
             if (_path == null) return null;
             if (_path.Count == 0) return null;
+            var height = zHeight - offset;
 
             var mesh = new MeshBuilder();
             var radius = Radius + offset;

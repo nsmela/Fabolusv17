@@ -98,7 +98,7 @@ namespace Fabolus.Features.AirChannel
         //when the bolus store sends an update
         protected override void Update(BolusModel bolus) { 
             DisplayMesh.Children.Clear();
-
+            if (bolus.TransformedMesh == null || bolus.TransformedMesh.TriangleCount == 0) return;
             //building geometry model
             _bolus = bolus;
             var model = GetTempOverhangs();
