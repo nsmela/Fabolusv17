@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media.Media3D;
 
 namespace Fabolus.Features.AirChannel.Channels {
     public class VerticalChannel : ChannelBase {
