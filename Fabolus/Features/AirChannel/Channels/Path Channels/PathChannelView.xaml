@@ -44,7 +44,7 @@
                             FontWeight="Bold"
                             FontFamily="\Fonts\#Poppins"/>
             <Slider Value="{Binding UpperHeight, Mode=TwoWay}"
-                            Minimum="2" Maximum="10" 
+                            Minimum="2" Maximum="12" 
                             TickFrequency="1.0" 
                             TickPlacement="TopLeft" 
                             AutoToolTipPlacement="TopLeft"
@@ -58,7 +58,7 @@
                             FontWeight="Bold"
                             FontFamily="\Fonts\#Poppins"/>
             <Slider Value="{Binding UpperDiameter, Mode=TwoWay}"
-                            Minimum="2" Maximum="15" 
+                            Minimum="2" Maximum="16" 
                             TickFrequency="1.0" 
                             TickPlacement="TopLeft" 
                             AutoToolTipPlacement="TopLeft"
