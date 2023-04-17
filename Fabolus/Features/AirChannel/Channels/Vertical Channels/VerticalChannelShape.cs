@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
 
-namespace Fabolus.Features.AirChannel.Channels.Vertical_Channels {
+namespace Fabolus.Features.AirChannel.Channels {
     public class VerticalChannelShape : ChannelShape {
         public override Type ChannelType => typeof(VerticalChannel);
 
