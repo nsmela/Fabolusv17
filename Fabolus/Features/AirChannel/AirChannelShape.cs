@@ -261,7 +261,6 @@ namespace Fabolus.Features.AirChannel {
 
         private double _depth, _diameter, _height, _upperHeight, _upperDiameter;
         private double Radius => _diameter / 2;
-        private double UppderRadius => _upperDiameter / 2;
         private List<Point3D> _path { get; set; }
 
         public AirChannelPath(List<Point3D> path, double depth, double diameter, double height, double upperDiameter, double upperHeight) {
@@ -338,7 +337,7 @@ namespace Fabolus.Features.AirChannel {
         }
 
         private Point3D BottomPoint(Point3D point) =>  new Point3D(point.X, point.Y, point.Z - _depth);
-        private Point3D MiddlePoint(Point3D point) => new Point3D(point.X, point.Y, point.Z + _upperHeight);
+        private Point3D MiddlePoint(Point3D point) => new Point3D(point.X, point.Y, point.Z + _upperHeight + (_upperDiameter / 2));
         private Point3D UpperPoint(Point3D point) => new Point3D(point.X, point.Y, _height);
         private void AddCylinder(Point3D point, double radius, double height, ref MeshBuilder mesh) => mesh.AddCylinder(point, new Point3D(point.X, point.Y, height), radius, 16, true, true);
         private void AddChannel(Point3D origin, Point3D end, double radius, double height, ref MeshBuilder mesh) {
