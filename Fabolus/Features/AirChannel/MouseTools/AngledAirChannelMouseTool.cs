@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using Fabolus.Features.AirChannel.Channels;
+using Fabolus.Features.AirChannel.Channels.Angled_Channels;
 using Fabolus.Features.Common;
 using HelixToolkit.Wpf;
 using System;
@@ -13,18 +14,16 @@ using System.Windows.Media.Media3D;
 
 namespace Fabolus.Features.AirChannel.MouseTools {
     internal class AngledAirChannelMouseTool : AirChannelMouseTool {
-        private string BOLUS_LABEL => AirChannelMeshViewModel.BOLUS_LABEL;
-        private string AIRCHANNEL_LABEL => AirChannelMeshViewModel.AIRCHANNEL_LABEL;
-
-        private double _depth, _diameter, _height, _coneLength, _coneDiameter;
+        private float _depth, _diameter, _height, _coneLength, _coneDiameter;
         private Point3D _lastMousePosition;
         private Vector3D _normal;
 
-        private AirChannelShape Shape => new AirChannelAngled(_lastMousePosition, _normal, _depth, _diameter, _coneLength, _coneDiameter, _height);
+        private ChannelShape Shape => new AngledChannelShape(_lastMousePosition, _normal, _depth, _diameter, _height, _coneDiameter, _coneLength );
 
         public override Geometry3D? ToolMesh =>
-            _lastMousePosition == null || _lastMousePosition == new Point3D() ?
-            null : Shape.Geometry;
+            _lastMousePosition == null || _lastMousePosition == 
+                new Point3D() ?
+                null : Shape.Geometry;
 
         public AngledAirChannelMouseTool() {
             //messages
@@ -38,6 +37,8 @@ namespace Fabolus.Features.AirChannel.MouseTools {
         private void ChannelUpdated(ChannelBase channel) {
             if (channel.GetType() != typeof(AngledChannel)) return;
             var angledChannel = channel as AngledChannel;
+            if (angledChannel == null) return;
+
             _depth = angledChannel.ChannelDepth;
             _diameter = angledChannel.ChannelDiameter;
             _coneLength = angledChannel.ConeLength;

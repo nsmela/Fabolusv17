@@ -13,7 +13,7 @@ using System.Windows.Media.Media3D;
 
 namespace Fabolus.Features.AirChannel {
     #region Messages
-    public sealed record AddAirChannelShapeMessage(AirChannelShape shape);
+    public sealed record AddAirChannelShapeMessage(ChannelShape shape);
     public sealed record RemoveSelectedChannelMessage();
     public sealed record ClearAirChannelsMessage();
     public sealed record AirChannelsUpdatedMessage(List<AirChannelModel> channels, int? selectedIndex);
@@ -27,7 +27,7 @@ namespace Fabolus.Features.AirChannel {
     //requests
     public class AirChannelsListRequestMessage : RequestMessage<List<string>> { }
     public class AirChannelsRequestMessage : RequestMessage<List<AirChannelModel>> { }
-    public class AirChannelHeightRequestMessage : RequestMessage<double> { }
+    public class AirChannelHeightRequestMessage : RequestMessage<float> { }
     public class AirChannelSelectedRequestMessage : RequestMessage<int> { }
     public class AirChannelMeshRequestMessage : RequestMessage<DMesh3> { }
     public class AirChannelsOffsetMeshRequestMessage : RequestMessage<DMesh3> { }
@@ -45,19 +45,18 @@ namespace Fabolus.Features.AirChannel {
         private List<AirChannelModel> _channels;
         private List<ChannelBase> _tools;
 
-        private double _zHeightOffset = 20.0f;
+        private float _zHeightOffset = 20.0f;
 
-        private double _maxZHeight {
+        private float _maxZHeight {
             get {
                 if (_bolus == null || _bolus.Geometry == null) return 0.0f;
-                else return _bolus.Geometry.Bounds.Z + _bolus.Geometry.Bounds.SizeZ + _zHeightOffset;
+                else return (float)(_bolus.Geometry.Bounds.Z + _bolus.Geometry.Bounds.SizeZ + _zHeightOffset);
             }
         }
 
         private BolusModel _bolus;
         private int _selectedChannel, _activeTool; //indexes 
         private int? _currentId; //used to identify air channels
-        private ChannelBase _editChannel;
         private float _offset;
 
         public AirChannelStore() {
@@ -158,7 +157,7 @@ namespace Fabolus.Features.AirChannel {
             SendChannelsUpdate();
         }
 
-        private void AddAirChannel(AirChannelShape shape) {
+        private void AddAirChannel(ChannelShape shape) {
             if (_channels == null) _channels = new List<AirChannelModel>();
 
             if (_currentId == null) _currentId = 0;
@@ -185,15 +184,15 @@ namespace Fabolus.Features.AirChannel {
 
             var airHole = new MeshEditor(new DMesh3());
         foreach (var channel in _channels)
-            if (channel.Geometry != null) airHole.AppendMesh(channel.Shape.MeshOffset(_offset, 0.0f)); //some reason, first channel is null
+            if (channel.Geometry != null) airHole.AppendMesh(channel.Shape.OffsetMesh(_offset, 0.0f)); //some reason, first channel is null
 
         return airHole.Mesh;
     }
 
     private void UpdateChannel(ChannelBase channel) {
             int index = _tools.FindIndex(t => t.GetType() == channel.GetType());
-            //TODO: if _selectedIndex isn't -1, there's a channel selected
-            //set the temp channel instead and send that
+
+            channel.Height = _maxZHeight; //need to update the hieght to ensure it's the right value
             _tools[index] = channel;
             WeakReferenceMessenger.Default.Send(new ChannelUpdatedMessage(channel));
 

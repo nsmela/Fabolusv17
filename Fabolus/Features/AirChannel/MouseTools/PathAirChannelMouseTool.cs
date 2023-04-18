@@ -17,10 +17,8 @@ namespace Fabolus.Features.AirChannel.MouseTools {
     public sealed record AddPathAirChannelMessage();
 
     internal class PathAirChannelMouseTool : AirChannelMouseTool {
-        private string BOLUS_LABEL => AirChannelMeshViewModel.BOLUS_LABEL;
-        private string AIRCHANNEL_LABEL => AirChannelMeshViewModel.AIRCHANNEL_LABEL;
 
-        private double _depth, _diameter, _height, _upperDiameter, _upperHeight;
+        private float _depth, _diameter, _height, _upperDiameter, _upperHeight;
         private List<Point3D> _pathPoints;
         private Point3D? _lastMousePosition;
         private MeshGeometry3D _mesh;
@@ -74,7 +72,7 @@ namespace Fabolus.Features.AirChannel.MouseTools {
             //create shape
             var path = new List<Point3D>();
             _pathPoints.ForEach(p => path.Add(new Point3D(p.X, p.Y, p.Z - _depth))); //for testing bottom render
-            var mesh = new AirChannelPath(path, _depth, _diameter, _height, _upperDiameter, _upperHeight);
+            var mesh = new PathChannelShape(path, _depth, _diameter, _height, _upperDiameter, _upperHeight);
 
             //clear relevant variables
             _pathPoints.Clear();

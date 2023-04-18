@@ -5,18 +5,15 @@ using System.Windows.Media.Media3D;
 using CommunityToolkit.Mvvm.Messaging;
 using Fabolus.Features.AirChannel.Channels;
 using HelixToolkit.Wpf;
-using MouseTool = Fabolus.Features.AirChannel.MouseTools.AirChannelMouseTool;
 
 namespace Fabolus.Features.AirChannel.MouseTools {
     public class VerticalAirChannelMouseTool : AirChannelMouseTool {
-        private string BOLUS_LABEL => AirChannelMeshViewModel.BOLUS_LABEL;
-        private string AIRCHANNEL_LABEL => AirChannelMeshViewModel.AIRCHANNEL_LABEL;
-        private double _depth, _diameter, _height;
+        private float _depth, _diameter, _height;
         private Point3D? _lastMousePosition;
 
         public override Geometry3D? ToolMesh =>
             _lastMousePosition == null || _lastMousePosition == new Point3D() ? 
-            null : new AirChannelStraight((Point3D)_lastMousePosition, _depth, _diameter, _height).Geometry;
+            null : new VerticalChannelShape((Point3D)_lastMousePosition, _depth, _diameter, _height).Geometry;
 
         public VerticalAirChannelMouseTool() {
             WeakReferenceMessenger.Default.Register<ChannelUpdatedMessage>(this, (r, m) => { ChannelUpdated(m.channel); });
@@ -28,6 +25,8 @@ namespace Fabolus.Features.AirChannel.MouseTools {
         private void ChannelUpdated(ChannelBase channel) {
             if (channel.GetType() != typeof(VerticalChannel)) return;
             var verticalChannel = channel as VerticalChannel;
+            if (verticalChannel is null) return;
+
             _depth = verticalChannel.ChannelDepth;
             _diameter = verticalChannel.ChannelDiameter;
         }
@@ -51,7 +50,7 @@ namespace Fabolus.Features.AirChannel.MouseTools {
                 if (name == BOLUS_LABEL) { //if clicked on bolus
                     _lastMousePosition = result.Position;
                     Point3D point = (_lastMousePosition != null) ? (Point3D)_lastMousePosition : new Point3D();
-                    var shape = new AirChannelStraight(point, _depth, _diameter, _height);
+                    var shape = new VerticalChannelShape(point, _depth, _diameter, _height);
                     WeakReferenceMessenger.Default.Send(new AddAirChannelShapeMessage(shape));
                     return;
                 }

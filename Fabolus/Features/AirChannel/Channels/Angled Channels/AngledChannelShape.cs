@@ -45,12 +45,13 @@ namespace Fabolus.Features.AirChannel.Channels.Angled_Channels {
             _height = height;
             _coneLength = coneLength;
             _coneRadius = coneDiameter / 2;
-            if (direction != null) _direction = direction.Value;
 
+            if (direction != null) _direction = direction.Value;
             if (anchor != null) _anchor = anchor.Value;
+
             ConeAnchor = _anchor + (_direction * -_depth);
-            BottomAnchor = new Point3D(_anchor.X, _anchor.Y, _anchor.Z - _depth);
-            TopAnchor = new Point3D(_anchor.X, _anchor.Y, _height);
+            BottomAnchor = ConeAnchor + _direction * (_coneLength);
+            TopAnchor = new Point3D(BottomAnchor.X, BottomAnchor.Y, _height);
 
             Geometry = GenerateGeometry();
             Mesh = BolusUtility.MeshGeometryToDMesh(Geometry);
@@ -74,7 +75,7 @@ namespace Fabolus.Features.AirChannel.Channels.Angled_Channels {
             mesh.AddSphere(BottomAnchor, radius);
             mesh.AddCylinder(
                 BottomAnchor,
-                heightOffset > 0 ? new Point3D(TopAnchor.X, TopAnchor.Y, TopAnchor.Z - heightOffset) : TopAnchor, //lower the top of the mesh if offset
+                new Point3D(TopAnchor.X, TopAnchor.Y, TopAnchor.Z - heightOffset), //lower the top of the mesh if offset
                 radius);
             return mesh.ToMesh();
         }

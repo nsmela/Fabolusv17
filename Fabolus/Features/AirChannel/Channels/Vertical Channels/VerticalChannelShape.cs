@@ -52,7 +52,7 @@ namespace Fabolus.Features.AirChannel.Channels {
             mesh.AddSphere(BottomAnchor, radius);
             mesh.AddCylinder(
                 BottomAnchor,
-                heightOffset > 0 ? new Point3D(TopAnchor.X, TopAnchor.Y, TopAnchor.Z - heightOffset) : TopAnchor, //lower the top of the mesh if offset
+                new Point3D(TopAnchor.X, TopAnchor.Y, TopAnchor.Z - heightOffset), //lower the top of the mesh if offset
                 radius);
             return mesh.ToMesh();
         }
