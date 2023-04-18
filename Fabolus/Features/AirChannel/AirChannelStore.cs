@@ -30,7 +30,6 @@ namespace Fabolus.Features.AirChannel {
     public class AirChannelHeightRequestMessage : RequestMessage<float> { }
     public class AirChannelSelectedRequestMessage : RequestMessage<int> { }
     public class AirChannelMeshRequestMessage : RequestMessage<DMesh3> { }
-    public class AirChannelsOffsetMeshRequestMessage : RequestMessage<DMesh3> { }
 
     //air channel requests
     public class AirChannelToolRequestMessage : RequestMessage<ChannelBase> { }
@@ -57,7 +56,6 @@ namespace Fabolus.Features.AirChannel {
         private BolusModel _bolus;
         private int _selectedChannel, _activeTool; //indexes 
         private int? _currentId; //used to identify air channels
-        private float _offset;
 
         public AirChannelStore() {
             _channels = new List<AirChannelModel>();
@@ -77,7 +75,6 @@ namespace Fabolus.Features.AirChannel {
             WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r,m) => { UpdateBolus(m.bolus); });
             WeakReferenceMessenger.Default.Register<SetChannelMessage>(this, (r, m) => { UpdateChannel(m.channel); });
             WeakReferenceMessenger.Default.Register<SetChannelTypeMessage>(this, (r, m) => { SetActiveTool(m.index); });
-            WeakReferenceMessenger.Default.Register<MoldContourUpdatedMessage>(this, (r, m) => { _offset = m.contour.Offset; });
 
             //request messages
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelsListRequestMessage>(this, (r, m) => {
@@ -89,7 +86,6 @@ namespace Fabolus.Features.AirChannel {
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelHeightRequestMessage>(this, (r, m) => { m.Reply(r._maxZHeight); });
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelSelectedRequestMessage>(this, (r,m) => { m.Reply(r._selectedChannel); });
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelMeshRequestMessage>(this, (r, m) => { m.Reply(r.ToMesh()); });
-            WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelsOffsetMeshRequestMessage>(this, (r, m) => { m.Reply(r.ToOffsetMesh()); });
 
             //air channel types
             WeakReferenceMessenger.Default.Register<AirChannelStore, AirChannelToolRequestMessage>(this, (r, m) => { m.Reply(_tools[_activeTool]); });
@@ -131,10 +127,6 @@ namespace Fabolus.Features.AirChannel {
             _activeTool= (int)index;
             _tools[_activeTool] = _channels[_selectedChannel].Shape.GetChannelSettings();
             SendSettingsUpdate();
-            //from the selected channel, figure out the ChannelBase type
-            //create a channelbase with the settings from the selected air channel shape
-            //set the active tool index to that ChannelBase in _tools
-            //the channel in _tools is updated with the settings from the selected channel model
         }
 
         //delete an air shape from the channels list
@@ -179,20 +171,10 @@ namespace Fabolus.Features.AirChannel {
             return airHole.Mesh;
         }
 
-        private DMesh3 ToOffsetMesh() {
-        if (_channels == null || _channels.Count <= 0) return null;
-
-            var airHole = new MeshEditor(new DMesh3());
-        foreach (var channel in _channels)
-            if (channel.Geometry != null) airHole.AppendMesh(channel.Shape.OffsetMesh(_offset, 0.0f)); //some reason, first channel is null
-
-        return airHole.Mesh;
-    }
-
     private void UpdateChannel(ChannelBase channel) {
             int index = _tools.FindIndex(t => t.GetType() == channel.GetType());
 
-            channel.Height = _maxZHeight; //need to update the hieght to ensure it's the right value
+            channel.Height = _maxZHeight; //need to update the height to ensure it's the right value
             _tools[index] = channel;
             WeakReferenceMessenger.Default.Send(new ChannelUpdatedMessage(channel));
 

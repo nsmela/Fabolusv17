@@ -19,8 +19,8 @@
                         FontFamily="\Fonts\#Poppins"/>
             <Slider     Value="{Binding OffsetXY, Mode=TwoWay}"
                         Minimum="2" 
-                        Maximum="8" 
-                        TickFrequency="0.5" 
+                        Maximum="12" 
+                        TickFrequency="1.0" 
                         TickPlacement="TopLeft" 
                         AutoToolTipPlacement="BottomRight"
                         AutoToolTipPrecision="1"
@@ -48,9 +48,9 @@
                         FontWeight="Bold"
                         FontFamily="\Fonts\#Poppins"/>
             <Slider     Value="{Binding OffsetTop, Mode=TwoWay}"
-                        Minimum="2" 
-                        Maximum="8" 
-                        TickFrequency="0.5" 
+                        Minimum="1" 
+                        Maximum="10" 
+                        TickFrequency="1.0" 
                         TickPlacement="TopLeft" 
                         AutoToolTipPlacement="BottomRight"
                         AutoToolTipPrecision="1"

@@ -29,10 +29,19 @@ namespace Fabolus.Features.Mold.Contours {
             var offsetMesh = MoldUtility.OffsetMeshD(bolus.TransformedMesh, OffsetXY);
 
             //add air channels as offset mesh 
-            DMesh3 channels = WeakReferenceMessenger.Default.Send<AirChannelsOffsetMeshRequestMessage>();
-            if (channels != null && channels.TriangleCount > 3) {
-                var mesh = MoldUtility.OffsetMeshD(channels, OffsetXY);
-                offsetMesh = MoldUtility.BooleanUnion(offsetMesh, mesh);
+            var maxBolusHeight = (float)(bolus.Geometry.Bounds.Z + bolus.Geometry.Bounds.SizeZ);
+            float maxZHeight = WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
+            var heightOffset = maxZHeight - (maxBolusHeight + OffsetTop);
+            List<AirChannelModel> channels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
+
+            if (channels != null && channels.Count > 0) {
+                var airHole = new MeshEditor(new DMesh3());
+                foreach (var channel in channels)
+                    if (channel.Geometry != null) 
+                        airHole.AppendMesh(channel.Shape.OffsetMesh(OffsetXY, heightOffset)); //some reason, first channel is null
+
+
+                offsetMesh = MoldUtility.BooleanUnion(offsetMesh, airHole.Mesh);
             }
 
             Bitmap3 bmp = BolusUtility.MeshBitmap(offsetMesh, numberOfCells);
