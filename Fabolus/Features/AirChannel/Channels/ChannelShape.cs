@@ -8,6 +8,7 @@ using System.Windows.Media.Media3D;
 
 namespace Fabolus.Features.AirChannel.Channels {
     public abstract class ChannelShape {
+        protected static int SEGMENTS = 32;
         public virtual Type ChannelType => typeof(ChannelBase);
         public virtual MeshGeometry3D Geometry { get; protected set; }
         public virtual DMesh3 Mesh { get; protected set; }

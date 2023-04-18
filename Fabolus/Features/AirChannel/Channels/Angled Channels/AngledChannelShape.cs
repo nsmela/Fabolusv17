@@ -50,7 +50,7 @@ namespace Fabolus.Features.AirChannel.Channels.Angled_Channels {
             if (anchor != null) _anchor = anchor.Value;
 
             ConeAnchor = _anchor + (_direction * -_depth);
-            BottomAnchor = ConeAnchor + _direction * (_coneLength);
+            BottomAnchor = ConeAnchor + _direction * (_coneLength + _depth);
             TopAnchor = new Point3D(BottomAnchor.X, BottomAnchor.Y, _height);
 
             Geometry = GenerateGeometry();
@@ -61,14 +61,13 @@ namespace Fabolus.Features.AirChannel.Channels.Angled_Channels {
             var mesh = new MeshBuilder(true, false);
 
             var radius = _radius + offset;
-            var segments = 32;
 
             //create circle at cone opening
             mesh.AddTube(
                 new List<Point3D> { ConeAnchor, BottomAnchor, TopAnchor }, 
                 null, 
                 new[] { (double)_coneRadius * 2, (double)radius * 2, (double)radius * 2 }, 
-                segments, 
+                SEGMENTS, 
                 false, 
                 true, 
                 true
