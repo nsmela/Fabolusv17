@@ -9,6 +9,9 @@ using System.Windows.Input;
 
 namespace Fabolus.Features.AirChannel.MouseTools {
     public abstract class AirChannelMouseTool : MouseTool {
+        protected const string BOLUS_LABEL = AirChannelMeshViewModel.BOLUS_LABEL;
+        protected const string AIRCHANNEL_LABEL = AirChannelMeshViewModel.AIRCHANNEL_LABEL;
+
         public virtual int? SelectedChannel { get; protected set; }
 
         public override abstract void MouseDown(MouseEventArgs mouse);

@@ -25,12 +25,11 @@ namespace Fabolus.Features.AirChannel
         public const string AIRCHANNEL_LABEL = "airchannel"; //names each airchannel for hit detection
 
         [ObservableProperty] private List<AirChannelModel> _airChannels;
-        [ObservableProperty] private double _diameter, _height;
+        [ObservableProperty] private float _diameter, _height;
         [ObservableProperty] private Point3D _mouseHit;
-        [ObservableProperty] private Model3DGroup _airChannelsMesh, _airChannelToolMesh, _testMesh;
+        [ObservableProperty] private Model3DGroup _airChannelsMesh, _airChannelToolMesh;
         [ObservableProperty] private bool _showTool, _showMesh;
         [ObservableProperty] private int? _selectedAirChannel = null;
-        [ObservableProperty] private Point3D? _pathStart, _pathEnd;
 
         private DiffuseMaterial _toolSkin, _channelsSkin, _selectedSkin, _overhangsSkin;
         private BolusModel _bolus;
@@ -89,10 +88,6 @@ namespace Fabolus.Features.AirChannel
             _overhangsSkin = OverhangSettings.OVERHANG_SKIN;
 
             Update(_bolus);
-            //shortest path
-            _pathStart = null;
-            _pathEnd = null;
-            TestMesh = new();
         }
 
         //when the bolus store sends an update
@@ -110,8 +105,6 @@ namespace Fabolus.Features.AirChannel
 
             //generate meshes for air channels to display
             Update(AirChannels, null);
-
-            //ensure mouse tool has 
         }
 
         //to update the list of air channels

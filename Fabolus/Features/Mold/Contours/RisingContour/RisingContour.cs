@@ -33,7 +33,7 @@ namespace Fabolus.Features.Mold.Contours
                 var channels = new MeshEditor(new DMesh3());
                 foreach (var a in airchannels) {
                     if (a != null && a.Geometry != null)
-                        channels.AppendMesh((a.Shape.MeshOffset(3.2f, (float)(bolus.Mesh.CachedBounds.Max.z + 10))));
+                        channels.AppendMesh((a.Shape.OffsetMesh(3.2f, (float)(bolus.Mesh.CachedBounds.Max.z + 10))));
                 }
                 if (channels.Mesh != null && channels.Mesh.TriangleCount > 3) {
                     var mesh = MoldUtility.OffsetMeshD(channels.Mesh, OffsetXY);

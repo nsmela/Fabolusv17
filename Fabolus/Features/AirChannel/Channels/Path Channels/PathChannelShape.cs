@@ -2,6 +2,7 @@
 using g3;
 using HelixToolkit.Wpf;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -42,7 +43,7 @@ namespace Fabolus.Features.AirChannel.Channels {
             _depth = depth;
             _radius = diameter / 2;
             _height = height;
-            _upperRadius = upperDiameter / 2;
+            _upperRadius = MathF.Max( upperDiameter / 2, _radius);
             _upperHeight = upperHeight;
 
             Geometry = GenerateGeometry();
@@ -54,6 +55,7 @@ namespace Fabolus.Features.AirChannel.Channels {
 
             var mesh = new MeshBuilder();
 
+            var radius = _radius + offset;
             var upperRadius = _upperRadius + offset;
 
             for(int i = 0; i < _path.Count; i++) {
@@ -63,16 +65,26 @@ namespace Fabolus.Features.AirChannel.Channels {
                 var upperVector = new Vector3D(0, 0, _upperHeight + upperRadius);
                 var topVector = new Vector3D(0, 0, _height - heightOffset);
 
-                AddChannel(ref mesh, path + depthVector, path + upperVector, offset, heightOffset);
-                AddChannel(ref mesh, path + upperVector, path + topVector, offset, heightOffset);
+                //bottom channel
+                mesh.AddSphere(path - depthVector, radius);
+                mesh.AddCylinder(path - depthVector, path + upperVector, radius * 2, SUBDIVISIONS);
+
+                //top channel
+                mesh.AddSphere(path + upperVector, upperRadius);
+                mesh.AddCylinder(path + upperVector, new Point3D(path.X, path.Y, topVector.Z), upperRadius, SUBDIVISIONS, true, true);
                 
-                //if i+1  < path.count, add box to next path[i]
-                //also add the upper hieght boxes
+                //also add the upper height boxes
                 if (i + 1 >= _path.Count) continue;
 
                 var nextPath = _path[i + 1];
-                AddExtendedChannel(ref mesh, path - depthVector, nextPath - depthVector, (float)upperVector.Z, offset);
-                AddExtendedChannel(ref mesh, path + upperVector, nextPath + upperVector, (float)topVector.Z, offset);
+
+                //bottom box w/ round bottom
+                mesh.AddCylinder(path - depthVector, nextPath - depthVector, radius * 2, SUBDIVISIONS);
+                AddExtendedChannel(ref mesh, path - depthVector, nextPath - depthVector, radius, (float)(upperVector + depthVector).Z); //height + depth equals total length needed
+
+                //top box w/ round bottom
+                mesh.AddCylinder(path + upperVector, nextPath + upperVector, upperRadius * 2, SUBDIVISIONS);
+                AddExtendedChannel(ref mesh, path + upperVector, nextPath + upperVector, upperRadius, (float)topVector.Z, false);
             }
 
             return mesh.ToMesh();
@@ -80,17 +92,13 @@ namespace Fabolus.Features.AirChannel.Channels {
 
 
 
-        private void AddChannel(ref MeshBuilder mesh, Point3D bottomAnchor, Point3D topAnchor, float offset = 0, float offsetHeight = 0) {
-            var radius = _radius + offset;
-            var upperPoint = new Point3D(topAnchor.X, topAnchor.Y, topAnchor.Z - offsetHeight);
-
+        private void AddChannel(ref MeshBuilder mesh, Point3D bottomAnchor, Point3D topAnchor, float radius) {
             mesh.AddSphere(bottomAnchor, radius);
-            mesh.AddCylinder(bottomAnchor, upperPoint, radius, SUBDIVISIONS);
+            mesh.AddCylinder(bottomAnchor, topAnchor, radius * 2, SUBDIVISIONS);
         }
 
-        private void AddExtendedChannel(ref MeshBuilder mesh, Point3D origin, Point3D end, float height, float offset = 0) {
-            var direction = Direction(origin, end);
-            var radius = _radius + offset;
+        private void AddExtendedChannel(ref MeshBuilder mesh, Point3D origin, Point3D end, float radius, float height, bool evenHeightLengths = true) {
+            float vertLength = 0.0f;
 
             var indices = new int[]{
                 0, 1, 2, 3, //f1
@@ -99,19 +107,21 @@ namespace Fabolus.Features.AirChannel.Channels {
                 5, 4, 3, 2, //f4
                 2, 1, 6, 5, //f5
                 0, 3, 4, 7  //f6
-
             };
 
             var positions = new List<Point3D>();
 
+
             //points for the starting face
-            var f1 = FacePoints(origin, direction, radius, height);
+            vertLength = evenHeightLengths ? height : (float)(height - origin.Z);
+            var f1 = FacePoints(origin, end, radius, vertLength);
             mesh.AddPolygon(f1);
 
             f1.ForEach(p => positions.Add(p));
 
             //opposite face
-            var f2 = FacePoints(end, origin, radius, height);
+            vertLength = evenHeightLengths ? height : (float)(height - end.Z);
+            var f2 = FacePoints(end, origin, radius, vertLength);
             mesh.AddPolygon(f2);
 
             f2.ForEach(p => positions.Add(p));
@@ -140,25 +150,14 @@ namespace Fabolus.Features.AirChannel.Channels {
             };
             mesh.AddPolygon(f6);
 
-            var o = new Point3D(origin.X, origin.Y, origin.Z);
-            var e = new Point3D(end.X, end.Y, end.Z);
-            mesh.AddCylinder(o, e, radius, SUBDIVISIONS, true, true);
         }
 
         //methods to build extended channel
-        private Vector3D Direction(Point3D start, Point3D end) {
-        var result = end - start;
-        result.Normalize();
-            return result;
-        }
-    private List<Point3D> FacePoints(Point3D origin, Point3D end, double radius, double height) {
-            var direction = Direction(origin, end);
-            return FacePoints(origin, direction, radius, height);
-        }
-
-        private List<Point3D> FacePoints(Point3D origin, Vector3D direction, double radius, double height) {
-            double length = radius;
-            var v = direction;
+        private List<Point3D> FacePoints(Point3D origin, Point3D end, float radius, float verticalLength) {
+            var length = radius;
+            var verticalVector = new Vector3D(0, 0, verticalLength);
+            //setting up the direction vector to calculate the points
+            var v = (end - origin);
             v.Z = 0;
             v.Normalize();
             v = Vector3D.CrossProduct(v, new Vector3D(0, 0, 1));
@@ -168,12 +167,11 @@ namespace Fabolus.Features.AirChannel.Channels {
             var p0 = new Point3D(origin.X, origin.Y, origin.Z); //bottom centre
             var p1 = p0 + (v * length); //bottom left
             var p4 = p0 - (v * length); //bottom right
-            var p2 = p1;
-            p2.Z = height; //top left
-            var p3 = p4;
-            p3.Z = height;//top right
+            var p2 = p1 + verticalVector;//top left
+            var p3 = p4 + verticalVector;//top right
 
             return new List<Point3D> { p1, p2, p3, p4 };
+
         }
     }
 }
