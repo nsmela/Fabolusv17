@@ -58,7 +58,7 @@ namespace Fabolus.Features.AirChannel.Channels {
             var radius = _radius + offset;
             var upperRadius = _upperRadius + offset;
 
-            for(int i = 0; i < _path.Count; i++) {
+            for (int i = 0; i < _path.Count; i++) {
                 var path = _path[i];
 
                 var depthVector = new Vector3D(0, 0, _depth);
@@ -72,13 +72,19 @@ namespace Fabolus.Features.AirChannel.Channels {
                 //top channel
                 mesh.AddSphere(path + upperVector, upperRadius);
                 mesh.AddCylinder(path + upperVector, new Point3D(path.X, path.Y, topVector.Z), upperRadius, SUBDIVISIONS, true, true);
-                
+
                 //also add the upper height boxes
                 if (i + 1 >= _path.Count) continue;
 
                 var nextPath = _path[i + 1];
-                AddExtendedChannel(ref mesh, path - depthVector, nextPath - depthVector, (float)upperVector.Z, offset);
-                AddExtendedChannel(ref mesh, path + upperVector, nextPath + upperVector, (float)topVector.Z, offset);
+
+                //bottom box w/ round bottom
+                mesh.AddCylinder(path - depthVector, nextPath - depthVector, radius * 2, SUBDIVISIONS);
+                AddExtendedChannel(ref mesh, path - depthVector, nextPath - depthVector, radius, (float)(upperVector + depthVector).Z); //height + depth equals total length needed
+
+                //top box w/ round bottom
+                mesh.AddCylinder(path + upperVector, nextPath + upperVector, upperRadius * 2, SUBDIVISIONS);
+                AddExtendedChannel(ref mesh, path + upperVector, nextPath + upperVector, upperRadius, (float)topVector.Z, false);
             }
 
             return mesh.ToMesh();
