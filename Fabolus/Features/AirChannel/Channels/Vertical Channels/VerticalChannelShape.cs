@@ -46,13 +46,13 @@ namespace Fabolus.Features.AirChannel.Channels {
 
         private MeshGeometry3D GenerateGeometry(float offset = 0, float heightOffset = 0) {
             var mesh = new MeshBuilder(true, false);
-
             var radius = _radius + offset;
+            var heightVector = new Vector3D(0, 0, heightOffset);
 
             mesh.AddSphere(BottomAnchor, radius);
             mesh.AddCylinder(
                 BottomAnchor,
-                new Point3D(TopAnchor.X, TopAnchor.Y, TopAnchor.Z - heightOffset), //lower the top of the mesh if offset
+                TopAnchor - heightVector, //lower the top of the mesh if offset
                 radius);
             return mesh.ToMesh();
         }

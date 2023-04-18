@@ -58,25 +58,22 @@ namespace Fabolus.Features.AirChannel.Channels.Angled_Channels {
         }
 
         private MeshGeometry3D GenerateGeometry(float offset = 0, float heightOffset = 0) {
-            var mesh = new MeshBuilder();
+            var mesh = new MeshBuilder(true, false);
 
             var radius = _radius + offset;
+            var segments = 32;
 
-            mesh.AddCone(
-                ConeAnchor, //cone tip position
-                _direction, //cone direction
-                _coneRadius + offset, //cone base radius
-                radius, //cone top radius
-                _coneLength, //cone length
-                true, //base cap
-                false, //top cap
-                16 //divisions/resolution
+            //create circle at cone opening
+            mesh.AddTube(
+                new List<Point3D> { ConeAnchor, BottomAnchor, TopAnchor }, 
+                null, 
+                new[] { (double)_coneRadius * 2, (double)radius * 2, (double)radius * 2 }, 
+                segments, 
+                false, 
+                true, 
+                true
             );
-            mesh.AddSphere(BottomAnchor, radius);
-            mesh.AddCylinder(
-                BottomAnchor,
-                new Point3D(TopAnchor.X, TopAnchor.Y, TopAnchor.Z - heightOffset), //lower the top of the mesh if offset
-                radius);
+
             return mesh.ToMesh();
         }
 
