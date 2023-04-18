@@ -11,9 +11,11 @@ using System.Windows.Media.Media3D;
 
 namespace Fabolus.Features.AirChannel.Channels {
     public class PathChannelShape : ChannelShape {
+        private const int SUBDIVISIONS = 16; //spheres and cylinder subdivisions
         public override Type ChannelType => typeof(PathChannel);
 
         private float _depth, _radius, _height, _upperRadius, _upperHeight;
+
         private List<Point3D> _path { get; set; }
 
 
@@ -52,9 +54,7 @@ namespace Fabolus.Features.AirChannel.Channels {
 
             var mesh = new MeshBuilder();
 
-            var radius = _radius + offset;
             var upperRadius = _upperRadius + offset;
-            Point3D topPoint, bottomPoint;
 
             for(int i = 0; i < _path.Count; i++) {
                 var path = _path[i];
@@ -63,22 +63,117 @@ namespace Fabolus.Features.AirChannel.Channels {
                 var upperVector = new Vector3D(0, 0, _upperHeight + upperRadius);
                 var topVector = new Vector3D(0, 0, _height - heightOffset);
 
-                AddChannel(ref mesh, path + depthVector, path + upperVector);
-                AddChannel(ref mesh, path + upperVector, path + topVector);
+                AddChannel(ref mesh, path + depthVector, path + upperVector, offset, heightOffset);
+                AddChannel(ref mesh, path + upperVector, path + topVector, offset, heightOffset);
+                
                 //if i+1  < path.count, add box to next path[i]
                 //also add the upper hieght boxes
+                if (i + 1 >= _path.Count) continue;
+
+                var nextPath = _path[i + 1];
+                AddExtendedChannel(ref mesh, path - depthVector, nextPath - depthVector, (float)upperVector.Z, offset);
+                AddExtendedChannel(ref mesh, path + upperVector, nextPath + upperVector, (float)topVector.Z, offset);
             }
 
             return mesh.ToMesh();
         }
 
+
+
         private void AddChannel(ref MeshBuilder mesh, Point3D bottomAnchor, Point3D topAnchor, float offset = 0, float offsetHeight = 0) {
             var radius = _radius + offset;
             var upperPoint = new Point3D(topAnchor.X, topAnchor.Y, topAnchor.Z - offsetHeight);
-            var subdivisions = 16;
 
             mesh.AddSphere(bottomAnchor, radius);
-            mesh.AddCylinder(bottomAnchor, upperPoint, radius, subdivisions);
+            mesh.AddCylinder(bottomAnchor, upperPoint, radius, SUBDIVISIONS);
+        }
+
+        private void AddExtendedChannel(ref MeshBuilder mesh, Point3D origin, Point3D end, float height, float offset = 0) {
+            var direction = Direction(origin, end);
+            var radius = _radius + offset;
+
+            var indices = new int[]{
+                0, 1, 2, 3, //f1
+                4, 5, 6, 7, //f2
+                7, 6, 1, 0, //f3
+                5, 4, 3, 2, //f4
+                2, 1, 6, 5, //f5
+                0, 3, 4, 7  //f6
+
+            };
+
+            var positions = new List<Point3D>();
+
+            //points for the starting face
+            var f1 = FacePoints(origin, direction, radius, height);
+            mesh.AddPolygon(f1);
+
+            f1.ForEach(p => positions.Add(p));
+
+            //opposite face
+            var f2 = FacePoints(end, origin, radius, height);
+            mesh.AddPolygon(f2);
+
+            f2.ForEach(p => positions.Add(p));
+
+            //right face
+            var f3 = new List<Point3D> {
+                positions[indices[8]], positions[indices[9]], positions[indices[10]], positions[indices[11]]
+            };
+            mesh.AddPolygon(f3);
+
+            //left face
+            var f4 = new List<Point3D> {
+                positions[indices[12]], positions[indices[13]], positions[indices[14]], positions[indices[15]]
+            };
+            mesh.AddPolygon(f4);
+
+            //top face
+            var f5 = new List<Point3D> {
+                positions[indices[16]], positions[indices[17]], positions[indices[18]], positions[indices[19]]
+            };
+            mesh.AddPolygon(f5);
+
+            //bottom face
+            var f6 = new List<Point3D> {
+                positions[indices[20]], positions[indices[21]], positions[indices[22]], positions[indices[23]]
+            };
+            mesh.AddPolygon(f6);
+
+            var o = new Point3D(origin.X, origin.Y, origin.Z);
+            var e = new Point3D(end.X, end.Y, end.Z);
+            mesh.AddCylinder(o, e, radius, SUBDIVISIONS, true, true);
+        }
+
+        //methods to build extended channel
+        private Vector3D Direction(Point3D start, Point3D end) {
+        var result = end - start;
+        result.Normalize();
+            return result;
+        }
+    private List<Point3D> FacePoints(Point3D origin, Point3D end, double radius, double height) {
+            var direction = Direction(origin, end);
+            return FacePoints(origin, direction, radius, height);
+        }
+
+        private List<Point3D> FacePoints(Point3D origin, Vector3D direction, double radius, double height) {
+            double length = radius;
+            var v = direction;
+            v.Z = 0;
+            v.Normalize();
+            v = Vector3D.CrossProduct(v, new Vector3D(0, 0, 1));
+
+            //points base on origin transformed by perpendicular vectors
+            //broken out like this so they can rely on each other for calculations
+            var p0 = new Point3D(origin.X, origin.Y, origin.Z); //bottom centre
+            var p1 = p0 + (v * length); //bottom left
+            var p4 = p0 - (v * length); //bottom right
+            var p2 = p1;
+            p2.Z = height; //top left
+            var p3 = p4;
+            p3.Z = height;//top right
+
+            return new List<Point3D> { p1, p2, p3, p4 };
         }
     }
 }
