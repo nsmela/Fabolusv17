@@ -77,14 +77,8 @@ namespace Fabolus.Features.AirChannel.Channels {
                 if (i + 1 >= _path.Count) continue;
 
                 var nextPath = _path[i + 1];
-
-                //bottom box w/ round bottom
-                mesh.AddCylinder(path - depthVector, nextPath - depthVector, radius * 2, SUBDIVISIONS);
-                AddExtendedChannel(ref mesh, path - depthVector, nextPath - depthVector, radius, (float)(upperVector + depthVector).Z); //height + depth equals total length needed
-
-                //top box w/ round bottom
-                mesh.AddCylinder(path + upperVector, nextPath + upperVector, upperRadius * 2, SUBDIVISIONS);
-                AddExtendedChannel(ref mesh, path + upperVector, nextPath + upperVector, upperRadius, (float)topVector.Z, false);
+                AddExtendedChannel(ref mesh, path - depthVector, nextPath - depthVector, (float)upperVector.Z, offset);
+                AddExtendedChannel(ref mesh, path + upperVector, nextPath + upperVector, (float)topVector.Z, offset);
             }
 
             return mesh.ToMesh();
