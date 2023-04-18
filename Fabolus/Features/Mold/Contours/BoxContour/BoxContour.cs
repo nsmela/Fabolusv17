@@ -31,7 +31,7 @@ namespace Fabolus.Features.Mold.Contours {
             //add air channels as offset mesh 
             var maxBolusHeight = (float)(bolus.Geometry.Bounds.Z + bolus.Geometry.Bounds.SizeZ);
             float maxZHeight = WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
-            var heightOffset = maxZHeight - (maxBolusHeight + OffsetTop);
+            var heightOffset = maxZHeight + OffsetTop - (maxBolusHeight);
             List<AirChannelModel> channels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
 
             if (channels != null && channels.Count > 0) {

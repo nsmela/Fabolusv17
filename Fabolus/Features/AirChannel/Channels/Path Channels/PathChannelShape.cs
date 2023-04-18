@@ -53,7 +53,7 @@ namespace Fabolus.Features.AirChannel.Channels {
         private MeshGeometry3D GenerateGeometry(float offset = 0, float heightOffset = 0) {
             if (_path == null || _path.Count < 2) return new MeshGeometry3D();
 
-            var mesh = new MeshBuilder();
+            var mesh = new MeshBuilder(true, false);
 
             var radius = _radius + offset;
             var upperRadius = _upperRadius + offset;
