@@ -8,6 +8,8 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
 namespace Fabolus.Features.AirChannel.Channels {
@@ -78,8 +80,18 @@ namespace Fabolus.Features.AirChannel.Channels {
             JoinPoints(ref mesh, upperPoints, topPoints);
 
             //add a top cap
-            mesh.AddPolygon(topPoints);
-           
+            //sweeping line polygon triangulation?
+            //possible for the top since all points have the same z
+            //sweeping solves 2D points
+            //solve the contour, then match the indices to those in the mesh
+
+            //mesh.AddPolygon(topPoints);
+            var poly = new PointCollection();
+            upperPoints.ForEach(p => poly.Add(new Point(p.X, p.Y)));
+            var polygon = new Polygon { Points = poly };
+            //foreach(var p in polygon.Triangulate()) topPoints.Add(new Point3D(p.X, p.Y))
+            //mesh.AddPolygon()
+            //mesh.Append()
         }
 
         private Vector3D GetDirection(Point3D start, Point3D end) {
@@ -127,6 +139,7 @@ namespace Fabolus.Features.AirChannel.Channels {
 
         }
 
+       
         private List<Point3D> ExtrudePoints(List<Point3D> points, float height) {
             if (points is null || points.Count < 2) return null;
 
@@ -150,7 +163,38 @@ namespace Fabolus.Features.AirChannel.Channels {
                 mesh.AddQuad(p1, p2, p3, p4);
             }
         }
-        
+
+        //calculating triangles via indices instead of adding polygons
+        private Int32Collection JoinPoints(List<Point3D> lowerPoints, List<Point3D> upperPoints) {
+            if (lowerPoints is null || lowerPoints.Count < 2) return null;
+            if (upperPoints is null || upperPoints.Count < 2) return null;
+
+            var indices = new Int32Collection();
+            var lowerCount = lowerPoints.Count;
+            for (int i = 0; i < lowerPoints.Count; i++) {
+                var next = (i + 1 < lowerPoints.Count) ? i + 1 : 0;
+                indices.Append(lowerCount + i);
+                indices.Append(i);
+                indices.Append(next);
+                indices.Append(lowerCount + next);
+            }
+            return indices;
+        }
+
+        private void CapContour(ref MeshBuilder mesh, List<Point3D> points) {
+            //break up points into sections:
+                //start arc
+                //path 
+                //end arc
+
+            //mesh the starting arc
+                //start point isn't the arc
+                //count back SEGMENTS / 2?
+            //mesh the path to the end arc
+                //quads following path Quad(path[start], path[start + 1], path[end - 2], path[end-1]
+            //mesh the end arc
+        }
+
         /// <summary>
         /// Creates a list of points in half-circle arc going clockwise starting with the first point
         /// </summary>
