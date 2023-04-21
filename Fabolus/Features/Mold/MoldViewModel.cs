@@ -9,6 +9,7 @@ using Fabolus.Features.Bolus;
 using System.Diagnostics;
 using System;
 using System.Windows;
+using Fabolus.Features.Helpers;
 
 namespace Fabolus.Features.Mold {
     public partial class MoldViewModel : ViewModelBase {
@@ -60,7 +61,7 @@ namespace Fabolus.Features.Mold {
 
             var mesh = MoldUtility.GenerateMold(_contour.Contour);
             text += $"    To Mesh: {timer.ElapsedMilliseconds} ms\r\n";
-            var geometry = BolusUtility.DMeshToMeshGeometry(mesh);
+            var geometry = mesh.ToGeometry(); //BolusUtility.DMeshToMeshGeometry(mesh);
             text += $"    To Geometry: {timer.ElapsedMilliseconds} ms\r\n";
             WeakReferenceMessenger.Default.Send(new MoldSetFinalShapeMessage(geometry));
             text += $"    To Message : {timer.ElapsedMilliseconds} ms\r\n";

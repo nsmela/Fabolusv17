@@ -2,10 +2,12 @@
 using HelixToolkit.Wpf;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media.Media3D;
 
 namespace Fabolus.Features.Helpers { 
@@ -14,25 +16,36 @@ namespace Fabolus.Features.Helpers {
         public static Vector3d ToVector3d(this Point3D point) => new Vector3d(point.X, point.Y, point.Z);
         public static MeshGeometry3D ToGeometry(this DMesh3 mesh) {
             if (mesh != null) {
+                var timer = new Stopwatch();
+                timer.Start();
+                var text = "Geometry timer started!\r\n";
+
                 //compacting the DMesh to the indices are true
                 MeshGeometry3D geometry = new();
 
                 //calculate positions and normals
                 var vertices = mesh.Vertices();
+                text += $"  Aquired vertices: {timer.ElapsedMilliseconds} ms\r\n";
                 foreach (var vert in vertices) {
                     geometry.Positions.Add(new Point3D(vert.x, vert.y, vert.z));
                 }
+                text += $"  Converted to positions: {timer.ElapsedMilliseconds} ms\r\n";
 
                 //calculate faces
                 var vID = mesh.VertexIndices().ToArray();
+                text += $"  Aquired indices: {timer.ElapsedMilliseconds} ms\r\n";
                 var faces = mesh.Triangles();
+                text += $"  Aquired acquired triangles: {timer.ElapsedMilliseconds} ms\r\n";
                 foreach (Index3i f in faces) {
                     geometry.TriangleIndices.Add(Array.IndexOf(vID, f.a));
                     geometry.TriangleIndices.Add(Array.IndexOf(vID, f.b));
                     geometry.TriangleIndices.Add(Array.IndexOf(vID, f.c));
                 }
-
+                text += $"  Converted to geo triangles: {timer.ElapsedMilliseconds} ms\r\n";
                 geometry.Normals = MeshGeometryHelper.CalculateNormals(geometry);
+                text += $"  Calculate normaled: {timer.ElapsedMilliseconds} ms\r\n";
+                timer.Stop();
+                MessageBox.Show(text);
 
                 return geometry;
             } else
