@@ -54,21 +54,10 @@ namespace Fabolus.Features.Mold {
             //mesh view needs to know if one exists when opening
             //MoldShape shape = WeakReferenceMessenger.Default.Send<MoldShapeRequestMessage>();
 
-            //used to monitor how long the program takes
-            var timer = new Stopwatch();
-            timer.Start();
-            string text = "Mold Generation started!\r\n";
-
             var mesh = MoldUtility.GenerateMold(_contour.Contour);
-            text += $"    To Mesh: {timer.ElapsedMilliseconds} ms\r\n";
-            var geometry = mesh.ToGeometry(); //BolusUtility.DMeshToMeshGeometry(mesh);
-            text += $"    To Geometry: {timer.ElapsedMilliseconds} ms\r\n";
+            var geometry = mesh.ToGeometry(); 
             WeakReferenceMessenger.Default.Send(new MoldSetFinalShapeMessage(geometry));
-            text += $"    To Message : {timer.ElapsedMilliseconds} ms\r\n";
-            timer.Stop();
-
-            MessageBox.Show(text);
-        }
+         }
 
         #endregion
 
