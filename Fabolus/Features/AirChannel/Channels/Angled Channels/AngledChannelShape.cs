@@ -61,10 +61,11 @@ namespace Fabolus.Features.AirChannel.Channels.Angled_Channels {
             var mesh = new MeshBuilder(true, false);
 
             var radius = _radius + offset;
+            var vertOffset = new Vector3D(0, 0, -heightOffset);
 
             //create circle at cone opening
             mesh.AddTube(
-                new List<Point3D> { ConeAnchor, BottomAnchor, TopAnchor }, 
+                new List<Point3D> { ConeAnchor, BottomAnchor, TopAnchor + vertOffset }, 
                 null, 
                 new[] { (double)_coneRadius * 2, (double)radius * 2, (double)radius * 2 }, 
                 SEGMENTS, 

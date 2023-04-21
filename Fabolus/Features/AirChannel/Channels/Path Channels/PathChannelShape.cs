@@ -51,9 +51,6 @@ namespace Fabolus.Features.AirChannel.Channels {
 
             Geometry = GenerateGeometry();
             Mesh = BolusUtility.MeshGeometryToDMesh(Geometry);
-
-            //Mesh = GenerateMesh();
-            //Geometry = BolusUtility.DMeshToMeshGeometry(Mesh);
         }
 
         private MeshGeometry3D GenerateGeometry(float offset = 0, float heightOffset = 0) {
