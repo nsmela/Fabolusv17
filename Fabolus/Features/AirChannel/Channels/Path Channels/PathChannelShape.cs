@@ -1,4 +1,5 @@
 ﻿using Fabolus.Features.Bolus;
+using Fabolus.Features.Helpers;
 using g3;
 using HelixToolkit.Wpf;
 using System;
@@ -14,7 +15,6 @@ using System.Windows.Media.Media3D;
 
 namespace Fabolus.Features.AirChannel.Channels {
     public class PathChannelShape : ChannelShape {
-        private const int SUBDIVISIONS = 16; //spheres and cylinder subdivisions
         public override Type ChannelType => typeof(PathChannel);
 
         private float _depth, _radius, _height, _upperRadius, _upperHeight;
@@ -39,6 +39,7 @@ namespace Fabolus.Features.AirChannel.Channels {
 
             UpdateSettings(pathChannel.ChannelDepth, pathChannel.ChannelDiameter, pathChannel.Height, pathChannel.UpperDiameter, pathChannel.UpperHeight);
         }
+
         public override DMesh3 OffsetMesh(float offset, float height) => BolusUtility.MeshGeometryToDMesh(GenerateGeometry(offset, height));
 
         private void UpdateSettings(float depth, float diameter, float height, float upperDiameter, float upperHeight) {
@@ -50,6 +51,9 @@ namespace Fabolus.Features.AirChannel.Channels {
 
             Geometry = GenerateGeometry();
             Mesh = BolusUtility.MeshGeometryToDMesh(Geometry);
+
+            //Mesh = GenerateMesh();
+            //Geometry = BolusUtility.DMeshToMeshGeometry(Mesh);
         }
 
         private MeshGeometry3D GenerateGeometry(float offset = 0, float heightOffset = 0) {
@@ -57,41 +61,33 @@ namespace Fabolus.Features.AirChannel.Channels {
 
             var mesh = new MeshBuilder(false, false);
 
-            var radius = _radius + offset;
-            var upperRadius = _upperRadius + offset;
-
-            BuildPathChannel(ref mesh, _path, radius, _height);
+            BuildPathChannel(ref mesh, _path, offset, heightOffset);
             return mesh.ToMesh();
         }
 
-        private void BuildPathChannel(ref MeshBuilder mesh, List<Point3D> path, float radius, float height, bool topCap = true) {
+
+        private void BuildPathChannel(ref MeshBuilder mesh, List<Point3D> path, float offset, float heightOffset) {
             if (mesh is null) return;
-            if (path is null || path.Count < 2) return;      
+            if (path is null || path.Count < 2) return;
+
+            var radius = _radius + offset;
+            var upperRadius = _upperRadius + offset;
+            var topHeight = _height - heightOffset;
+            var diff = upperRadius - radius;
 
             //collect all points
-            var lowerPoints = GetPathOutlinePoints(path, radius);
-            var midLowerPoints = ExtrudePoints(lowerPoints, 3.0f);
-            var upperPoints = GetPathOutlinePoints(path, radius + 2.5f, 10.0f);
+            var lowerPoints = GetPathOutlinePoints(path, radius, -_depth);
+            var midLowerPoints = ExtrudePoints(lowerPoints, _depth + _upperHeight);
+            var upperPoints = GetPathOutlinePoints(path, upperRadius, _upperHeight + diff);
             var topPoints = new List<Point3D>();
-            upperPoints.ForEach(p => topPoints.Add(new Point3D(p.X, p.Y, _height)));
+            upperPoints.ForEach(p => topPoints.Add(new Point3D(p.X, p.Y, topHeight)));
 
+            //mesh those points
+            CapContour(ref mesh, _path, lowerPoints, true);
             JoinPoints(ref mesh, lowerPoints, midLowerPoints);
             JoinPoints(ref mesh, midLowerPoints, upperPoints);
             JoinPoints(ref mesh, upperPoints, topPoints);
-
-            //add a top cap
-            //sweeping line polygon triangulation?
-            //possible for the top since all points have the same z
-            //sweeping solves 2D points
-            //solve the contour, then match the indices to those in the mesh
-
-            //mesh.AddPolygon(topPoints);
-            var poly = new PointCollection();
-            upperPoints.ForEach(p => poly.Add(new Point(p.X, p.Y)));
-            var polygon = new Polygon { Points = poly };
-            //foreach(var p in polygon.Triangulate()) topPoints.Add(new Point3D(p.X, p.Y))
-            //mesh.AddPolygon()
-            //mesh.Append()
+            CapContour(ref mesh, _path, topPoints);
         }
 
         private Vector3D GetDirection(Point3D start, Point3D end) {
@@ -139,7 +135,6 @@ namespace Fabolus.Features.AirChannel.Channels {
 
         }
 
-       
         private List<Point3D> ExtrudePoints(List<Point3D> points, float height) {
             if (points is null || points.Count < 2) return null;
 
@@ -181,20 +176,55 @@ namespace Fabolus.Features.AirChannel.Channels {
             return indices;
         }
 
-        private void CapContour(ref MeshBuilder mesh, List<Point3D> points) {
-            //break up points into sections:
-                //start arc
-                //path 
-                //end arc
+        private void CapContour(ref MeshBuilder mesh, List<Point3D> path, List<Point3D> points, bool reverse = false) {
+            var pathCount = path.Count;
+            var arcCount = SEGMENTS / 2; 
 
-            //mesh the starting arc
-                //start point isn't the arc
-                //count back SEGMENTS / 2?
-            //mesh the path to the end arc
-                //quads following path Quad(path[start], path[start + 1], path[end - 2], path[end-1]
-            //mesh the end arc
+            int left = 0; //starts at 0
+            int endArc = left + pathCount - 1;
+            int right = endArc + arcCount + 1;
+            int startArc = right + pathCount - 1;
+
+            //taking the points relevant to the component
+            var leftPoints = new List<Point3D>();
+            for(int i = left; i <= endArc; i++) leftPoints.Add(points[i]);
+
+            var endPoints = new List<Point3D>();
+            for (int i = endArc; i <= right; i++) endPoints.Add(points[i]);
+
+            var rightPoints = new List<Point3D>();
+            for (int i = right; i <= startArc; i++) rightPoints.Add(points[i]);
+
+            var startPoints = new List<Point3D>();
+            for (int i = startArc; i < points.Count; i++) startPoints.Add(points[i]);
+            startPoints.Add(points[0]); //first point also included
+
+            //flips the normals to point downward
+            if (reverse) {
+                endPoints.Reverse();
+                startPoints.Reverse();
+            }
+
+            mesh.AddPolygon(endPoints);
+            mesh.AddPolygon(startPoints);
+
+            for (int i = 0; i < pathCount - 1; i++) {
+                var p1 = points[startArc - i];
+                var p2 = points[startArc - i - 1];
+                var p3 = points[left + i];
+                var p4 = points[left + i + 1];
+
+                if (reverse) { //flip the normals
+                    mesh.AddTriangle(p4, p3, p1);
+                    mesh.AddTriangle(p1, p2, p4);
+                } else {
+                    mesh.AddTriangle(p1, p3, p4);
+                    mesh.AddTriangle(p4, p2, p1);
+                }
+            }
+
         }
-
+ 
         /// <summary>
         /// Creates a list of points in half-circle arc going clockwise starting with the first point
         /// </summary>
