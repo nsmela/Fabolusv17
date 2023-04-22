@@ -135,21 +135,10 @@ namespace Fabolus.Features.Bolus {
             _transformedMesh = new DMesh3();
             _transformedMesh.Copy(Mesh);
 
-            //TODO: a roation where the trasnforms are applied to a single vector and that vector is used to determine the final transformt o apply to the mesh
-            //since we apply trasnforms 
-            //for some reason, transformVector isn't moving
-            //var transformVector = new Vector3d(0,0,1);
-            //combine transforms
             foreach(var q in _transforms) MeshTransforms.Rotate(_transformedMesh, Vector3d.Zero, q);
 
-            //transformVector = MeshTransforms.Rotate(transformVector, Vector3d.Zero, q);
-            //var transform = new Quaterniond();
-            //transform.SetFromTo(Vector3d.AxisZ, transformVector);
-
-
-
             //creates new MeshGeometry3D
-            _geometry = TransformedMesh.ToGeometry(); // DMeshToMeshGeometry(TransformedMesh);
+            _geometry = TransformedMesh.ToGeometry(); 
             GenerateModel();
         }
 
