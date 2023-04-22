@@ -85,7 +85,7 @@ namespace Fabolus.Features.Mold.Contours {
 
             Mesh = result;
             Geometry = Mesh.ToGeometry();
-            MessageBox.Show(text);
+            //MessageBox.Show(text); //for testing
         }
 
         private Bitmap3 BitmapBox(Bitmap3 bmp) { //~71 ms

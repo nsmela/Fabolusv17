@@ -1,4 +1,5 @@
 ﻿using Fabolus.Features.Bolus;
+using Fabolus.Features.Helpers;
 using g3;
 using HelixToolkit.Wpf;
 using System;
@@ -39,9 +40,12 @@ namespace Fabolus.Features.AirChannel.Channels {
             if (anchor != null) _anchor = anchor.Value;
             BottomAnchor = new Point3D(_anchor.X, _anchor.Y, _anchor.Z - _depth);
             TopAnchor = new Point3D(_anchor.X, _anchor.Y, _height);
-            
-            Geometry = GenerateGeometry();
-            Mesh = BolusUtility.MeshGeometryToDMesh(Geometry);
+
+            //TODO switch to generating the mesh and then converting to mesh geometry
+            //Geometry = GenerateGeometry();
+            //Mesh = BolusUtility.MeshGeometryToDMesh(Geometry);'
+            Mesh = GenerateMesh();
+            Geometry = Mesh.ToGeometry();
         }
 
         private MeshGeometry3D GenerateGeometry(float offset = 0, float heightOffset = 0) {
@@ -57,7 +61,34 @@ namespace Fabolus.Features.AirChannel.Channels {
             return mesh.ToMesh();
         }
 
-        public override DMesh3 OffsetMesh(float offset, float height) => BolusUtility.MeshGeometryToDMesh(GenerateGeometry(offset, height));
+        private DMesh3 GenerateMesh(float offset = 0, float heightOffset = 0) {
+            var mesh = new MeshEditor(new DMesh3(true, false));
+            var radius = _radius + offset;
+            var anchor = new Vector3d(BottomAnchor.X, BottomAnchor.Y, BottomAnchor.Z - _depth);
+
+
+            //create cylinder
+            var cyl_gen = new CappedCylinderGenerator {
+                BaseRadius = radius,
+                TopRadius = radius,
+                Height = (float)(_height - heightOffset - BottomAnchor.Z - _depth),
+                Slices = SEGMENTS
+            };
+
+            cyl_gen.Generate();
+            DMesh3 cylinder = new DMesh3(cyl_gen.MakeDMesh());
+            var rotation = new Quaterniond(Vector3d.AxisX, 90.0f);
+            MeshTransforms.Rotate(cylinder, Vector3d.Zero, rotation);
+            MeshTransforms.Translate(cylinder, anchor);
+            mesh.AppendMesh(cylinder);
+            var result = mesh.Mesh;
+            result.ReverseOrientation();//comes out with reversed normals
+            return mesh.Mesh;
+            
+        }
+
+        //TODO: switch to generating the DMesh3 directly and then converting to geometry if needed.
+        public override DMesh3 OffsetMesh(float offset, float height) => GenerateMesh(offset, height);//BolusUtility.MeshGeometryToDMesh(GenerateGeometry(offset, height));
 
     }
 }

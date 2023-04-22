@@ -53,7 +53,7 @@ namespace Fabolus.Features.Mold {
             //does the shape hold it?
             //mesh view needs to know if one exists when opening
             //MoldShape shape = WeakReferenceMessenger.Default.Send<MoldShapeRequestMessage>();
-
+            
             var mesh = MoldUtility.GenerateMold(_contour.Contour);
             var geometry = mesh.ToGeometry(); 
             WeakReferenceMessenger.Default.Send(new MoldSetFinalShapeMessage(geometry));

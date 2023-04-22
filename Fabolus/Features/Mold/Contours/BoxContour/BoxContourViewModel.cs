@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
+using Fabolus.Features.Mold.Tools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,7 +47,7 @@ namespace Fabolus.Features.Mold.Contours {
 
             WeakReferenceMessenger.Default.Send(new MoldSetContourMessage(_contour));
 
-            _isFrozen= false;
+            _isFrozen = false;
         }
     }
 }
