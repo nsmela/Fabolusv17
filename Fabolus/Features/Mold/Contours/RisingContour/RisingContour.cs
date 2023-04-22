@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using Fabolus.Features.AirChannel;
 using Fabolus.Features.Bolus;
+using Fabolus.Features.Helpers;
 using Fabolus.Features.Mold.Tools;
 using g3;
 using System;
@@ -58,7 +59,7 @@ namespace Fabolus.Features.Mold.Contours
             BolusUtility.CentreMesh(result, offsetMesh);
 
             Mesh = result;
-            Geometry = BolusUtility.DMeshToMeshGeometry(Mesh);
+            Geometry = Mesh.ToGeometry();
         }
 
         private static Bitmap3 BitmapExtendedToFloor(Bitmap3 bmp, int z_height = 0) {

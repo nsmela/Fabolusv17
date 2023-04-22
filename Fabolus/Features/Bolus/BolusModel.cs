@@ -1,4 +1,5 @@
 ﻿using Fabolus.Features.Bolus;
+using Fabolus.Features.Helpers;
 using g3;
 using System;
 using System.Collections.Generic;
@@ -134,7 +135,7 @@ namespace Fabolus.Features.Bolus {
             foreach (var q in _transforms) MeshTransforms.Rotate(_transformedMesh, Vector3d.Zero, q);
 
             //creates new MeshGeometry3D
-            _geometry = BolusUtility.DMeshToMeshGeometry(TransformedMesh);
+            _geometry = TransformedMesh.ToGeometry(); // DMeshToMeshGeometry(TransformedMesh);
             GenerateModel();
 
             //generate a bitmap for mold generations

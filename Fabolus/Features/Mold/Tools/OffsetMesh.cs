@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
+using Fabolus.Features.Helpers;
 
 namespace Fabolus.Features.Mold.Tools {
     public static partial class MoldUtility {
@@ -15,8 +16,8 @@ namespace Fabolus.Features.Mold.Tools {
         }
 
         public static MeshGeometry3D OffsetMesh(DMesh3 mesh, double offset, int resolution = 64) {
-            DMesh3 offSesh = OffsetMeshD(mesh, offset, resolution);
-            return BolusUtility.DMeshToMeshGeometry(offSesh);
+            DMesh3 offmesh = OffsetMeshD(mesh, offset, resolution);
+            return offmesh.ToGeometry();
         }
     }
 }
