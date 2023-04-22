@@ -11,27 +11,25 @@ namespace Fabolus.Features.Bolus
         public static MeshGeometry3D DMeshToMeshGeometry(DMesh3 value) {
             if (value != null) {
                 //compacting the DMesh to the indices are true
-                MeshGeometry3D mesh = new();
+                MeshGeometry3D geometry = new();
 
                 //calculate positions and normals
                 var vertices = value.Vertices();
-                foreach (var vert in vertices) {
-                    mesh.Positions.Add(new Point3D(vert.x, vert.y, vert.z));
-                }
+                foreach (var vert in vertices) geometry.Positions.Add(new Point3D(vert.x, vert.y, vert.z));
 
                 //calculate faces
-                var vID = value.VertexIndices().ToArray();
-                var faces = value.Triangles();
-                foreach (Index3i f in faces) {
-                    mesh.TriangleIndices.Add(Array.IndexOf(vID, f.a));
-                    mesh.TriangleIndices.Add(Array.IndexOf(vID, f.b));
-                    mesh.TriangleIndices.Add(Array.IndexOf(vID, f.c));
+                var triangleIndices = value.Triangles();
+                foreach (var i in triangleIndices) {
+                    geometry.TriangleIndices.Add(i.a);
+                    geometry.TriangleIndices.Add(i.b);
+                    geometry.TriangleIndices.Add(i.c);
                 }
 
-                mesh.Normals = MeshGeometryHelper.CalculateNormals(mesh);
+                geometry.Normals = MeshGeometryHelper.CalculateNormals(geometry.Positions, geometry.TriangleIndices);
 
-                return mesh;
-            } else
+                return geometry;
+            }
+            else
                 return new MeshGeometry3D();
         }
 

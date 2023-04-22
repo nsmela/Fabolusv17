@@ -60,7 +60,7 @@ namespace Fabolus.Features.Smoothing {
             //load new mesh from ply in folder
             var result = ReadPLYFileToDMesh(TEMP_FOLDER + @"temp_smooth.ply");
 
-            return MeshRefinement.Remesh(result, EdgeLength);
+            return result; // MeshRefinement.Remesh(result, EdgeLength);
         }
 
         private static void ExecutePoisson(string inputFile, string outputFile, int depth, float scale, int samples) {
