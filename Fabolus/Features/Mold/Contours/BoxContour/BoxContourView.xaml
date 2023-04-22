@@ -63,7 +63,7 @@
                         FontWeight="Bold"
                         FontFamily="\Fonts\#Poppins"/>
             <Slider     Value="{Binding Resolution, Mode=TwoWay}"
-                        Minimum="0.5" 
+                        Minimum="2.0" 
                         Maximum="4" 
                         TickFrequency="0.5"
                         TickPlacement="TopLeft" 

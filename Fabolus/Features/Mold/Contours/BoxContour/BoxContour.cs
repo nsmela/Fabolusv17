@@ -88,8 +88,9 @@ namespace Fabolus.Features.Mold.Contours {
             MessageBox.Show(text);
         }
 
-        private Bitmap3 BitmapBox(Bitmap3 bmp) {
+        private Bitmap3 BitmapBox(Bitmap3 bmp) { //~71 ms
             int[,,] grid = new int[bmp.Dimensions.x, bmp.Dimensions.y, bmp.Dimensions.z];
+            bool[,] whitelist = new bool[bmp.Dimensions.x, bmp.Dimensions.y]; //optimize searching by ignoring vacant spaces
 
             //getting the top and bottoms
             int z_bottom = 0;
@@ -116,15 +117,20 @@ namespace Fabolus.Features.Mold.Contours {
                     for (int z = z_bottom; z < bmp.Dimensions.z; z++) {
                         if (bmp.Get(new Vector3i(x, y, z))) {
                             if (z > z_top) z_top = z;
+                            whitelist[x, y] = true;
                         }
                     }
                 }
             }
 
+            //todo: create a blacklist of x,y coordinates that have nothing?
+
+
             //if an airhole is too low, this will extend the mesh from the lowest airhole up to the top.
             //the 3D print will be easier to fill
             for (int x = 0; x < bmp.Dimensions.x; x++) {
                 for (int y = 0; y < bmp.Dimensions.y; y++) {
+                    if (!whitelist[x, y]) continue;
                     //multithreading
                     Parallel.For(z_bottom, z_top, z => {
                         if (bmp.Get(new Vector3i(x, y, z))) {
@@ -147,7 +153,6 @@ namespace Fabolus.Features.Mold.Contours {
                     }*/
                 }
             }
-
 
             return bmp;
         }
