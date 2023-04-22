@@ -3,6 +3,8 @@ using Fabolus.Features.Helpers;
 using g3;
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography.Xml;
+using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
@@ -132,21 +134,23 @@ namespace Fabolus.Features.Bolus {
             //creates transformed mesh
             _transformedMesh = new DMesh3();
             _transformedMesh.Copy(Mesh);
-            foreach (var q in _transforms) MeshTransforms.Rotate(_transformedMesh, Vector3d.Zero, q);
+
+            //TODO: a roation where the trasnforms are applied to a single vector and that vector is used to determine the final transformt o apply to the mesh
+            //since we apply trasnforms 
+            //for some reason, transformVector isn't moving
+            //var transformVector = new Vector3d(0,0,1);
+            //combine transforms
+            foreach(var q in _transforms) MeshTransforms.Rotate(_transformedMesh, Vector3d.Zero, q);
+
+            //transformVector = MeshTransforms.Rotate(transformVector, Vector3d.Zero, q);
+            //var transform = new Quaterniond();
+            //transform.SetFromTo(Vector3d.AxisZ, transformVector);
+
+
 
             //creates new MeshGeometry3D
             _geometry = TransformedMesh.ToGeometry(); // DMeshToMeshGeometry(TransformedMesh);
             GenerateModel();
-
-            //generate a bitmap for mold generations
-            //Map = BolusUtility.MeshBitmap(TransformedMesh, 1.0f);
-
-            //updated node map for pathfinding
-            //GenerateNodeMap(new Vector3d(0,0,0));
-
-            //update spatial structure
-            ///_spatial = new DMeshAABBTree3(_transformedMesh);
-            //_spatial.Build();
         }
 
         private void GenerateModel() {
