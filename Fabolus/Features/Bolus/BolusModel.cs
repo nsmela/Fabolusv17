@@ -139,7 +139,7 @@ namespace Fabolus.Features.Bolus {
             GenerateModel();
 
             //generate a bitmap for mold generations
-            Map = BolusUtility.MeshBitmap(TransformedMesh, 1.0f);
+            //Map = BolusUtility.MeshBitmap(TransformedMesh, 1.0f);
 
             //updated node map for pathfinding
             //GenerateNodeMap(new Vector3d(0,0,0));
