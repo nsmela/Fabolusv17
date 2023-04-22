@@ -18,7 +18,8 @@ namespace Fabolus.Features.Helpers {
         public static MeshGeometry3D ToGeometry(this DMesh3 mesh) {
             if (mesh != null) {
                  //compacting the DMesh to the indices are true
-                MeshGeometry3D geometry = new();
+                var geometry = new MeshGeometry3D();
+                if (geometry == null) return null;
 
                 //calculate positions and normals
                 var vertices = mesh.Vertices();
