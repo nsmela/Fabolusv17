@@ -32,35 +32,7 @@ namespace Fabolus.Features.Helpers {
                     geometry.TriangleIndices.Add(i.c);
                 }
 
-                //geometry.Normals = MeshGeometryHelper.CalculateNormals(geometry);
-                var normals = new Vector3DCollection(geometry.Positions.Count);
-                for (var i = 0; i < geometry.Positions.Count; i++) {
-                    normals.Add(new Vector3D());
-                }
-
-                for (var i = 0; i < geometry.TriangleIndices.Count; i += 3) {
-                    var index0 = geometry.TriangleIndices[i];
-                    var index1 = geometry.TriangleIndices[i + 1];
-                    var index2 = geometry.TriangleIndices[i + 2];
-                    var p0 = geometry.Positions[index0];
-                    var p1 = geometry.Positions[index1];
-                    var p2 = geometry.Positions[index2];
-                    var u = p1 - p0;
-                    var v = p2 - p0;
-                    var w = Vector3D.CrossProduct(u, v);
-                    w.Normalize();
-                    normals[index0] += w;
-                    normals[index1] += w;
-                    normals[index2] += w;
-                }
-
-                for (var i = 0; i < normals.Count; i++) {
-                    var n = normals[i];
-                    n.Normalize();
-                    normals[i] = n;
-                }
-
-                geometry.Normals =  normals;
+                geometry.Normals = MeshGeometryHelper.CalculateNormals(geometry);
 
                 return geometry;
             } else

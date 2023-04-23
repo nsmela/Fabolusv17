@@ -26,6 +26,7 @@ namespace Fabolus.Features.Common {
             reducer.ProjectionMode = Reducer.TargetProjectionMode.Inline;
 
             reducer.ReduceToEdgeLength(edgeLength);
+           
             return reducer.Mesh;
         }
     }
