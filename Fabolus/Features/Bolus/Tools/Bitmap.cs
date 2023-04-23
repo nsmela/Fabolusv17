@@ -16,10 +16,14 @@ namespace Fabolus.Features.Bolus {
             ShiftGridIndexer3 indexer = new ShiftGridIndexer3(bounds.Min, cellsize);
 
             Bitmap3 bmp = new Bitmap3(new Vector3i(numcells, numcells, numcells));
-            foreach (Vector3i idx in bmp.Indices()) {
+            //foreach (Vector3i idx in bmp.Indices()) {
+            //   Vector3d v = indexer.FromGrid(idx);
+            //    bmp.Set(idx, spatial.IsInside(v));
+            //}
+            Parallel.ForEach(bmp.Indices(), idx => {
                 Vector3d v = indexer.FromGrid(idx);
                 bmp.Set(idx, spatial.IsInside(v));
-            }
+            });
             return bmp;
         }
 

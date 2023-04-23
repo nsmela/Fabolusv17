@@ -25,21 +25,44 @@ namespace Fabolus.Features.Mold.Contours {
         public float Resolution { get; set; } //size of the cells when doing marching cubes, in mm
 
         public override void Calculate() {
+            //TODO: calculate air channels and bolus offset mesh at the same time with multithreading
+            //each set up as a task and output the result
+            //continue when both are done
             var timer = new Stopwatch();
             timer.Start();
             string text = "Calculating box contour: \r\n";
             Geometry = new MeshGeometry3D();
             Mesh = new DMesh3();
-            text += $"  istantiated variables: {timer.ElapsedMilliseconds}\r\n";
+
+            //BolusModel bolus = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
+            //if (bolus == null || bolus.Mesh == null || bolus.Mesh.VertexCount == 0) return;
+            //var numberOfCells = (int)Math.Ceiling(bolus.TransformedMesh.CachedBounds.MaxDim / Resolution);
+            //var offsetMesh = MoldUtility.OffsetMeshD(bolus.TransformedMesh, OffsetXY);
+
+            //BolusModel bolus = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
+            //if (bolus == null || bolus.Mesh == null || bolus.Mesh.VertexCount == 0) return;
+            //var numberOfCells = (int)Math.Ceiling(bolus.TransformedMesh.CachedBounds.MaxDim / Resolution);
+            
             BolusModel bolus = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
-            text += $"  incoming message: {timer.ElapsedMilliseconds}\r\n";
             if (bolus == null || bolus.Mesh == null || bolus.Mesh.VertexCount == 0) return;
             var numberOfCells = (int)Math.Ceiling(bolus.TransformedMesh.CachedBounds.MaxDim / Resolution);
-            var offsetMesh = MoldUtility.OffsetMeshD(bolus.TransformedMesh, OffsetXY);
-            text += $"  created offset mesh: {timer.ElapsedMilliseconds}\r\n";
+            var maxBolusHeight = (float)(bolus.Geometry.Bounds.Z + bolus.Geometry.Bounds.SizeZ);
+
+            //tasks
+            var task1 = Task.Run(() => GetOffsetMesh(bolus, OffsetXY));
+            var task2 = Task.Run(() => GetOffsetAirChannels(numberOfCells, maxBolusHeight, OffsetXY));
+
+            task1.Start();
+            task2.Start();
+
+            Task.WaitAll(task1, task2);
+
+            var offsetMesh = MoldUtility.BooleanUnion(task1.Result, task2.Result);
+            text += $"  boolean union: {timer.ElapsedMilliseconds}\r\n";
             timer.Reset();
             timer.Start();
 
+            /*
             //add air channels as offset mesh 
             var maxBolusHeight = (float)(bolus.Geometry.Bounds.Z + bolus.Geometry.Bounds.SizeZ);
             float maxZHeight = WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
@@ -48,9 +71,6 @@ namespace Fabolus.Features.Mold.Contours {
 
             if (channels != null && channels.Count > 0) {
                 var airHole = new MeshEditor(new DMesh3());
-                //foreach (var channel in channels)
-                //if (channel.Geometry != null) 
-                //airHole.AppendMesh(channel.Shape.OffsetMesh(OffsetXY, heightOffset)); //some reason, first channel is null
 
                 //multithreading
                 var airMeshes = new ConcurrentBag<DMesh3>();
@@ -61,10 +81,7 @@ namespace Fabolus.Features.Mold.Contours {
                 foreach (var m in airMeshes) airHole.AppendMesh(m); //this is a major hurdle?
                 
                 offsetMesh = MoldUtility.BooleanUnion(offsetMesh, airHole.Mesh);
-            }
-            text += $"  consulted air channels: {timer.ElapsedMilliseconds}\r\n";
-            timer.Reset();
-            timer.Start();
+            }*/
 
             Bitmap3 bmp = BolusUtility.MeshBitmap(offsetMesh, numberOfCells); //another huge time sink
             text += $"  bitmap made: {timer.ElapsedMilliseconds}\r\n";
@@ -86,6 +103,31 @@ namespace Fabolus.Features.Mold.Contours {
             Mesh = result;
             Geometry = Mesh.ToGeometry();
             //MessageBox.Show(text); //for testing
+        }
+
+        private DMesh3 GetOffsetMesh(BolusModel bolus, float offset) {
+            return MoldUtility.OffsetMeshD(bolus.TransformedMesh, offset);
+        }
+        private DMesh3 GetOffsetAirChannels(int numberOfCells, float maxHeight, float offset) {
+            float maxZHeight = WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
+            var heightOffset = maxZHeight + offset - (maxHeight);
+            List<AirChannelModel> channels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
+
+            if (channels != null && channels.Count > 0) {
+                var airHole = new MeshEditor(new DMesh3());
+
+                //multithreading
+                var airMeshes = new ConcurrentBag<DMesh3>();
+                Parallel.ForEach(channels, channel => {
+                    if (channel.Geometry is null) return;
+                    airMeshes.Add(channel.Shape.OffsetMesh(offset, heightOffset));
+                });
+                foreach (var m in airMeshes) airHole.AppendMesh(m); //this is a major hurdle?
+
+                return airHole.Mesh;
+            }
+
+            return null;
         }
 
         private Bitmap3 BitmapBox(Bitmap3 bmp) { //~71 ms
