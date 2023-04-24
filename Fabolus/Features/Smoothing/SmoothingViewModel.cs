@@ -47,12 +47,14 @@ namespace Fabolus.Features.Smoothing {
             _smoothModel.EdgeLength = SmoothingDefault.EdgeLength;
 
             SmoothingLabel = _smoothModel.Name;
-            Depth= _smoothModel.Depth;
+            Depth = _smoothModel.Depth;
             SamplesPerNode = _smoothModel.SamplesPerNode;
             SmoothScale = _smoothModel.Scale;
             EdgeLength = _smoothModel.EdgeLength;
 
-            _isFrozen= false;
+            ClearSmoothed();//removes the old smoothed mesh
+
+            _isFrozen = false;
         }
         partial void OnDepthChanged(int value) => UpdateSettings();
         partial void OnSamplesPerNodeChanged(int value) => UpdateSettings();
@@ -91,12 +93,12 @@ namespace Fabolus.Features.Smoothing {
 
         #region Commands
         [RelayCommand] 
-        public void Smooth() {
+        public async Task Smooth() {
             if (_bolus.Mesh == null) return; //no bolus to smooth
 
-            //ClearSmoothed();//removes the old smoothed mesh
+            ClearSmoothed();//removes the old smoothed mesh
 
-            DMesh3 mesh =  _smoothModel.ToMesh();
+            DMesh3 mesh =  await Task.Run(() => _smoothModel.ToMesh());
 
             WeakReferenceMessenger.Default.Send(new AddNewBolusMessage(BolusModel.SMOOTHED_BOLUS_LABEL, mesh));
         }
