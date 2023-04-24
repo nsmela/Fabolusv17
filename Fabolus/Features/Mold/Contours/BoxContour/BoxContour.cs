@@ -61,6 +61,17 @@ namespace Fabolus.Features.Mold.Contours {
             
             Mesh = result;
             Geometry = Mesh.ToGeometry();
+
+            //testing
+            var timer = new Stopwatch();
+            timer.Start();
+            var text = "testing contour timing:\r\n";
+            var contour = GetContour(offsetMesh);
+
+            text += $" contour: {timer.ElapsedMilliseconds}";
+            timer.Stop();
+
+
         }
 
         private DMesh3 GetOffsetMesh(BolusModel bolus, float offset) => MoldUtility.OffsetMeshD(bolus.TransformedMesh, offset);
@@ -137,5 +148,42 @@ namespace Fabolus.Features.Mold.Contours {
             return bmp;
         }
 
-    }
+        private List<Vector3d> GetContour(DMesh3 mesh, float resolution = 1.0f, int padding = 2) {
+            if (mesh is null) return null;
+
+            var spatial = new DMeshAABBTree3(mesh);
+            spatial.Build();
+
+            //try a hit test for each cube?
+            var z = mesh.CachedBounds.Max.z + 2.0f; //where hit tests will start
+            var min = new Vector2d(mesh.CachedBounds.Min.x, mesh.CachedBounds.Min.y);
+            var max = new Vector2d(mesh.CachedBounds.Max.x, mesh.CachedBounds.Max.y);
+
+            var dimensions = new Index2i(
+                (int)((max.x - min.x) /resolution) + padding * 2, //for the negative and plus side of x
+                (int)((max.y - min.y) / resolution) + padding * 2
+                );
+
+            var map = new bool[dimensions.a, dimensions.b]; //stores the results of hits
+
+            //hit tests
+
+            var hitRay = new Ray3d(Vector3d.Zero, new Vector3d(0, 0, -1));
+            for(int x = 0; x < dimensions.a; x++) {
+                var xSet = min.x + 0.5f + (x * resolution);
+                for(int y = 0; y < dimensions.b; y++) {
+                    var ySet = min.y + 0.5f + (y * resolution);
+                    hitRay.Origin = new Vector3d(xSet, ySet, z);
+
+                    var hit = spatial.FindNearestHitTriangle(hitRay);
+
+                    if (hit != DMesh3.InvalidID) map[x, y] = true;
+                }
+            }
+
+            //use map to make a contour
+
+            return null;
+        }
 }
+    }
