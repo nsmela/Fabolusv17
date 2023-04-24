@@ -28,21 +28,9 @@ namespace Fabolus.Features.Mold.Contours {
             //TODO: calculate air channels and bolus offset mesh at the same time with multithreading
             //each set up as a task and output the result
             //continue when both are done
-            var timer = new Stopwatch();
-            timer.Start();
-            string text = "Calculating box contour: \r\n";
             Geometry = new MeshGeometry3D();
             Mesh = new DMesh3();
 
-            //BolusModel bolus = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
-            //if (bolus == null || bolus.Mesh == null || bolus.Mesh.VertexCount == 0) return;
-            //var numberOfCells = (int)Math.Ceiling(bolus.TransformedMesh.CachedBounds.MaxDim / Resolution);
-            //var offsetMesh = MoldUtility.OffsetMeshD(bolus.TransformedMesh, OffsetXY);
-
-            //BolusModel bolus = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
-            //if (bolus == null || bolus.Mesh == null || bolus.Mesh.VertexCount == 0) return;
-            //var numberOfCells = (int)Math.Ceiling(bolus.TransformedMesh.CachedBounds.MaxDim / Resolution);
-            
             BolusModel bolus = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
             if (bolus == null || bolus.Mesh == null || bolus.Mesh.VertexCount == 0) return;
             var numberOfCells = (int)Math.Ceiling(bolus.TransformedMesh.CachedBounds.MaxDim / Resolution);
@@ -52,48 +40,17 @@ namespace Fabolus.Features.Mold.Contours {
             var task1 = Task.Run(() => GetOffsetMesh(bolus, OffsetXY));
             var task2 = Task.Run(() => GetOffsetAirChannels(numberOfCells, maxBolusHeight, OffsetXY));
 
-            task1.Start();
-            task2.Start();
-
             Task.WaitAll(task1, task2);
 
             var offsetMesh = MoldUtility.BooleanUnion(task1.Result, task2.Result);
-            text += $"  boolean union: {timer.ElapsedMilliseconds}\r\n";
-            timer.Reset();
-            timer.Start();
-
-            /*
-            //add air channels as offset mesh 
-            var maxBolusHeight = (float)(bolus.Geometry.Bounds.Z + bolus.Geometry.Bounds.SizeZ);
-            float maxZHeight = WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
-            var heightOffset = maxZHeight + OffsetTop - (maxBolusHeight);
-            List<AirChannelModel> channels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
-
-            if (channels != null && channels.Count > 0) {
-                var airHole = new MeshEditor(new DMesh3());
-
-                //multithreading
-                var airMeshes = new ConcurrentBag<DMesh3>();
-                Parallel.ForEach(channels, channel => {
-                    if (channel.Geometry is null) return;
-                    airMeshes.Add(channel.Shape.OffsetMesh(OffsetXY, heightOffset));
-                });
-                foreach (var m in airMeshes) airHole.AppendMesh(m); //this is a major hurdle?
-                
-                offsetMesh = MoldUtility.BooleanUnion(offsetMesh, airHole.Mesh);
-            }*/
 
             Bitmap3 bmp = BolusUtility.MeshBitmap(offsetMesh, numberOfCells); //another huge time sink
-            text += $"  bitmap made: {timer.ElapsedMilliseconds}\r\n";
-            timer.Reset();
-            timer.Start();
 
             //turn it into a voxilized mesh
             VoxelSurfaceGenerator voxGen = new VoxelSurfaceGenerator();
             voxGen.Voxels = BitmapBox(bmp);
             voxGen.Generate();
             var result = new DMesh3(MoldUtility.MarchingCubesSmoothing(voxGen.Meshes[0], numberOfCells));
-            text += $"  voxel mesh: {timer.ElapsedMilliseconds}\r\n";
 
             //mesh is small and not aligned
             var scale = offsetMesh.CachedBounds.MaxDim / numberOfCells;
@@ -105,11 +62,10 @@ namespace Fabolus.Features.Mold.Contours {
             //MessageBox.Show(text); //for testing
         }
 
-        private DMesh3 GetOffsetMesh(BolusModel bolus, float offset) {
-            return MoldUtility.OffsetMeshD(bolus.TransformedMesh, offset);
-        }
+        private DMesh3 GetOffsetMesh(BolusModel bolus, float offset) => MoldUtility.OffsetMeshD(bolus.TransformedMesh, offset);
+        
         private DMesh3 GetOffsetAirChannels(int numberOfCells, float maxHeight, float offset) {
-            float maxZHeight = WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
+            float maxZHeight = maxHeight + 20.0f; //WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
             var heightOffset = maxZHeight + offset - (maxHeight);
             List<AirChannelModel> channels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
 

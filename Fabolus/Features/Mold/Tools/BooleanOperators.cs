@@ -1,18 +1,22 @@
 ﻿using g3;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Fabolus.Features.Mold.Tools {
     public static partial class MoldUtility {
-        public static DMesh3 BooleanUnion(DMesh3 mesh1, DMesh3 mesh2) {
-            BoundedImplicitFunction3d meshA = meshToImplicitF(mesh1, 128, 0.2f);
-            BoundedImplicitFunction3d meshB = meshToImplicitF(mesh2, 128, 0.2f);
+        public static DMesh3 BooleanUnion(DMesh3 mesh1, DMesh3 mesh2, int resolution = 128) {
+            var task1 = Task.Run(() => meshToImplicitF(mesh1, resolution, 0.2f));
+            var task2 = Task.Run(() => meshToImplicitF(mesh2, resolution, 0.2f));
+
+            Task.WaitAll(task1, task2);
 
             //take the difference of the bolus mesh minus the tools
-            var mesh = new ImplicitUnion3d() { A = meshA, B = meshB };
+            var mesh = new ImplicitUnion3d() { A = task1.Result, B = task2.Result }; //{ A = meshA, B = meshB };
 
             //calculate the boolean mesh
             MarchingCubes c = new MarchingCubes();
