@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.1.0" />
+    <PackageReference Include="Delaunator" Version="1.0.10" />
     <PackageReference Include="geometry3Sharp" Version="1.0.324" />
     <PackageReference Include="HelixToolkit.Wpf" Version="2.23.0" />
     <PackageReference Include="System.Collections.Specialized" Version="4.3.0" />

@@ -167,8 +167,8 @@ namespace Fabolus.Features.Mold.Contours {
             var map = new bool[dimensions.a, dimensions.b]; //stores the results of hits
 
             //hit tests
-
             var hitRay = new Ray3d(Vector3d.Zero, new Vector3d(0, 0, -1));
+            var points = new List<Point>();
             for(int x = 0; x < dimensions.a; x++) {
                 var xSet = min.x + 0.5f + (x * resolution);
                 for(int y = 0; y < dimensions.b; y++) {
@@ -182,8 +182,8 @@ namespace Fabolus.Features.Mold.Contours {
             }
 
             //use map to make a contour
-
             return null;
         }
-}
+
     }
+}
