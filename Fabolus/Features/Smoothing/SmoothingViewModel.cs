@@ -91,12 +91,12 @@ namespace Fabolus.Features.Smoothing {
 
         #region Commands
         [RelayCommand] 
-        public void Smooth() {
+        public async Task Smooth() {
             if (_bolus.Mesh == null) return; //no bolus to smooth
 
-            //ClearSmoothed();//removes the old smoothed mesh
+            ClearSmoothed();//removes the old smoothed mesh
 
-            DMesh3 mesh =  _smoothModel.ToMesh();
+            DMesh3 mesh =  await Task.Run(() => _smoothModel.ToMesh());
 
             WeakReferenceMessenger.Default.Send(new AddNewBolusMessage(BolusModel.SMOOTHED_BOLUS_LABEL, mesh));
         }
