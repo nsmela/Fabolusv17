@@ -21,6 +21,10 @@ namespace Fabolus.Features.Mold {
         [ObservableProperty] private List<string> _shapeNames;
         private ContourModelBase _contour;
 
+        partial void OnActiveContourIndexChanged(int value) {
+            SetContour(value);
+        }
+
         public MoldViewModel() {
             ShapeNames = WeakReferenceMessenger.Default.Send<MoldListRequestMessage>();
             _contour = WeakReferenceMessenger.Default.Send<MoldContourRequestMessage>();

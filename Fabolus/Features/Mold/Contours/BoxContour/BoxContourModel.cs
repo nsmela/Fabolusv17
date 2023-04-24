@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Fabolus.Features.Mold.Contours {
     public class BoxContourModel : ContourModelBase {
+        public override string Name => "box contour";
         public override float Offset => ((BoxContour)Contour).OffsetXY;
             
         public BoxContourModel() {
