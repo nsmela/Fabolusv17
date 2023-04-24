@@ -1,4 +1,5 @@
 ﻿using Fabolus.Features.Bolus;
+using Fabolus.Features.Helpers;
 using g3;
 using HelixToolkit.Wpf;
 using System;
@@ -53,8 +54,10 @@ namespace Fabolus.Features.AirChannel.Channels.Angled_Channels {
             BottomAnchor = ConeAnchor + _direction * (_coneLength + _depth);
             TopAnchor = new Point3D(BottomAnchor.X, BottomAnchor.Y, _height);
 
-            Geometry = GenerateGeometry();
-            Mesh = BolusUtility.MeshGeometryToDMesh(Geometry);
+            //Geometry = GenerateGeometry();
+            //Mesh = BolusUtility.MeshGeometryToDMesh(Geometry);
+            Mesh = GenerateMesh();
+            Geometry = Mesh.ToGeometry();
         }
 
         private MeshGeometry3D GenerateGeometry(float offset = 0, float heightOffset = 0) {
@@ -78,5 +81,75 @@ namespace Fabolus.Features.AirChannel.Channels.Angled_Channels {
         }
 
         public override DMesh3 OffsetMesh(float offset, float height) => BolusUtility.MeshGeometryToDMesh(GenerateGeometry(offset, height));
+
+        private DMesh3 GenerateMesh(float offset = 0, float heightOffset = 0) {
+            var mesh = new MeshEditor(new DMesh3());
+
+            var coneRadius = _coneRadius + offset;
+            var radius = _radius + offset;
+            var vertOffset = new Vector3D(0, 0, -heightOffset);
+
+            //sphere
+            Sphere3Generator_NormalizedCube sphereGenerator = new Sphere3Generator_NormalizedCube {
+                Radius = coneRadius,
+                EdgeVertices = SEGMENTS
+            };
+            sphereGenerator.Generate();
+            var sphere = new DMesh3(sphereGenerator.MakeDMesh());
+            MeshTransforms.Translate(sphere, ConeAnchor.ToVector3d());
+            mesh.AppendMesh(sphere);
+
+            //cone
+            CappedCylinderGenerator coneGenerator = new CappedCylinderGenerator {
+                BaseRadius = coneRadius,
+                TopRadius = radius,
+                Height = _coneLength,
+                Slices = SEGMENTS
+            };
+            coneGenerator.Generate();
+
+            var direction = _direction.ToVector3d();
+            var cone = new DMesh3(coneGenerator.MakeDMesh());
+            var vX = Vector3d.AxisX.AngleD(direction);
+            var vY = Vector3d.AxisY.AngleD(direction);
+            var vZ = Vector3d.AxisZ.AngleD(direction);
+            var coneRotationX = new Quaterniond(Vector3d.AxisX, vX);
+            var coneRotationY = new Quaterniond(Vector3d.AxisY, vY);
+            var coneRotationZ = new Quaterniond(Vector3d.AxisZ, vZ);
+            MeshTransforms.Rotate(cone, ConeAnchor.ToVector3d(), coneRotationX);
+            MeshTransforms.Rotate(cone, ConeAnchor.ToVector3d(), coneRotationY);
+            MeshTransforms.Rotate(cone, ConeAnchor.ToVector3d(), coneRotationZ);
+            MeshTransforms.Translate(cone, ConeAnchor.ToVector3d());
+            mesh.AppendMesh(cone);
+
+            //sphere
+            sphereGenerator = new Sphere3Generator_NormalizedCube {
+                Radius = radius,
+                EdgeVertices = SEGMENTS
+            };
+            sphereGenerator.Generate();
+            sphere = new DMesh3(sphereGenerator.MakeDMesh());
+            MeshTransforms.Translate(sphere, BottomAnchor.ToVector3d());
+            mesh.AppendMesh(sphere);
+
+            //cylinder
+            var cyl_gen = new CappedCylinderGenerator {
+                BaseRadius = radius,
+                TopRadius = radius,
+                Height = (float)(_height - heightOffset - BottomAnchor.Z - _depth),
+                Slices = SEGMENTS
+            };
+
+            cyl_gen.Generate();
+            DMesh3 cylinder = new DMesh3(cyl_gen.MakeDMesh());
+            var rotation = new Quaterniond(Vector3d.AxisX, 90.0f);
+            MeshTransforms.Rotate(cylinder, Vector3d.Zero, rotation);
+            MeshTransforms.Translate(cylinder, BottomAnchor.ToVector3d());
+            mesh.AppendMesh(cylinder);
+            var result = mesh.Mesh;
+
+            result.ReverseOrientation();//comes out with reversed normals
+            return mesh.Mesh;
+        }
     }
 }
