@@ -1,15 +1,13 @@
 ﻿using g3;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Fabolus.Features.Mold.Tools {
     public static partial class MoldUtility {
         public static DMesh3 BooleanUnion(DMesh3 mesh1, DMesh3 mesh2, int resolution = 128) {
+            if (mesh1 is null || mesh1.TriangleCount <= 0) return mesh2;
+            if (mesh2 is null || mesh2.TriangleCount <= 0) return mesh1;
+
             var task1 = Task.Run(() => meshToImplicitF(mesh1, resolution, 0.2f));
             var task2 = Task.Run(() => meshToImplicitF(mesh2, resolution, 0.2f));
 
@@ -33,6 +31,9 @@ namespace Fabolus.Features.Mold.Tools {
         }
 
         public static DMesh3 BooleanSubtraction(DMesh3 mesh1, DMesh3 mesh2, int resolution = 128) {
+            if (mesh1 is null || mesh1.TriangleCount <= 0) return mesh2;
+            if (mesh2 is null || mesh2.TriangleCount <= 0) return mesh1;
+
             var task1 = Task.Run(() => meshToImplicitF(mesh1, resolution, 0.2f));
             var task2 = Task.Run(() => meshToImplicitF(mesh2, resolution, 0.2f));
 

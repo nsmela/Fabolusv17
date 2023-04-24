@@ -41,9 +41,6 @@ namespace Fabolus.Features.AirChannel.Channels {
             BottomAnchor = new Point3D(_anchor.X, _anchor.Y, _anchor.Z - _depth);
             TopAnchor = new Point3D(_anchor.X, _anchor.Y, _height);
 
-            //TODO switch to generating the mesh and then converting to mesh geometry
-            //Geometry = GenerateGeometry();
-            //Mesh = BolusUtility.MeshGeometryToDMesh(Geometry);'
             Mesh = GenerateMesh();
             Geometry = Mesh.ToGeometry();
         }
@@ -82,13 +79,13 @@ namespace Fabolus.Features.AirChannel.Channels {
             MeshTransforms.Translate(cylinder, anchor);
             mesh.AppendMesh(cylinder);
             var result = mesh.Mesh;
+            
             result.ReverseOrientation();//comes out with reversed normals
             return mesh.Mesh;
             
         }
 
-        //TODO: switch to generating the DMesh3 directly and then converting to geometry if needed.
-        public override DMesh3 OffsetMesh(float offset, float height) => GenerateMesh(offset, height);//BolusUtility.MeshGeometryToDMesh(GenerateGeometry(offset, height));
+        public override DMesh3 OffsetMesh(float offset, float height) => GenerateMesh(offset, height);
 
     }
 }

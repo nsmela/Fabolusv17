@@ -23,7 +23,7 @@ namespace Fabolus.Features.Mold.Contours {
         public float OffsetBottom { get; set; }
         public float OffsetTop { get; set; }
         public float Resolution { get; set; } //size of the cells when doing marching cubes, in mm
-
+       
         public override void Calculate() {
             //TODO: calculate air channels and bolus offset mesh at the same time with multithreading
             //each set up as a task and output the result
@@ -35,12 +35,14 @@ namespace Fabolus.Features.Mold.Contours {
             if (bolus == null || bolus.Mesh == null || bolus.Mesh.VertexCount == 0) return;
             var numberOfCells = (int)Math.Ceiling(bolus.TransformedMesh.CachedBounds.MaxDim / Resolution);
             var maxBolusHeight = (float)(bolus.Geometry.Bounds.Z + bolus.Geometry.Bounds.SizeZ);
+            var maxHeight = WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
+            var heightOffset = maxHeight - (maxBolusHeight + OffsetTop);
 
             //tasks
             var task1 = Task.Run(() => GetOffsetMesh(bolus, OffsetXY));
-            var task2 = Task.Run(() => GetOffsetAirChannels(numberOfCells, maxBolusHeight, OffsetXY));
+            var task2 = Task.Run(() => GetOffsetAirChannels(numberOfCells, OffsetXY, heightOffset));
 
-            Task.WaitAll(task1, task2);
+            Task.WaitAll(task1, task2); 
 
             var offsetMesh = MoldUtility.BooleanUnion(task1.Result, task2.Result);
 
@@ -56,22 +58,19 @@ namespace Fabolus.Features.Mold.Contours {
             var scale = offsetMesh.CachedBounds.MaxDim / numberOfCells;
             MeshTransforms.Scale(result, scale);
             BolusUtility.CentreMesh(result, offsetMesh);
-
+            
             Mesh = result;
             Geometry = Mesh.ToGeometry();
-            //MessageBox.Show(text); //for testing
         }
 
         private DMesh3 GetOffsetMesh(BolusModel bolus, float offset) => MoldUtility.OffsetMeshD(bolus.TransformedMesh, offset);
         
-        private DMesh3 GetOffsetAirChannels(int numberOfCells, float maxHeight, float offset) {
-            float maxZHeight = maxHeight + 20.0f; //WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
-            var heightOffset = maxZHeight + offset - (maxHeight);
+        private DMesh3 GetOffsetAirChannels(int numberOfCells, float offset, float heightOffset) {
             List<AirChannelModel> channels = WeakReferenceMessenger.Default.Send<AirChannelsRequestMessage>();
 
-            if (channels != null && channels.Count > 0) {
-                var airHole = new MeshEditor(new DMesh3());
+            if (channels == null || channels.Count <= 0) return new DMesh3();
 
+            var airHole = new MeshEditor(new DMesh3());
                 //multithreading
                 var airMeshes = new ConcurrentBag<DMesh3>();
                 Parallel.ForEach(channels, channel => {
@@ -81,9 +80,6 @@ namespace Fabolus.Features.Mold.Contours {
                 foreach (var m in airMeshes) airHole.AppendMesh(m); //this is a major hurdle?
 
                 return airHole.Mesh;
-            }
-
-            return null;
         }
 
         private Bitmap3 BitmapBox(Bitmap3 bmp) { //~71 ms
@@ -121,9 +117,6 @@ namespace Fabolus.Features.Mold.Contours {
                 }
             }
 
-            //todo: create a blacklist of x,y coordinates that have nothing?
-
-
             //if an airhole is too low, this will extend the mesh from the lowest airhole up to the top.
             //the 3D print will be easier to fill
             for (int x = 0; x < bmp.Dimensions.x; x++) {
@@ -138,21 +131,11 @@ namespace Fabolus.Features.Mold.Contours {
                             return;
                         }
                     }); 
-
-
-                    /*
-                    for (int z = z_bottom; z <= z_top; z++) {
-                        if (bmp.Get(new Vector3i(x, y, z))) {
-                            for (int j = z_bottom; j <= z_top; j++) {
-                                bmp.Set(new Vector3i(x, y, j), true);
-                            }
-                            break;
-                        }
-                    }*/
                 }
             }
 
             return bmp;
         }
+
     }
 }
