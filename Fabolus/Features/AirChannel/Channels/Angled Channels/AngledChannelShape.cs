@@ -67,7 +67,9 @@ namespace Fabolus.Features.AirChannel.Channels.Angled_Channels {
             mesh.AddSphere(BottomAnchor, radius, SEGMENTS);
             mesh.AddCylinder(BottomAnchor, TopAnchor + vertOffset, radius, SEGMENTS, true, true);
 
-            return mesh.ToMesh();
+            var result = mesh.ToMesh();
+            //result.Normals = MeshGeometryHelper.CalculateNormals(result);
+            return result;
         }
 
         public override DMesh3 OffsetMesh(float offset, float height) => BolusUtility.MeshGeometryToDMesh(GenerateGeometry(offset, height));
