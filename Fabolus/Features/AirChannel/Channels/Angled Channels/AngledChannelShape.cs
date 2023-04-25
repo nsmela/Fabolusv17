@@ -51,7 +51,7 @@ namespace Fabolus.Features.AirChannel.Channels.Angled_Channels {
             TopAnchor = new Point3D(BottomAnchor.X, BottomAnchor.Y, _height);
 
             Geometry = GenerateGeometry();
-            Mesh = Geometry.ToDMesh();// BolusUtility.MeshGeometryToDMesh(Geometry);
+            Mesh = Geometry.ToDMesh();
         }
 
         private MeshGeometry3D GenerateGeometry(float offset = 0, float heightOffset = 0) {
