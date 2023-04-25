@@ -95,7 +95,7 @@ namespace Fabolus.Features.MainWindow {
             //volumes
             if (bolus.Mesh != null) {
                 var volumeArea = MeshMeasurements.VolumeArea(bolus.Mesh, bolus.Mesh.TriangleIndices(), bolus.Mesh.GetVertex);
-                VolumeText = string.Format("{0:0,0.0} mL", (volumeArea.x / 1000));//BolusUtility.VolumeToText(bolus.Mesh);
+                VolumeText = string.Format("{0:0,0.0} mL", (volumeArea.x / 1000));
             } else VolumeText = "No Mesh loaded";
         }
 

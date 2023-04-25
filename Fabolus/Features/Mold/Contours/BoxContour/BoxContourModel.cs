@@ -14,8 +14,8 @@ namespace Fabolus.Features.Mold.Contours {
 
             Contour = new BoxContour {
                 OffsetXY = 5.0f,
-                OffsetBottom = 2.5f,
-                OffsetTop = 2.5f,
+                OffsetBottom = 0.0f,
+                OffsetTop = 2.0f,
                 Resolution = 3.0f
             };
             ViewModel = new BoxContourViewModel();

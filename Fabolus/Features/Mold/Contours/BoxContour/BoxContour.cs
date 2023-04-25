@@ -17,6 +17,7 @@ using Fabolus.Features.Helpers;
 using System.Collections.Concurrent;
 using System.CodeDom;
 using gs;
+using HelixToolkit.Wpf;
 
 namespace Fabolus.Features.Mold.Contours {
     public class BoxContour : ContourBase {
@@ -48,6 +49,14 @@ namespace Fabolus.Features.Mold.Contours {
 
             var offsetMesh = MoldUtility.BooleanUnion(task1.Result, task2.Result);
 
+            //Mesh = CalculateByMesh(offsetMesh, numberOfCells);
+            //Geometry = Mesh.ToGeometry();
+
+            Geometry = CalculateByContour(offsetMesh, numberOfCells);
+            Mesh = Geometry.ToDMesh();
+        }
+
+        private DMesh3 CalculateByMesh(DMesh3 offsetMesh, int numberOfCells) {
             Bitmap3 bmp = BolusUtility.MeshBitmap(offsetMesh, numberOfCells); //another huge time sink
 
             //turn it into a voxilized mesh
@@ -60,27 +69,45 @@ namespace Fabolus.Features.Mold.Contours {
             var scale = offsetMesh.CachedBounds.MaxDim / numberOfCells;
             MeshTransforms.Scale(result, scale);
             BolusUtility.CentreMesh(result, offsetMesh);
-            
-            Mesh = result;
-            Geometry = Mesh.ToGeometry();
 
+            return result;
+        }
+
+        private MeshGeometry3D CalculateByContour(DMesh3 offsetMesh, int numberOfCells) {
             //testing
             var contour = GetContour(offsetMesh);
-            var vertIndexes = new List<int>();
 
-            var mesh = new DMesh3();
-            int i = 0;
+            var verts = new List<Point3D>();
+            var points = new List<Point>();
             contour.ForEach(v => {
-                mesh.AppendVertex(v);
-                vertIndexes.Add(i++);
+                verts.Add(new Point3D(v.x, v.y, v.z));
+                points.Add(new Point(v.x, v.y));
             });
 
-            //create a flat surface using the contour
-            var contourEdges = EdgeLoop.FromVertices(mesh, vertIndexes);
-            var fill = new AutoHoleFill(mesh, contourEdges);
-            fill.Apply();
-            //MeshMeasurements.VolumeArea(mesh, mesh)
-                
+            //using helix toolkit instead
+            var builder = new MeshBuilder(false, false);
+
+            BolusModel bolus = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
+            var maxBolusHeight = (float)(bolus.Geometry.Bounds.Z + bolus.Geometry.Bounds.SizeZ);
+
+            var upperVerts = new List<Point3D>();
+            verts.ForEach(p => { upperVerts.Add(new Point3D(p.X, p.Y, maxBolusHeight + OffsetTop)); });
+
+            builder.AddPolygon(verts); //these aren't robust. some triangles are intersecting the boundry
+            builder.AddPolygon(upperVerts);
+
+            //sides of the contour
+            int count = verts.Count;
+            for (int i = 0; i < verts.Count - 1; i++) {
+                var p1 = verts[i];
+                var p2 = verts[i + 1];
+                var p3 = upperVerts[i];
+                var p4 = upperVerts[i + 1];
+
+                builder.AddQuad(p4, p2, p1, p3);
+            }
+
+            return builder.ToMesh();
         }
 
         private DMesh3 GetOffsetMesh(BolusModel bolus, float offset) => MoldUtility.OffsetMeshD(bolus.TransformedMesh, offset);
@@ -121,7 +148,6 @@ namespace Fabolus.Features.Mold.Contours {
                         }
                     }
                 }
-
             }
 
             int z_top = z_bottom;
@@ -206,12 +232,16 @@ namespace Fabolus.Features.Mold.Contours {
             var lastPoint = new Vector2i(minX, minY - 1);
             var nextPoint = startPoint;
             var contour = new List<Vector3d>();
+            var bottom_z = mesh.CachedBounds.Min.z - OffsetBottom + 4.0f;
 
             while (true) {
                 currentPoint = nextPoint;
 
                 //create a vector for the current point and store it
-                var vector = new Vector3d((currentPoint.x + 0.5f) * resolution, (currentPoint.y + 0.5) * resolution, 0.0f);
+                var vector = new Vector3d(
+                    (currentPoint.x + 0.5f) * resolution + min.x, 
+                    (currentPoint.y + 0.5) * resolution + min.y, 
+                    bottom_z);
                 contour.Add(vector);
 
                 //look for the next point to use
@@ -234,8 +264,6 @@ namespace Fabolus.Features.Mold.Contours {
             
             int lastX = lastPoint.x;
             int lastY = lastPoint.y;    
-
-            //if (!map[x,y] || !map[lastX, lastY]) return new Vector2i();
 
             //starting with last point, go around the current point counter clockwise until a filled point is hit
             var position = NextClockwise(new Vector2i((lastX - x), (lastY - y)));
