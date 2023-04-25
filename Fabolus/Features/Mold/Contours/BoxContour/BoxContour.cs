@@ -120,6 +120,7 @@ namespace Fabolus.Features.Mold.Contours {
         private MeshGeometry3D CalculateContour(DMesh3 mesh) {
             var zHeight = (float)(_bolus.Geometry.Bounds.SizeZ + _bolus.Geometry.Bounds.Z);
             var contour = GetContour(mesh);
+            if (contour.Count % 2 != 0) contour.Add(contour[0]);
 
             var bottomVector = new Vector3D(0, 0, contour[0].z - OffsetBottom);
             var topVector = new Vector3D(0, 0, zHeight + OffsetTop);
@@ -148,19 +149,34 @@ namespace Fabolus.Features.Mold.Contours {
                 p2 = new Point3D(v2.X, v2.Y, topVector.Z);
                 builder.AddTriangle(p2, p1, p0);
             }
-            
 
+            //sides of the contour
+            int count = verts.Count;
+            var indicesCount = builder.Positions.Count();
+            for (int i = 0; i < count - 1; i++) {
+                var indices = new List<int> {
+                    count + i + 1, 
+                    i + 1, 
+                    i,
+                    count
+                };
+
+                builder.AddQuad(indices);
+            }
+
+            /*
             var points = new List<System.Windows.Point>();
             contour.ForEach(v => points.Add(new System.Windows.Point(v.x, v.y)));
-            if (points.Count % 2 != 0) points.RemoveAt(0);
+
             builder.AddExtrudedSegments(
                 points,
-                new Vector3D(1, 0, 0),
-                topVector.ToPoint3D(),
-                bottomVector.ToPoint3D()
-            ); 
+                new Vector3D(-1, 0, 0),
+                bottomVector.ToPoint3D(),
+                topVector.ToPoint3D()
 
-            builder.ComputeNormalsAndTangents(MeshFaces.Default);
+            );*/
+
+
 
             return builder.ToMesh();
         }
