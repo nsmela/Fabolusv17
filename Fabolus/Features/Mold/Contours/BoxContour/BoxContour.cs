@@ -15,6 +15,8 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using Fabolus.Features.Helpers;
 using System.Collections.Concurrent;
+using System.CodeDom;
+using gs;
 
 namespace Fabolus.Features.Mold.Contours {
     public class BoxContour : ContourBase {
@@ -63,15 +65,22 @@ namespace Fabolus.Features.Mold.Contours {
             Geometry = Mesh.ToGeometry();
 
             //testing
-            var timer = new Stopwatch();
-            timer.Start();
-            var text = "testing contour timing:\r\n";
             var contour = GetContour(offsetMesh);
+            var vertIndexes = new List<int>();
 
-            text += $" contour: {timer.ElapsedMilliseconds}";
-            timer.Stop();
+            var mesh = new DMesh3();
+            int i = 0;
+            contour.ForEach(v => {
+                mesh.AppendVertex(v);
+                vertIndexes.Add(i++);
+            });
 
-
+            //create a flat surface using the contour
+            var contourEdges = EdgeLoop.FromVertices(mesh, vertIndexes);
+            var fill = new AutoHoleFill(mesh, contourEdges);
+            fill.Apply();
+            //MeshMeasurements.VolumeArea(mesh, mesh)
+                
         }
 
         private DMesh3 GetOffsetMesh(BolusModel bolus, float offset) => MoldUtility.OffsetMeshD(bolus.TransformedMesh, offset);
@@ -148,7 +157,7 @@ namespace Fabolus.Features.Mold.Contours {
             return bmp;
         }
 
-        private List<Vector3d> GetContour(DMesh3 mesh, float resolution = 1.0f, int padding = 2) {
+        private List<Vector3d> GetContour(DMesh3 mesh, float resolution = 1.0f, int padding = 3) {
             if (mesh is null) return null;
 
             var spatial = new DMeshAABBTree3(mesh);
@@ -169,21 +178,113 @@ namespace Fabolus.Features.Mold.Contours {
             //hit tests
             var hitRay = new Ray3d(Vector3d.Zero, new Vector3d(0, 0, -1));
             var points = new List<Point>();
-            for(int x = 0; x < dimensions.a; x++) {
+            int minX = dimensions.a, minY = dimensions.b;
+            for (int x = 0; x < dimensions.a; x++) {
                 var xSet = min.x + 0.5f + (x * resolution);
-                for(int y = 0; y < dimensions.b; y++) {
+                if (x < minX) minX = x;
+
+                for (int y = 0; y < dimensions.b; y++) {
                     var ySet = min.y + 0.5f + (y * resolution);
                     hitRay.Origin = new Vector3d(xSet, ySet, z);
 
                     var hit = spatial.FindNearestHitTriangle(hitRay);
 
-                    if (hit != DMesh3.InvalidID) map[x, y] = true;
+                    if (hit == DMesh3.InvalidID) continue;
+                    
+                    map[x, y] = true;
+
+                    //used to start the contour
+
+                    if(x == minX && y < minY) minY = y;
                 }
             }
 
             //use map to make a contour
-            return null;
+
+            var startPoint = new Vector2i(minX, minY);
+            var currentPoint = startPoint;
+            var lastPoint = new Vector2i(minX, minY - 1);
+            var nextPoint = startPoint;
+            var contour = new List<Vector3d>();
+
+            while (true) {
+                currentPoint = nextPoint;
+
+                //create a vector for the current point and store it
+                var vector = new Vector3d((currentPoint.x + 0.5f) * resolution, (currentPoint.y + 0.5) * resolution, 0.0f);
+                contour.Add(vector);
+
+                //look for the next point to use
+                nextPoint = GetNextPoint(map, currentPoint, lastPoint);
+                lastPoint = currentPoint;
+
+                //test to see if we should exit the loop
+                if (nextPoint == startPoint) {
+                    contour.Add(contour[0]);//link the last point to the first point
+                    break;
+                }
+            }
+            return contour;
         }
 
+        private Vector2i GetNextPoint(bool[,] map, Vector2i currentPoint, Vector2i lastPoint) {
+            //double check current point and last point are valid
+            int x = currentPoint.x;
+            int y = currentPoint.y;
+            
+            int lastX = lastPoint.x;
+            int lastY = lastPoint.y;    
+
+            //if (!map[x,y] || !map[lastX, lastY]) return new Vector2i();
+
+            //starting with last point, go around the current point counter clockwise until a filled point is hit
+            var position = NextClockwise(new Vector2i((lastX - x), (lastY - y)));
+            int pX, pY;
+            for (int i = 0; i < 8; i++) {
+                if (position == null) return new Vector2i(); //invalid value
+                if (position.Value == lastPoint) return new Vector2i(); //went all the way around and didn't find anything
+
+                pX = position.Value.x + currentPoint.x; 
+                pY = position.Value.y + currentPoint.y;
+
+                if (pX >= 0 && pY >= 0 && map[pX, pY]) return new Vector2i(pX, pY); //found the correct position
+
+                position = NextClockwise(position.Value);
+            }
+
+            //didn't find anything
+            return new Vector2i();
+        }
+
+        /// <summary>
+        /// Take a Vector2i with values between -1 and 1 for the x and y
+        /// Goes clockwise around 0,0 to find the next position
+        /// </summary>
+        /// <param name="position"></param>
+        /// <returns>The next Vector2i clockwise around 0,0</returns>
+        private Vector2i? NextClockwise(Vector2i position) {
+            int x = position.x;
+            int y = position.y;
+
+            //simple yet effective 
+            if (x == -1) {
+                if (y == -1) return new Vector2i(-1, 0);
+                if (y == 0) return new Vector2i(-1, 1);
+                if (y == 1) return new Vector2i(0, 1);
+            }
+            if (x == 0) {
+                if (y == -1) return new Vector2i(-1, -1);
+                if (y == 0) return new Vector2i(0, -1); //sent the current point, which means we need some point to start. this is most likely to be empty
+                if (y == 1) return new Vector2i(1, 1);
+            }
+            if (x == 1) {
+                if (y == -1) return new Vector2i(0, -1);
+                if (y == 0) return new Vector2i(1, -1);
+                if (y == 1) return new Vector2i(1, 0);
+            }
+
+            //invalid entry
+            return null;
+        }
     }
 }

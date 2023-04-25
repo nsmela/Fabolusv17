@@ -9,6 +9,7 @@ using Fabolus.Features.Import;
 using Fabolus.Features.Mold;
 using Fabolus.Features.Rotation;
 using Fabolus.Features.Smoothing;
+using g3;
 using HelixToolkit.Wpf;
 using System.IO;
 using System.Threading.Tasks;
@@ -92,8 +93,10 @@ namespace Fabolus.Features.MainWindow {
             else TriangleCount = "N/A";
 
             //volumes
-            if (bolus.Mesh != null) VolumeText = BolusUtility.VolumeToText(bolus.Mesh);
-            else VolumeText = "No Mesh loaded";
+            if (bolus.Mesh != null) {
+                var volumeArea = MeshMeasurements.VolumeArea(bolus.Mesh, bolus.Mesh.TriangleIndices(), bolus.Mesh.GetVertex);
+                VolumeText = string.Format("{0:0,0.0} mL", (volumeArea.x / 1000));//BolusUtility.VolumeToText(bolus.Mesh);
+            } else VolumeText = "No Mesh loaded";
         }
 
         #region Commands
