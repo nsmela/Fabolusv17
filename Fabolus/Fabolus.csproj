@@ -26,11 +26,16 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.1.0" />
-    <PackageReference Include="Delaunator" Version="1.0.10" />
     <PackageReference Include="geometry3Sharp" Version="1.0.324" />
     <PackageReference Include="HelixToolkit.Wpf" Version="2.23.0" />
     <PackageReference Include="System.Collections.Specialized" Version="4.3.0" />
     <PackageReference Include="The.Microsoft.Expression.Interactions" Version="4.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="ClassLibrary">
+      <HintPath>Files\TriangleNet.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
@@ -47,6 +52,9 @@
 
   <ItemGroup>
     <None Update="Files\PoissonRecon.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Files\ClassLibrary.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

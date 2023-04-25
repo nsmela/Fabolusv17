@@ -18,10 +18,15 @@ using System.Collections.Concurrent;
 using System.CodeDom;
 using gs;
 using HelixToolkit.Wpf;
+using TriangleNet.Geometry;
+using TriangleNet.Tools;
+using TriangleNet.Meshing;
 
 namespace Fabolus.Features.Mold.Contours {
     public class BoxContour : ContourBase {
         public override string Name => "contoured box";
+        private BolusModel _bolus;
+
         public float OffsetXY { get; set; }
         public float OffsetBottom { get; set; }
         public float OffsetTop { get; set; }
@@ -34,15 +39,15 @@ namespace Fabolus.Features.Mold.Contours {
             Geometry = new MeshGeometry3D();
             Mesh = new DMesh3();
 
-            BolusModel bolus = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
-            if (bolus == null || bolus.Mesh == null || bolus.Mesh.VertexCount == 0) return;
-            var numberOfCells = (int)Math.Ceiling(bolus.TransformedMesh.CachedBounds.MaxDim / Resolution);
-            var maxBolusHeight = (float)(bolus.Geometry.Bounds.Z + bolus.Geometry.Bounds.SizeZ);
+            _bolus = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
+            if (_bolus == null || _bolus.Mesh == null || _bolus.Mesh.VertexCount == 0) return;
+            var numberOfCells = (int)Math.Ceiling(_bolus.TransformedMesh.CachedBounds.MaxDim / Resolution);
+            var maxBolusHeight = (float)(_bolus.Geometry.Bounds.Z + _bolus.Geometry.Bounds.SizeZ);
             var maxHeight = WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
             var heightOffset = maxHeight - (maxBolusHeight + OffsetTop);
 
             //tasks
-            var task1 = Task.Run(() => GetOffsetMesh(bolus, OffsetXY));
+            var task1 = Task.Run(() => GetOffsetMesh(_bolus, OffsetXY));
             var task2 = Task.Run(() => GetOffsetAirChannels(numberOfCells, OffsetXY, heightOffset));
 
             Task.WaitAll(task1, task2); 
@@ -52,7 +57,10 @@ namespace Fabolus.Features.Mold.Contours {
             //Mesh = CalculateByMesh(offsetMesh, numberOfCells);
             //Geometry = Mesh.ToGeometry();
 
-            Geometry = CalculateByContour(offsetMesh, numberOfCells);
+            //Geometry = CalculateByContour(offsetMesh, numberOfCells);
+            //Mesh = Geometry.ToDMesh();
+
+            Geometry = CalculateContour(offsetMesh);
             Mesh = Geometry.ToDMesh();
         }
 
@@ -78,17 +86,16 @@ namespace Fabolus.Features.Mold.Contours {
             var contour = GetContour(offsetMesh);
 
             var verts = new List<Point3D>();
-            var points = new List<Point>();
+            var points = new List<System.Windows.Point>();
             contour.ForEach(v => {
                 verts.Add(new Point3D(v.x, v.y, v.z));
-                points.Add(new Point(v.x, v.y));
+                points.Add(new System.Windows.Point(v.x, v.y));
             });
 
             //using helix toolkit instead
             var builder = new MeshBuilder(false, false);
 
-            BolusModel bolus = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
-            var maxBolusHeight = (float)(bolus.Geometry.Bounds.Z + bolus.Geometry.Bounds.SizeZ);
+            var maxBolusHeight = (float)(_bolus.Geometry.Bounds.Z + _bolus.Geometry.Bounds.SizeZ);
 
             var upperVerts = new List<Point3D>();
             verts.ForEach(p => { upperVerts.Add(new Point3D(p.X, p.Y, maxBolusHeight + OffsetTop)); });
@@ -106,6 +113,54 @@ namespace Fabolus.Features.Mold.Contours {
 
                 builder.AddQuad(p4, p2, p1, p3);
             }
+
+            return builder.ToMesh();
+        }
+
+        private MeshGeometry3D CalculateContour(DMesh3 mesh) {
+            var zHeight = (float)(_bolus.Geometry.Bounds.SizeZ + _bolus.Geometry.Bounds.Z);
+            var contour = GetContour(mesh);
+
+            var bottomVector = new Vector3D(0, 0, contour[0].z - OffsetBottom);
+            var topVector = new Vector3D(0, 0, zHeight + OffsetTop);
+
+            var verts = new List<Vertex>();
+            contour.ForEach(v => { verts.Add(new Vertex(v.x, v.y)); });
+            var polygon = new TriangleNet.Geometry.Polygon();
+            var outline = new Contour(verts);
+            
+            polygon.Add(outline);
+
+            var builder = new MeshBuilder(false, false);
+            foreach(var t in new GenericMesher().Triangulate(polygon).Triangles) {
+                var v0 = t.GetVertex(0);
+                var v1 = t.GetVertex(1);
+                var v2 = t.GetVertex(2);
+
+                var p0 = new Point3D(v0.X, v0.Y, bottomVector.Z);
+                var p1 = new Point3D(v1.X, v1.Y, bottomVector.Z);
+                var p2 = new Point3D(v2.X, v2.Y, bottomVector.Z);
+
+                builder.AddTriangle(p0, p1, p2);
+
+                p0 = new Point3D(v0.X, v0.Y, topVector.Z);
+                p1 = new Point3D(v1.X, v1.Y, topVector.Z);
+                p2 = new Point3D(v2.X, v2.Y, topVector.Z);
+                builder.AddTriangle(p2, p1, p0);
+            }
+            
+
+            var points = new List<System.Windows.Point>();
+            contour.ForEach(v => points.Add(new System.Windows.Point(v.x, v.y)));
+            if (points.Count % 2 != 0) points.RemoveAt(0);
+            builder.AddExtrudedSegments(
+                points,
+                new Vector3D(1, 0, 0),
+                topVector.ToPoint3D(),
+                bottomVector.ToPoint3D()
+            ); 
+
+            builder.ComputeNormalsAndTangents(MeshFaces.Default);
 
             return builder.ToMesh();
         }
@@ -203,7 +258,7 @@ namespace Fabolus.Features.Mold.Contours {
 
             //hit tests
             var hitRay = new Ray3d(Vector3d.Zero, new Vector3d(0, 0, -1));
-            var points = new List<Point>();
+            var points = new List<System.Windows.Point>();
             int minX = dimensions.a, minY = dimensions.b;
             for (int x = 0; x < dimensions.a; x++) {
                 var xSet = min.x + 0.5f + (x * resolution);
