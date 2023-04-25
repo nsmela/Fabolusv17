@@ -16,6 +16,7 @@ using HelixToolkit.Wpf;
 using Fabolus.Features.AirChannel.MouseTools;
 using Fabolus.Features.AirChannel.Channels;
 using System.Threading.Channels;
+using Fabolus.Features.Helpers;
 
 namespace Fabolus.Features.AirChannel
 {
@@ -119,7 +120,7 @@ namespace Fabolus.Features.AirChannel
                 for(int i = 0; i < AirChannels.Count; i++) {
                     bool isSelected = (selectedIndex != null &&  i == selectedIndex); //color the selected air channel differently
                     var skin = isSelected ? _selectedSkin : _channelsSkin;
-                    var model = new GeometryModel3D(BolusUtility.DMeshToMeshGeometry( AirChannels[i].Mesh), skin);
+                    var model = new GeometryModel3D(AirChannels[i].Mesh.ToGeometry(), skin);
                     model.SetName(AIRCHANNEL_LABEL + i.ToString()); //adding a unique label for hit detection
                     AirChannelsMesh.Children.Add(model); //TODO: load all at once? has to stay seperate to detect
                 }
