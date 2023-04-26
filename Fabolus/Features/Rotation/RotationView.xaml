@@ -6,6 +6,7 @@
              xmlns:rotation="clr-namespace:Fabolus.Features.Rotation"
              d:DataContext="{d:DesignInstance Type=rotation:RotationViewModel}"
              xmlns:b="clr-namespace:Fabolus.Features.Rotation.Behaviors"
+             xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="200">
     <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="4,0,4,0">
@@ -45,6 +46,19 @@
                 AutoToolTipPlacement="TopLeft"
                 AutoToolTipPrecision="1"
                 Margin="2"/>
+        <Label Content="overhang display" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center"
+                FontSize="12" 
+                FontWeight="Bold"
+                FontFamily="\Fonts\#Poppins"/>
+        <mah:RangeSlider 
+            MinRangeWidth="10"
+            
+            LowerValue="60" UpperValue="75"
+            Orientation="Horizontal"
+            AutoToolTipPlacement="TopLeft"
+            TickFrequency="5"/>
         <Button Content="reset" 
                 Height="30"
                 HorizontalAlignment="Stretch"
