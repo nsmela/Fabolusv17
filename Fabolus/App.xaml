@@ -9,10 +9,21 @@
              xmlns:export="clr-namespace:Fabolus.Features.Export"
              xmlns:channels="clr-namespace:Fabolus.Features.AirChannel.Channels"
              xmlns:contours="clr-namespace:Fabolus.Features.Mold.Contours"
+             xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
-
+            <!-- MetroApp -->
+            <ResourceDictionary.MergedDictionaries>
+                <!-- MahApps.Metro resource dictionaries. Make sure that all file names are Case Sensitive! -->
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
+                <!-- Theme setting -->
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Steel.xaml" />
+                <!-- Custom Themes <ResourceDictionary Source="Themes\AxisRotationSliderTheme.xaml" />-->
+                
+            </ResourceDictionary.MergedDictionaries>
+            
             <!-- binding Views to ViewModels -->
             <DataTemplate DataType="{x:Type import:ImportViewModel}">
                 <import:ImportView/>

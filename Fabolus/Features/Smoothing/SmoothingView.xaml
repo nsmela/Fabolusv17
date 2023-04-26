@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:smooth="clr-namespace:Fabolus.Features.Smoothing"
+             xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
              d:DataContext="{d:DesignInstance Type=smooth:SmoothingViewModel}"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="200">
@@ -22,14 +23,22 @@
                     FontWeight="Bold"
                     FontFamily="\Fonts\#Poppins"/>
             </StackPanel>
-            <Slider Value="{Binding SmoothingIndex, Mode=TwoWay}"
+        
+        <Slider Value="{Binding SmoothingIndex, Mode=TwoWay}"
                 Minimum="0" Maximum="2" TickFrequency="1" IsSnapToTickEnabled="True"
-                Margin="12,0,12,10" />
+                mah:SliderHelper.TrackFillBrush="Black"
+                mah:SliderHelper.TrackValueFillBrush="Black"
+                Margin="12,0,12,10">
+            <Slider.Resources>
+                
+            </Slider.Resources>
+        </Slider>
 
         <!-- Advanced User Settings -->
         <ToggleButton Content="advanced settings"
                       HorizontalAlignment="Stretch" 
                       VerticalAlignment="Center"
+                      Margin="4"
                       FontSize="14" 
                       FontWeight="Bold"
                       Command="{Binding ToggleAdvancedModeCommand}"
@@ -104,7 +113,7 @@
         </StackPanel>
         
         <Button Content="apply" 
-                Height="30"
+                Height="30" Margin="4"
                 HorizontalAlignment="Stretch"
                 FontSize="14" 
                 FontWeight="Bold"
@@ -112,7 +121,7 @@
                 Command="{Binding SmoothCommand}" />
 
         <Button Content="clear" 
-                Height="30"
+                Height="30" Margin="4"
                 HorizontalAlignment="Stretch"
                 FontSize="14" 
                 FontWeight="Bold"

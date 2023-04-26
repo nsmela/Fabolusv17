@@ -1,20 +1,20 @@
-﻿<Window x:Class="Fabolus.MainWindow"
+﻿<mah:MetroWindow x:Class="Fabolus.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Fabolus"
         xmlns:viewmodel="clr-namespace:Fabolus.Features.MainWindow"
+        xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         mc:Ignorable="d"
-        Title="Fabolus" 
-        Height="600" 
-        Width="800"
+        Title="FABOLUS" Height="550" Width="800" MinHeight="520" MinWidth="600"
+        ResizeMode="CanResizeWithGrip"
         WindowStartupLocation="CenterScreen">
 
     <Window.DataContext>
         <viewmodel:MainViewModel />
     </Window.DataContext>
-    
+
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="ShowInfoWindow" />
     </Window.Resources>
@@ -45,24 +45,24 @@
         <StackPanel Orientation="Horizontal"
                     Grid.Row="0" Grid.Column="1" 
                     Height="64">
-            <Button Content="file"
+            <Button Content="import" 
                     Command="{Binding SwitchToImportViewCommand}"
-                    Width="64"/>
-            <Button Content="Smooth"
+                    Width="72" Margin="1"/>
+            <Button Content="smooth" IsEnabled="{Binding MeshLoaded}"
                     Command="{Binding SwitchToSmoothingViewCommand}"
-                    Width="64"/>
-            <Button Content="Rotation"
+                    Width="72" Margin="1"/>
+            <Button Content="rotate" IsEnabled="{Binding MeshLoaded}"
                     Command="{Binding SwitchToRotationViewCommand}"
-                    Width="64"/>
-            <Button Content="Air Channels"
+                    Width="72" Margin="1"/>
+            <Button Content="channels" IsEnabled="{Binding MeshLoaded}"
                     Command="{Binding SwitchToAirChannelViewCommand}"
-                    Width="64"/>
-            <Button Content="Mold"
+                    Width="72" Margin="1"/>
+            <Button Content="mold" IsEnabled="{Binding MeshLoaded}"
                     Command="{Binding SwitchToMoldViewCommand}"
-                    Width="64"/>
-            <Button Content="export"
+                    Width="72" Margin="1"/>
+            <Button Content="export" IsEnabled="{Binding MeshLoaded}"
                     Command="{Binding SwitchToExportViewCommand}"
-                    Width="64"/>
+                    Width="72" Margin="1"/>
         </StackPanel>
         
         <!-- Tools View  -->
@@ -133,4 +133,4 @@
             </StackPanel>
         </GroupBox>
     </Grid>
-</Window>
+</mah:MetroWindow>

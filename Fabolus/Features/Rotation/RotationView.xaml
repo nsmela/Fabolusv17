@@ -48,7 +48,7 @@
         <Button Content="reset" 
                 Height="30"
                 HorizontalAlignment="Stretch"
-                Margin="2,10,2,0"
+                Margin="4,12,4,0"
                 FontSize="14" 
                 FontWeight="Bold"
                 FontFamily="\Fonts\#Poppins"
