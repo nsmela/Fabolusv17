@@ -18,7 +18,7 @@ namespace Fabolus.Features.Mold.Contours {
                 OffsetTop = 2.5f,
                 Resolution = 2.0f
             };
-            ViewModel = new BoxContourViewModel();
+            ViewModel = new RisingContourViewModel();
             ViewModel.Initialize();
         }
     }
