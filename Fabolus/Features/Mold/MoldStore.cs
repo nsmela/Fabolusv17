@@ -46,6 +46,7 @@ namespace Fabolus.Features.Mold
             });
             WeakReferenceMessenger.Default.Register<MoldSetContourIndexMessage>(this, (r, m) => {
                 _activeContour = m.index;
+                _contours[_activeContour].Contour.Calculate();
                 WeakReferenceMessenger.Default.Send(new MoldContourUpdatedMessage(_contours[_activeContour]));
             });
             WeakReferenceMessenger.Default.Register<MoldSetContourMessage>(this, (r, m) => {
