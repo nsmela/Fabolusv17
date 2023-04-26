@@ -37,12 +37,10 @@ namespace Fabolus.Features.Mold.Contours {
             var text = "Starting BoxContour.Calculate timer!\r\n";
             timer.Start();
 
-            //TODO: calculate air channels and bolus offset mesh at the same time with multithreading
-            //each set up as a task and output the result
-            //continue when both are done
             Geometry = new MeshGeometry3D();
             Mesh = new DMesh3();
 
+            //variables to use
             _bolus = WeakReferenceMessenger.Default.Send<BolusRequestMessage>();
             if (_bolus == null || _bolus.Mesh == null || _bolus.Mesh.VertexCount == 0) return;
             var numberOfCells = (int)Math.Ceiling(_bolus.TransformedMesh.CachedBounds.MaxDim / Resolution);
@@ -50,32 +48,17 @@ namespace Fabolus.Features.Mold.Contours {
             var maxHeight = WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
             var heightOffset = maxHeight - (maxBolusHeight + OffsetTop);
 
-            text += $"  acquired variables: {timer.ElapsedMilliseconds}\r\n";
-            timer.Restart();
-
             //tasks
             var task1 = Task.Run(() => GetOffsetMesh(_bolus, OffsetXY));
             var task2 = Task.Run(() => GetOffsetAirChannels(numberOfCells, OffsetXY, heightOffset));
 
             Task.WaitAll(task1, task2);
 
-            text += $"  tasks: {timer.ElapsedMilliseconds}\r\n";
-            timer.Restart();
-
             var offsetMesh = MoldUtility.BooleanUnion(task1.Result, task2.Result, 64);
 
-            text += $"  boolean union: {timer.ElapsedMilliseconds} \r\n";
-            timer.Restart();
-
             Geometry = CalculateContour(offsetMesh);
-
-            text += $"  Calculate contour: {timer.ElapsedMilliseconds} \r\n";
-            timer.Restart();
-
             Mesh = Geometry.ToDMesh();
 
-            text += $"  toDMesh: {timer.ElapsedMilliseconds} \r\n";
-            timer.Stop();
         }
 
         private DMesh3 CalculateByMesh(DMesh3 offsetMesh, int numberOfCells) {
@@ -93,42 +76,6 @@ namespace Fabolus.Features.Mold.Contours {
             BolusUtility.CentreMesh(result, offsetMesh);
 
             return result;
-        }
-
-        private MeshGeometry3D CalculateByContour(DMesh3 offsetMesh, int numberOfCells) {
-            //testing
-            var contour = GetContour(offsetMesh);
-
-            var verts = new List<Point3D>();
-            var points = new List<System.Windows.Point>();
-            contour.ForEach(v => {
-                verts.Add(new Point3D(v.x, v.y, v.z));
-                points.Add(new System.Windows.Point(v.x, v.y));
-            });
-
-            //using helix toolkit instead
-            var builder = new MeshBuilder(false, false);
-
-            var maxBolusHeight = (float)(_bolus.Geometry.Bounds.Z + _bolus.Geometry.Bounds.SizeZ);
-
-            var upperVerts = new List<Point3D>();
-            verts.ForEach(p => { upperVerts.Add(new Point3D(p.X, p.Y, maxBolusHeight + OffsetTop)); });
-
-            builder.AddPolygon(verts); //these aren't robust. some triangles are intersecting the boundry
-            builder.AddPolygon(upperVerts);
-
-            //sides of the contour
-            int count = verts.Count;
-            for (int i = 0; i < verts.Count - 1; i++) {
-                var p1 = verts[i];
-                var p2 = verts[i + 1];
-                var p3 = upperVerts[i];
-                var p4 = upperVerts[i + 1];
-
-                builder.AddQuad(p4, p2, p1, p3);
-            }
-
-            return builder.ToMesh();
         }
 
         private MeshGeometry3D CalculateContour(DMesh3 mesh) {
@@ -274,7 +221,7 @@ namespace Fabolus.Features.Mold.Contours {
 
             var map = new bool[dimensions.a, dimensions.b]; //stores the results of hits
 
-            //hit tests
+            //hit tests to create the boolean map
             var hitRay = new Ray3d(Vector3d.Zero, new Vector3d(0, 0, -1));
             var points = new List<System.Windows.Point>();
             int minX = dimensions.a, minY = dimensions.b;
@@ -299,34 +246,38 @@ namespace Fabolus.Features.Mold.Contours {
             }
 
             //use map to make a contour
+            var bottom_z = mesh.CachedBounds.Min.z - OffsetBottom + 4.0f;
 
             var startPoint = new Vector2i(minX, minY);
             var currentPoint = startPoint;
-            var lastPoint = new Vector2i(minX, minY - 1);
             var nextPoint = startPoint;
             var contour = new List<Vector3d>();
-            var bottom_z = mesh.CachedBounds.Min.z - OffsetBottom + 4.0f;
+
+            //track the direction around the mold
+            //if subsequent points follw the same direction, no need to add them
+            //reduces the contour's points to those only needed
+            var direction = GridPosition(0, 1);
 
             while (true) {
-                currentPoint = nextPoint;
+                //currentPoint = nextPoint;
+                var nextDirection = NextDirection(map, currentPoint, direction);
 
-                //create a vector for the current point and store it
-                var vector = new Vector3d(
-                    (currentPoint.x + 0.5f) * resolution + min.x, 
-                    (currentPoint.y + 0.5) * resolution + min.y, 
-                    bottom_z);
-                contour.Add(vector);
+                //only add to contour if the new direction is different
+                if (nextDirection != direction) contour.Add(new Vector3d(
+                    (currentPoint.x + 0.5f) * resolution + min.x,
+                    (currentPoint.y + 0.5) * resolution + min.y,
+                    bottom_z));
 
-                //look for the next point to use
-                nextPoint = GetNextPoint(map, currentPoint, lastPoint);
-                lastPoint = currentPoint;
+                direction= nextDirection;
+                currentPoint += GridPosition(direction);
 
                 //test to see if we should exit the loop
-                if (nextPoint == startPoint) {
+                if (currentPoint == startPoint) {
                     contour.Add(contour[0]);//link the last point to the first point
                     break;
                 }
             }
+
             return contour;
         }
 
@@ -355,6 +306,40 @@ namespace Fabolus.Features.Mold.Contours {
 
             //didn't find anything
             return new Vector2i();
+        }
+
+        /// <summary>
+        /// Using GridPosition, determine the next spot on the grid
+        /// </summary>
+        /// <param name="map"></param>
+        /// <param name="currentPoint"></param>
+        /// <param name="lastPoint">int value that represents the direction to go</param>
+        /// <returns></returns>
+        private int NextDirection(bool[,] map, Vector2i currentPoint, int direction) {
+            int x = currentPoint.x;
+            int y = currentPoint.y;
+
+            //invert the value to start from the last position
+            Vector2i pVector = GridPosition(direction);
+            pVector *= -1;
+            var position = GridPosition(pVector);
+            int pX, pY;
+
+            //cycle clockwise until a new spot is hit
+            for(int i = 0; i < 9; i++) {
+                position++;
+                if (position > 8) position = 1;
+                
+                pVector = GridPosition(position);
+                pX = x + pVector.x; 
+                pY = y + pVector.y;
+
+                //check if map is true or false at this position
+                if (pX >= 0 &&  pY >= 0 && map[pX, pY]) return position;
+                
+            }
+
+            return -1;
         }
 
         /// <summary>
@@ -387,5 +372,43 @@ namespace Fabolus.Features.Mold.Contours {
             //invalid entry
             return null;
         }
+
+        private static int GridPosition(Vector2i position) => GridPosition(position.x, position.y);
+        
+        private static int GridPosition(int x, int y) {
+            if (x == -1) {
+                if (y == -1) return 7;
+                if (y == 0) return 8;
+                if (y == 1) return 1;
+            }
+            if (x == 0) {
+                if (y == -1) return 6;
+                if (y == 0) return 9; //sent the current point, which means we need some point to start. this is most likely to be empty
+                if (y == 1) return 2;
+            }
+            if (x == 1) {
+                if (y == -1) return 5;
+                if (y == 0) return 4;
+                if (y == 1) return 3;
+            }
+
+            return 0;
+        }
+
+        private static Vector2i GridPosition(int position) {
+            switch (position) {
+                case 1: return new Vector2i(-1, 1);
+                case 2: return new Vector2i(0, 1);
+                case 3: return new Vector2i(1, 1);
+                case 4: return new Vector2i(1, 0);
+                case 5: return new Vector2i(1, -1);
+                case 6: return new Vector2i(0, -1);
+                case 7: return new Vector2i(-1, -1);
+                case 8: return new Vector2i(-1, 0);
+                default: return new Vector2i(0, 0);
+            }
+        }
+
+ 
     }
 }
