@@ -8,30 +8,6 @@ using System.Windows.Media.Media3D;
 namespace Fabolus.Features.Bolus
 {
     public static partial class BolusUtility {
-        public static MeshGeometry3D DMeshToMeshGeometry(DMesh3 value) {
-            if (value != null) {
-                //compacting the DMesh to the indices are true
-                MeshGeometry3D geometry = new();
-
-                //calculate positions and normals
-                var vertices = value.Vertices();
-                foreach (var vert in vertices) geometry.Positions.Add(new Point3D(vert.x, vert.y, vert.z));
-
-                //calculate faces
-                var triangleIndices = value.Triangles();
-                foreach (var i in triangleIndices) {
-                    geometry.TriangleIndices.Add(i.a);
-                    geometry.TriangleIndices.Add(i.b);
-                    geometry.TriangleIndices.Add(i.c);
-                }
-
-                geometry.Normals = MeshGeometryHelper.CalculateNormals(geometry.Positions, geometry.TriangleIndices);
-
-                return geometry;
-            }
-            else
-                return new MeshGeometry3D();
-        }
 
         public static DMesh3 MeshGeometryToDMesh(MeshGeometry3D mesh) {
             List<Vector3d> vertices = new();

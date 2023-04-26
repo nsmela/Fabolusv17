@@ -33,6 +33,10 @@ namespace Fabolus.Features.Mold.Contours {
         public float Resolution { get; set; } //size of the cells when doing marching cubes, in mm
        
         public override void Calculate() {
+            var timer = new Stopwatch();
+            var text = "Starting BoxContour.Calculate timer!\r\n";
+            timer.Start();
+
             //TODO: calculate air channels and bolus offset mesh at the same time with multithreading
             //each set up as a task and output the result
             //continue when both are done
@@ -46,22 +50,32 @@ namespace Fabolus.Features.Mold.Contours {
             var maxHeight = WeakReferenceMessenger.Default.Send<AirChannelHeightRequestMessage>();
             var heightOffset = maxHeight - (maxBolusHeight + OffsetTop);
 
+            text += $"  acquired variables: {timer.ElapsedMilliseconds}\r\n";
+            timer.Restart();
+
             //tasks
             var task1 = Task.Run(() => GetOffsetMesh(_bolus, OffsetXY));
             var task2 = Task.Run(() => GetOffsetAirChannels(numberOfCells, OffsetXY, heightOffset));
 
-            Task.WaitAll(task1, task2); 
+            Task.WaitAll(task1, task2);
 
-            var offsetMesh = MoldUtility.BooleanUnion(task1.Result, task2.Result);
+            text += $"  tasks: {timer.ElapsedMilliseconds}\r\n";
+            timer.Restart();
 
-            //Mesh = CalculateByMesh(offsetMesh, numberOfCells);
-            //Geometry = Mesh.ToGeometry();
+            var offsetMesh = MoldUtility.BooleanUnion(task1.Result, task2.Result, 64);
 
-            //Geometry = CalculateByContour(offsetMesh, numberOfCells);
-            //Mesh = Geometry.ToDMesh();
+            text += $"  boolean union: {timer.ElapsedMilliseconds} \r\n";
+            timer.Restart();
 
             Geometry = CalculateContour(offsetMesh);
+
+            text += $"  Calculate contour: {timer.ElapsedMilliseconds} \r\n";
+            timer.Restart();
+
             Mesh = Geometry.ToDMesh();
+
+            text += $"  toDMesh: {timer.ElapsedMilliseconds} \r\n";
+            timer.Stop();
         }
 
         private DMesh3 CalculateByMesh(DMesh3 offsetMesh, int numberOfCells) {
@@ -118,12 +132,11 @@ namespace Fabolus.Features.Mold.Contours {
         }
 
         private MeshGeometry3D CalculateContour(DMesh3 mesh) {
-            var zHeight = (float)(_bolus.Geometry.Bounds.SizeZ + _bolus.Geometry.Bounds.Z);
-            var contour = GetContour(mesh);
-            if (contour.Count % 2 != 0) contour.Add(contour[0]);
+            var contour = GetContour(mesh, Resolution);
+            //if (contour.Count % 2 != 0) contour.Add(contour[0]);
 
-            var bottomVector = new Vector3D(0, 0, contour[0].z - OffsetBottom);
-            var topVector = new Vector3D(0, 0, zHeight + OffsetTop);
+            var zHeight = (float)(_bolus.Geometry.Bounds.SizeZ + _bolus.Geometry.Bounds.Z) + OffsetTop;
+            var zBottom = contour[0].z - OffsetBottom;
 
             var verts = new List<Vertex>();
             contour.ForEach(v => { verts.Add(new Vertex(v.x, v.y)); });
@@ -138,45 +151,34 @@ namespace Fabolus.Features.Mold.Contours {
                 var v1 = t.GetVertex(1);
                 var v2 = t.GetVertex(2);
 
-                var p0 = new Point3D(v0.X, v0.Y, bottomVector.Z);
-                var p1 = new Point3D(v1.X, v1.Y, bottomVector.Z);
-                var p2 = new Point3D(v2.X, v2.Y, bottomVector.Z);
+                var p0 = new Point3D(v0.X, v0.Y, zBottom);
+                var p1 = new Point3D(v1.X, v1.Y, zBottom);
+                var p2 = new Point3D(v2.X, v2.Y, zBottom);
 
                 builder.AddTriangle(p0, p1, p2);
 
-                p0 = new Point3D(v0.X, v0.Y, topVector.Z);
-                p1 = new Point3D(v1.X, v1.Y, topVector.Z);
-                p2 = new Point3D(v2.X, v2.Y, topVector.Z);
+                p0 = new Point3D(v0.X, v0.Y, zHeight);
+                p1 = new Point3D(v1.X, v1.Y, zHeight);
+                p2 = new Point3D(v2.X, v2.Y, zHeight);
+
                 builder.AddTriangle(p2, p1, p0);
             }
 
+            var lowerVerts = new List<Point3D>();
+            contour.ForEach(v => lowerVerts.Add(new Point3D(v.x, v.y, zBottom)));
+            var upperVerts = new List<Point3D>();
+            verts.ForEach(p => upperVerts.Add(new Point3D(p.X, p.Y, zHeight)));
+
             //sides of the contour
             int count = verts.Count;
-            var indicesCount = builder.Positions.Count();
-            for (int i = 0; i < count - 1; i++) {
-                var indices = new List<int> {
-                    count + i + 1, 
-                    i + 1, 
-                    i,
-                    count
-                };
+            for (int i = 0; i < verts.Count - 1; i++) {
+                var p1 = lowerVerts[i];
+                var p2 = lowerVerts[i + 1];
+                var p3 = upperVerts[i];
+                var p4 = upperVerts[i + 1];
 
-                builder.AddQuad(indices);
+                builder.AddQuad(p4, p2, p1, p3);
             }
-
-            /*
-            var points = new List<System.Windows.Point>();
-            contour.ForEach(v => points.Add(new System.Windows.Point(v.x, v.y)));
-
-            builder.AddExtrudedSegments(
-                points,
-                new Vector3D(-1, 0, 0),
-                bottomVector.ToPoint3D(),
-                topVector.ToPoint3D()
-
-            );*/
-
-
 
             return builder.ToMesh();
         }
