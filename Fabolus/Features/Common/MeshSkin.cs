@@ -19,7 +19,7 @@ namespace Fabolus.Features.Common {
             AirChannelTool,
             AirChannelSelected,
             AirChannel,
-            MoldTemp,
+            MoldPreview,
             MoldFinal
         }
 
@@ -32,7 +32,7 @@ namespace Fabolus.Features.Common {
                 case MeshColor.AirChannelTool: return Colors.MediumPurple;
                 case MeshColor.AirChannelSelected: return Colors.Turquoise;
                 case MeshColor.AirChannel: return Colors.Violet;
-                case MeshColor.MoldTemp: return Colors.Pink; 
+                case MeshColor.MoldPreview: return Colors.Aqua; 
                 case MeshColor.MoldFinal: return Colors.Red;
             }
             return Colors.WhiteSmoke;
@@ -72,7 +72,7 @@ namespace Fabolus.Features.Common {
             
         }
 
-        public static DiffuseMaterial GetMeshSkin(MeshColor colour, float opacity) {
+        public static DiffuseMaterial GetMeshSkin(MeshColor colour, float opacity = 1.0f) {
             var brush = new SolidColorBrush(MeshSkinColor(colour));
             brush.Opacity = opacity;
             return new DiffuseMaterial(brush);
