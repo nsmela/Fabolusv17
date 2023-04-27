@@ -82,42 +82,12 @@ namespace Fabolus.Features.Rotation {
             transform.Children.Add(rotate);
             var refAngle = transform.Transform(OverhangAxis);
 
-            //using the transformed referance angle, generate texture coordinates to use with the gradient brush
-            var texture = GetTextureCoords(_geometry, refAngle);
-            _geometry.TextureCoordinates = texture;
-
-            //get temp model
-            GeometryModel3D geometryModel = new GeometryModel3D(_geometry, _meshSkinMaterial);
-            geometryModel.BackMaterial = _meshSkinMaterial;
-            return geometryModel;
+            //using the MeshSkin static class to generate mesh materials
+            return  MeshSkin.GetTempOverhangs(_geometry, refAngle);
         }
 
-        private GeometryModel3D GetOverhangsModel() {
-            var texture = GetTextureCoords(_geometry, OverhangAxis);
-            _geometry.TextureCoordinates = texture;
+        private GeometryModel3D GetOverhangsModel() => MeshSkin.GetTempOverhangs(_geometry, OverhangAxis);
 
-            GeometryModel3D geometryModel = new GeometryModel3D(_geometry, _meshSkinMaterial);
-            geometryModel.BackMaterial = _meshSkinMaterial;
-            return geometryModel;
-        }
-
-        private PointCollection GetTextureCoords(MeshGeometry3D mesh, Vector3D refAxis) {
-            var refAngle = 180.0f;
-            var normals = mesh.Normals;
-
-            PointCollection textureCoords= new PointCollection();
-            foreach(var normal in normals) {
-                double difference = Math.Abs(Vector3D.AngleBetween(normal, refAxis));
-
-                while (difference > refAngle) difference -= refAngle;
-
-                var ratio = difference / refAngle;
-
-                textureCoords.Add(new System.Windows.Point(0, ratio));
-            }
-
-            return textureCoords;
-        }
         #endregion
     }
 }
