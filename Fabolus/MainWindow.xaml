@@ -123,7 +123,7 @@
                   Visibility="{Binding InfoVisible, Converter={StaticResource ShowInfoWindow}}">
             <StackPanel Orientation="Vertical" Width="140" MinWidth="140" MaxWidth="200" >
                 <Label Content="File Name" Margin="0,-8,0,0"/>
-                <Label Content="{Binding FileName}" Margin="10,-8,0,0"/>
+                <Label Content="{Binding FilePath}" Margin="10,-8,0,0"/>
                 <Label Content="File Size" Margin="0,-8,0,0"/>
                 <Label Content="{Binding FileSize}" Margin="10,-8,0,0"/>
                 <Label Content="Triangles" Margin="0,-8,0,0"/>
