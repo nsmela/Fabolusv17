@@ -49,8 +49,14 @@ namespace Fabolus.Features.Rotation {
         private void Initialize() {
             //material for mesh skin set ahead to prevent multiple calls
             //can allow editing in viewer later
-            _meshSkinMaterial = OverhangSettings.OVERHANG_SKIN;
-            _meshSkinMaterial.Brush.Opacity = _meshOpacity;
+            // _meshSkinMaterial = OverhangSettings.OVERHANG_SKIN;
+            //_meshSkinMaterial.Brush.Opacity = _meshOpacity;
+            _meshSkinMaterial = WeakReferenceMessenger.Default.Send<BolusOverhangMaterialRequestMessage>();
+
+            WeakReferenceMessenger.Default.Register<BolusOverhangsUpdated>(this, (r, m) => {
+                _meshSkinMaterial = m.material;
+                UpdateTempModel();
+            });
 
             _geometry = new MeshGeometry3D();
 

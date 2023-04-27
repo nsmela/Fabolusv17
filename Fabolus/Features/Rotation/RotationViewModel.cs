@@ -20,7 +20,7 @@ namespace Fabolus.Features.Rotation {
         public override MeshViewModelBase MeshViewModel => _meshViewModel;
         private RotationMeshViewModel _meshViewModel = new RotationMeshViewModel();
 
-        [ObservableProperty] private float _xAxisAngle, _yAxisAngle, zAxisAngle;
+        [ObservableProperty] private float _xAxisAngle, _yAxisAngle, _zAxisAngle, _lowerOverhang, _upperOverhang;
         partial void OnXAxisAngleChanged(float value) => SendTempRotation(new Vector3D(1, 0, 0), value);
         partial void OnYAxisAngleChanged(float value) => SendTempRotation(new Vector3D(0, 1, 0), value);
         partial void OnZAxisAngleChanged(float value) => SendTempRotation(new Vector3D(0, 0, 1), value);
@@ -31,6 +31,30 @@ namespace Fabolus.Features.Rotation {
 
             _meshViewModel.RotationAxis = axis;
             _meshViewModel.RotationAngle = angle;
+        }
+
+        private bool _isOverhangsFrozen;
+        partial void OnLowerOverhangChanged(float value) => SendOverhangRange();
+        partial void OnUpperOverhangChanged(float value) => SendOverhangRange();
+        private void SendOverhangRange() {
+            if(_isOverhangsFrozen) return;
+            _isOverhangsFrozen = true;
+
+            var lowerValue = LowerOverhang;
+            var upperValue = UpperOverhang;
+            
+            //send the value
+            WeakReferenceMessenger.Default.Send(new ApplyOverhangSettingsMessage(lowerValue, upperValue));
+            _isOverhangsFrozen= false;
+        }
+
+        public RotationViewModel() {
+            //grab existing overhang values
+            float[] settings = WeakReferenceMessenger.Default.Send<BolusOverhangSettingsRequestMessage>();
+            _isOverhangsFrozen = true; //preventing updating the bolus store with values it already has
+            LowerOverhang = settings[0];
+            UpperOverhang = settings[1];
+            _isOverhangsFrozen = false;
         }
 
         private void ResetValues() {

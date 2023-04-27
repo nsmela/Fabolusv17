@@ -32,5 +32,6 @@ namespace Fabolus.Features.Common {
                 return new DiffuseMaterial(gradientBrush);
             }
         }
+        
     }
 }

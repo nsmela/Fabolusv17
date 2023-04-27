@@ -53,12 +53,24 @@
                 FontWeight="Bold"
                 FontFamily="\Fonts\#Poppins"/>
         <mah:RangeSlider 
-            MinRangeWidth="10"
-            
-            LowerValue="60" UpperValue="75"
+            ExtendedMode="False"
+            MinRangeWidth="10" MinRange="10"
+            Minimum="45" Maximum="90"
+            LowerValue="{Binding LowerOverhang, Mode=TwoWay}" UpperValue="{Binding UpperOverhang, Mode=TwoWay}"
             Orientation="Horizontal"
             AutoToolTipPlacement="TopLeft"
-            TickFrequency="5"/>
+            TickFrequency="5">
+            <mah:RangeSlider.AutoToolTipRangeValuesTemplate>
+                <DataTemplate DataType="mah:RangeSliderAutoTooltipValues">
+                    <UniformGrid Columns="2" Rows="2">
+                        <TextBlock HorizontalAlignment="Right" Text="Warning:" />
+                        <TextBlock HorizontalAlignment="Right" Text="{Binding LowerValue, StringFormat='{}{0:N2}'}" />
+                        <TextBlock HorizontalAlignment="Right" Text="Failure:" />
+                        <TextBlock HorizontalAlignment="Right" Text="{Binding UpperValue, StringFormat='{}{0:N2}'}" />
+                    </UniformGrid>
+                </DataTemplate>
+            </mah:RangeSlider.AutoToolTipRangeValuesTemplate>
+        </mah:RangeSlider>
         <Button Content="reset" 
                 Height="30"
                 HorizontalAlignment="Stretch"
