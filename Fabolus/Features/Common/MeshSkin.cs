@@ -78,6 +78,11 @@ namespace Fabolus.Features.Common {
             return new DiffuseMaterial(brush);
         }
 
+        public static GeometryModel3D GetColouredModel(MeshGeometry3D mesh, MeshColor colour, float opacity = 1.0f) {
+            var material = GetMeshSkin(colour, opacity);
+            return new GeometryModel3D(mesh, material);
+        }
+
         public static GeometryModel3D GetTempOverhangs(MeshGeometry3D mesh, Vector3D refAngle) {
             //Overhangs are displayed using a gradient brush and vertex texture coordinates
             //The angle of the vertex's normal vs the reference angle determines how far along the gradient 

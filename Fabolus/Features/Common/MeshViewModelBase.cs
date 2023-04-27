@@ -39,13 +39,12 @@ namespace Fabolus.Features.Common
 
         #region Private Methods
         protected virtual void Update(BolusModel bolus) {
-            if (bolus.Model3D == null) return;
+            if (bolus.Geometry == null) return;
 
             DisplayMesh.Children.Clear();
 
             //building geometry model
-            var material = MeshSkin.GetMeshSkin(MeshSkin.MeshColor.Warning, 1.0f);
-            var model = new GeometryModel3D(bolus.Geometry, material);
+            var model = MeshSkin.GetColouredModel(bolus.Geometry, MeshSkin.MeshColor.Bolus);  
             DisplayMesh.Children.Add(model);
         }
         #endregion  
