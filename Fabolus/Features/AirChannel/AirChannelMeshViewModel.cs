@@ -83,10 +83,10 @@ namespace Fabolus.Features.AirChannel
             ChannelChanged(channel);
 
             //skin colours
-            _toolSkin = SetSkin(Colors.MediumPurple, 0.5f);
-            _channelsSkin = SetSkin(Colors.Purple, 1.0f);
-            _selectedSkin = SetSkin(Colors.Cyan, 1.0f);
-            _overhangsSkin = OverhangSettings.OVERHANG_SKIN;
+            _toolSkin = MeshSkin.GetMeshSkin(MeshSkin.MeshColor.AirChannelTool, 0.5f);
+            _channelsSkin = MeshSkin.GetMeshSkin(MeshSkin.MeshColor.AirChannel, 1.0f);
+            _selectedSkin = MeshSkin.GetMeshSkin(MeshSkin.MeshColor.AirChannelSelected, 1.0f);
+            _overhangsSkin = WeakReferenceMessenger.Default.Send<BolusOverhangMaterialRequestMessage>();
 
             Update(_bolus);
         }
@@ -164,7 +164,7 @@ namespace Fabolus.Features.AirChannel
 
                 var ratio = difference / refAngle;
 
-                textureCoords.Add(new System.Windows.Point(0, ratio));
+                textureCoords.Add(new Point(0, ratio));
             }
 
             return textureCoords;
@@ -191,9 +191,6 @@ namespace Fabolus.Features.AirChannel
 
         }
 
-        #endregion
-
-        #region Receive
         #endregion
 
         #region Commands
