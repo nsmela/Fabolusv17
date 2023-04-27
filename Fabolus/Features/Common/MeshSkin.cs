@@ -5,6 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
 using System.Windows.Media;
+using CommunityToolkit.Mvvm.Messaging;
+using Fabolus.Features.Bolus;
+using System.Windows;
 
 namespace Fabolus.Features.Common {
     public static class MeshSkin {
@@ -33,6 +36,14 @@ namespace Fabolus.Features.Common {
                 case MeshColor.MoldFinal: return Colors.Red;
             }
             return Colors.WhiteSmoke;
+        }
+
+        private static DiffuseMaterial GetOverHangSkin(float[] settings) {
+            if(settings.Length != 2) {
+                throw new NotImplementedException();
+            }
+
+            return GetOverHangSkin(settings[0], settings[1]);
         }
 
         public static DiffuseMaterial GetOverHangSkin(float warningAngle, float faultAngle) {
@@ -65,6 +76,42 @@ namespace Fabolus.Features.Common {
             var brush = new SolidColorBrush(MeshSkinColor(colour));
             brush.Opacity = opacity;
             return new DiffuseMaterial(brush);
+        }
+
+        public static GeometryModel3D GetTempOverhangs(MeshGeometry3D mesh, Vector3D refAngle) {
+            //Overhangs are displayed using a gradient brush and vertex texture coordinates
+            //The angle of the vertex's normal vs the reference angle determines how far along the gradient 
+
+            //using the transformed referance angle, generate texture coordinates to use with the gradient brush
+            var texture = GetTextureCoords(mesh, refAngle);
+            mesh.TextureCoordinates = texture;
+
+            //get temp model
+            float[] overhangSettings = WeakReferenceMessenger.Default.Send<BolusOverhangSettingsRequestMessage>();
+            DiffuseMaterial skin = GetOverHangSkin(overhangSettings);
+            var geometryModel = new GeometryModel3D(mesh, skin);
+            geometryModel.BackMaterial = skin;
+            return geometryModel;
+        }
+
+        private static PointCollection GetTextureCoords(MeshGeometry3D mesh, Vector3D refAxis) {
+            if (mesh == null) return new PointCollection();
+
+            var refAngle = 180.0f;
+            var normals = mesh.Normals;
+
+            PointCollection textureCoords = new PointCollection();
+            foreach (var normal in normals) {
+                double difference = Math.Abs(Vector3D.AngleBetween(normal, refAxis));
+
+                while (difference > refAngle) difference -= refAngle;
+
+                var ratio = difference / refAngle;
+
+                textureCoords.Add(new Point(0, ratio));
+            }
+
+            return textureCoords;
         }
     }
 }
