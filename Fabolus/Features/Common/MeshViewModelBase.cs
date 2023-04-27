@@ -44,7 +44,9 @@ namespace Fabolus.Features.Common
             DisplayMesh.Children.Clear();
 
             //building geometry model
-            DisplayMesh.Children.Add(bolus.Model3D);
+            var material = MeshSkin.GetMeshSkin(MeshSkin.MeshColor.Warning, 1.0f);
+            var model = new GeometryModel3D(bolus.Geometry, material);
+            DisplayMesh.Children.Add(model);
         }
         #endregion  
     }
