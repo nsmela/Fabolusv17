@@ -21,13 +21,7 @@ namespace Fabolus.Features.Export {
 
             _displayMesh.Children.Clear();
 
-            var skin = new DiffuseMaterial(new SolidColorBrush {
-                Color = Colors.IndianRed,
-                Opacity = 0.8f
-            });
-
-            var model = new GeometryModel3D(mesh, skin);
-            model.BackMaterial = skin;
+            var model = MeshSkin.GetColouredModel(mesh, MeshSkin.MeshColor.MeshExport, 0.8f);
             DisplayMesh.Children.Add(model);
         }
 

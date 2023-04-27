@@ -20,7 +20,8 @@ namespace Fabolus.Features.Common {
             AirChannelSelected,
             AirChannel,
             MoldPreview,
-            MoldFinal
+            MoldFinal,
+            MeshExport
         }
 
         public static Color MeshSkinColor(MeshColor color) {
@@ -34,6 +35,7 @@ namespace Fabolus.Features.Common {
                 case MeshColor.AirChannel: return Colors.Violet;
                 case MeshColor.MoldPreview: return Colors.Aqua; 
                 case MeshColor.MoldFinal: return Colors.Red;
+                case MeshColor.MeshExport: return Colors.Tomato;
             }
             return Colors.WhiteSmoke;
         }
