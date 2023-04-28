@@ -23,9 +23,9 @@ namespace Fabolus.Features.Mold {
         public MoldMeshViewModel() : base () {
             MoldMesh = new();
 
-            _moldPreviewSkin = SetSkin(Colors.Aqua, 0.4f);
-            _moldSkin = SetSkin(Colors.Red, 0.8f);
-            _channelsSkin = SetSkin(Colors.Purple);
+            _moldPreviewSkin = MeshSkin.GetMeshSkin(MeshSkin.MeshColor.MoldPreview, 0.4f);
+            _moldSkin = MeshSkin.GetMeshSkin(MeshSkin.MeshColor.MoldFinal, 0.8f);
+            _channelsSkin = MeshSkin.GetMeshSkin(MeshSkin.MeshColor.AirChannel);
 
             WeakReferenceMessenger.Default.Register<MoldContourUpdatedMessage>(this, (r, m) => { UpdateContour(m.contour); });
             WeakReferenceMessenger.Default.Register<MoldFinalUpdatedMessage>(this, (r,m) => { UpdateFinalMold(m.mesh); });
@@ -93,15 +93,6 @@ namespace Fabolus.Features.Mold {
             FinalMesh.Children.Add(model);
         }
         #endregion
-
-        #region Private Methods
-        private DiffuseMaterial SetSkin(System.Windows.Media.Color colour, float opacity = 1.0f) {
-            var brush = new SolidColorBrush(colour);
-            brush.Opacity = opacity;
-            return new DiffuseMaterial(brush);
-        }
-
-            #endregion
 
         }
 }

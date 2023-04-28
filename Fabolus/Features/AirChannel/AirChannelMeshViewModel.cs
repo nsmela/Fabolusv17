@@ -67,37 +67,13 @@ namespace Fabolus.Features.AirChannel
             OnMouseMove();//updates the tool if needed
         }
 
-        #endregion
-
-        #region Private Methods
-        private void Initialize() {
-            AirChannelsMesh = new Model3DGroup();
-            AirChannelToolMesh = new Model3DGroup();
-            ShowTool = false;
-            ShowMesh = true;
-
-            MouseHit = new Point3D();
-
-            //mouse tools
-            ChannelBase channel = WeakReferenceMessenger.Default.Send<AirChannelToolRequestMessage>();
-            ChannelChanged(channel);
-
-            //skin colours
-            _toolSkin = SetSkin(Colors.MediumPurple, 0.5f);
-            _channelsSkin = SetSkin(Colors.Purple, 1.0f);
-            _selectedSkin = SetSkin(Colors.Cyan, 1.0f);
-            _overhangsSkin = OverhangSettings.OVERHANG_SKIN;
-
-            Update(_bolus);
-        }
-
         //when the bolus store sends an update
-        protected override void Update(BolusModel bolus) { 
+        protected override void Update(BolusModel bolus) {
             DisplayMesh.Children.Clear();
             if (bolus.TransformedMesh == null || bolus.TransformedMesh.TriangleCount == 0) return;
             //building geometry model
             _bolus = bolus;
-            var model = GetTempOverhangs();
+            var model = MeshSkin.GetTempOverhangs(bolus.Geometry, new Vector3D(0, 0, -1));
             model.SetName(BOLUS_LABEL);
             DisplayMesh.Children.Add(model);
 
@@ -117,8 +93,8 @@ namespace Fabolus.Features.AirChannel
             //generates mesh for saved air channels in air channel store
             AirChannelsMesh.Children.Clear();
             if (AirChannels.Count > 0) {
-                for(int i = 0; i < AirChannels.Count; i++) {
-                    bool isSelected = (selectedIndex != null &&  i == selectedIndex); //color the selected air channel differently
+                for (int i = 0; i < AirChannels.Count; i++) {
+                    bool isSelected = (selectedIndex != null && i == selectedIndex); //color the selected air channel differently
                     var skin = isSelected ? _selectedSkin : _channelsSkin;
                     var model = new GeometryModel3D(AirChannels[i].Mesh.ToGeometry(), skin);
                     model.SetName(AIRCHANNEL_LABEL + i.ToString()); //adding a unique label for hit detection
@@ -127,49 +103,29 @@ namespace Fabolus.Features.AirChannel
             }
         }
 
-        private DiffuseMaterial SetSkin(Color colour, double opacity) {
-            var brush = new SolidColorBrush(colour);
-            brush.Opacity= opacity;
-            return new DiffuseMaterial(brush);
+        #endregion
+
+        #region Private Methods
+        private void Initialize() {
+            AirChannelsMesh = new Model3DGroup();
+            AirChannelToolMesh = new Model3DGroup();
+            ShowTool = false;
+            ShowMesh = true;
+
+            MouseHit = new Point3D();
+
+            //mouse tools
+            ChannelBase channel = WeakReferenceMessenger.Default.Send<AirChannelToolRequestMessage>();
+            ChannelChanged(channel);
+
+            //skin colours
+            _toolSkin = MeshSkin.GetMeshSkin(MeshSkin.MeshColor.AirChannelTool, 0.5f);
+            _channelsSkin = MeshSkin.GetMeshSkin(MeshSkin.MeshColor.AirChannel, 1.0f);
+            _selectedSkin = MeshSkin.GetMeshSkin(MeshSkin.MeshColor.AirChannelSelected, 1.0f);
+            _overhangsSkin = WeakReferenceMessenger.Default.Send<BolusOverhangMaterialRequestMessage>();
+
+            Update(_bolus);
         }
-
-        private GeometryModel3D GetTempOverhangs() {
-            //Overhangs are displayed using a gradient brush and vertex texture coordinates
-            //The angle of the vertex's normal vs the reference angle determines how far along the gradient 
-
-            //apply temp rotation to reference axis
-            var refAngle = new Vector3D(0, 0, -1);
-
-            //using the transformed referance angle, generate texture coordinates to use with the gradient brush
-            var texture = GetTextureCoords(_bolus.Geometry, refAngle);
-            _bolus.Geometry.TextureCoordinates = texture;
-
-            //get temp model
-            GeometryModel3D geometryModel = new GeometryModel3D(_bolus.Geometry, _overhangsSkin);
-            geometryModel.BackMaterial = _overhangsSkin;
-            return geometryModel;
-        }
-
-        private PointCollection GetTextureCoords(MeshGeometry3D mesh, Vector3D refAxis) {
-            if (mesh == null) return new PointCollection();
-
-            var refAngle = 180.0f;
-            var normals = mesh.Normals;
-
-            PointCollection textureCoords = new PointCollection();
-            foreach (var normal in normals) {
-                double difference = Math.Abs(Vector3D.AngleBetween(normal, refAxis));
-
-                while (difference > refAngle) difference -= refAngle;
-
-                var ratio = difference / refAngle;
-
-                textureCoords.Add(new System.Windows.Point(0, ratio));
-            }
-
-            return textureCoords;
-        }
-
 
         private void OnMouseMove() {
             AirChannelToolMesh.Children.Clear();
@@ -191,9 +147,6 @@ namespace Fabolus.Features.AirChannel
 
         }
 
-        #endregion
-
-        #region Receive
         #endregion
 
         #region Commands

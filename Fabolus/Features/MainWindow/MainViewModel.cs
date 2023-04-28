@@ -33,7 +33,7 @@ namespace Fabolus.Features.MainWindow {
         [ObservableProperty] private string? _centreMouseLabel;
 
         //mesh info
-        [ObservableProperty] private bool _infoVisible;
+        [ObservableProperty] private bool _infoVisible, _meshLoaded;
         [ObservableProperty] private string _filePath, _fileSize, _triangleCount, _volumeText;
 
         #region Messages
@@ -51,6 +51,7 @@ namespace Fabolus.Features.MainWindow {
             WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r, m) => { BolusUpdated(m.bolus); });
 
             InfoVisible = false;
+            MeshLoaded = false;
             FilePath = string.Empty;
             FileSize = "No model loaded";
             TriangleCount = "No model loaded";
@@ -77,6 +78,12 @@ namespace Fabolus.Features.MainWindow {
         }
 
         private void BolusUpdated(BolusModel bolus) {
+            if(bolus == null) {
+                MeshLoaded = false;
+                return;
+            }
+
+
             string filepath = WeakReferenceMessenger.Default.Send<BolusFilePathRequestMessage>();
             FilePath = string.Empty;
             InfoVisible= false;
@@ -97,6 +104,8 @@ namespace Fabolus.Features.MainWindow {
                 var volumeArea = MeshMeasurements.VolumeArea(bolus.Mesh, bolus.Mesh.TriangleIndices(), bolus.Mesh.GetVertex);
                 VolumeText = string.Format("{0:0,0.0} mL", (volumeArea.x / 1000));
             } else VolumeText = "No Mesh loaded";
+
+            MeshLoaded = true;
         }
 
         #region Commands

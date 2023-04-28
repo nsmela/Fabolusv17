@@ -6,6 +6,7 @@
              xmlns:rotation="clr-namespace:Fabolus.Features.Rotation"
              d:DataContext="{d:DesignInstance Type=rotation:RotationViewModel}"
              xmlns:b="clr-namespace:Fabolus.Features.Rotation.Behaviors"
+             xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="200">
     <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="4,0,4,0">
@@ -45,10 +46,35 @@
                 AutoToolTipPlacement="TopLeft"
                 AutoToolTipPrecision="1"
                 Margin="2"/>
+        <Label Content="overhang display" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center"
+                FontSize="12" 
+                FontWeight="Bold"
+                FontFamily="\Fonts\#Poppins"/>
+        <mah:RangeSlider 
+            ExtendedMode="False"
+            MinRangeWidth="10" MinRange="10"
+            Minimum="45" Maximum="90"
+            LowerValue="{Binding LowerOverhang, Mode=TwoWay}" UpperValue="{Binding UpperOverhang, Mode=TwoWay}"
+            Orientation="Horizontal"
+            AutoToolTipPlacement="TopLeft"
+            TickFrequency="5">
+            <mah:RangeSlider.AutoToolTipRangeValuesTemplate>
+                <DataTemplate DataType="mah:RangeSliderAutoTooltipValues">
+                    <UniformGrid Columns="2" Rows="2">
+                        <TextBlock HorizontalAlignment="Right" Text="Warning:" />
+                        <TextBlock HorizontalAlignment="Right" Text="{Binding LowerValue, StringFormat='{}{0:N2}'}" />
+                        <TextBlock HorizontalAlignment="Right" Text="Failure:" />
+                        <TextBlock HorizontalAlignment="Right" Text="{Binding UpperValue, StringFormat='{}{0:N2}'}" />
+                    </UniformGrid>
+                </DataTemplate>
+            </mah:RangeSlider.AutoToolTipRangeValuesTemplate>
+        </mah:RangeSlider>
         <Button Content="reset" 
                 Height="30"
                 HorizontalAlignment="Stretch"
-                Margin="2,10,2,0"
+                Margin="4,12,4,0"
                 FontSize="14" 
                 FontWeight="Bold"
                 FontFamily="\Fonts\#Poppins"
