@@ -13,7 +13,7 @@
         <ComboBox SelectedIndex="{Binding ActiveContourIndex}"
                       ItemsSource="{Binding ShapeNames}"
                       IsSynchronizedWithCurrentItem="True"
-                      Width="164">
+                      Width="164" Margin="4">
         </ComboBox>
         <ContentControl Content="{Binding ContourViewModel}" />
         <Button Content="generate" 

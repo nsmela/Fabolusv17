@@ -15,7 +15,7 @@
                         FontSize="12" 
                         FontWeight="Bold"
                         FontFamily="\Fonts\#Poppins"/>
-        <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="4">
             <ComboBox SelectedIndex="{Binding ActiveToolIndex}"
                       ItemsSource="{Binding ToolNames}"
                       IsSynchronizedWithCurrentItem="True"
