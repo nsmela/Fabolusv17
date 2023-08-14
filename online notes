@@ -1,0 +1,124 @@
+               @foreach (var group in patient.TaskGroups) {
+                    <!-- Task Group -->
+                    <MudGrid Class="mud-theme-tertiary pa-1 mt-2 d-flex flex-column" Spacing="1">
+                        <MudItem>
+                            <MudText>@group.Label</MudText>
+                        </MudItem>
+                        @foreach (var task in group.Tasks) {
+                            <MudPaper MaxHeight="22px" Class="mud-theme-secondary mx-1 pl-1 mt-1 d-flex flex-grow-1 justify-space-between">
+                                <MudText Class="d-inline-flex flex-grow-1" Typo="Typo.body2" Style="height:18px"><b>@task.Label</b></MudText>
+                                @if (task.Type == (int)TaskType.Bool) {
+                                    var tb = task as TaskBool;
+                                    <MudCheckBox Class="mt-n4 mr-n2 d-inline-flex" Checked="@tb.Checked" ReadOnly="true" LabelPosition="LabelPosition.Start" T="bool" Style="height:18px;" />
+                                } else if (task.Type == (int)TaskType.Text) {
+                                    var tt = task as TaskText;
+                                    <MudText Class="mr-1 d-inline-flex" Typo="Typo.body2" Style="height:18px;">@tt.Text</MudText>
+                                } else if (task.Type == (int)TaskType.Number) {
+                                    var tn = task as TaskNumber;
+                                    <MudText Class="mr-1 d-inline-flex" Typo="Typo.body2" Style="height:18px;">@tn.Task.Value</MudText>
+                                } else if (task.Type == (int)TaskType.List) {
+                                    var tl = task as TaskList;
+                                    <MudText Class="mr-1 d-inline-flex" Typo="Typo.body2" Style="height:18px;">@tl.Options[tl.SelectedOption]</MudText>
+                                } else {
+                                    <MudText Class="mr-1 d-inline-flex" Typo="Typo.body2" Style="height:18px;">UNKNOWN TYPE</MudText>
+                                }
+
+                            </MudPaper>
+                        }
+                    </MudGrid>
+                }
+                
+        public async Task GetPatients() {
+            string requestString = $"/api/Patient";
+            var result = await _http.GetFromJsonAsync<ServiceResponse<List<Patient>>>(requestString);
+
+            if (result is not null && result.Data is not null) {
+                var patients = result.Data;
+                foreach(var patient in patients) { 
+                    foreach(var group in patient.TaskGroups) {
+                        for(int k = 0; k < group.Tasks.Count; k++) {
+                            var tasks = new List<TaskItem>();
+                            foreach(var task in group.Tasks) {
+                                switch(task.Type) {
+                                    case (int)TaskType.Bool:
+                                        tasks.Add(new TaskBool(task));
+                                        break;
+                                    case (int)TaskType.Text:
+                                        tasks.Add(new TaskText(task));
+                                        break;
+                                    case (int)TaskType.List:
+                                        tasks.Add(new TaskList(task));
+                                        break;
+                                    case (int)TaskType.Number:
+                                        tasks.Add(new TaskNumber(task));
+                                        break;
+                                    default:
+                                        tasks.Add(task);
+                                        break;
+                                }
+                            }
+                            group.Tasks = tasks;
+                        }
+                    }
+                }
+                Patients= patients;
+            }
+        }                
+               
+               
+    public class TaskBool : TaskItem {
+        public TaskItem Task { get; set; }
+        public bool Checked { get; set; }
+        public TaskBool(TaskItem task) {
+            Task = task;
+            Checked = task.Value == "true";
+        }
+    }
+
+    public class TaskText: TaskItem {
+        public TaskItem Task { get; set; }
+        public string Text { get; set; }
+        public TaskText(TaskItem task) {
+            Task = task;
+            Text = task.Value;
+        }
+    }
+
+    public class TaskNumber : TaskItem {
+        public TaskItem Task { get; set; }
+        public double Number { get; set; }
+        public TaskNumber(TaskItem task) {
+            Task = task;
+            Number=  double.Parse(task.Value);
+        }
+    }
+
+    public class TaskList : TaskItem {
+        public TaskItem Task { get; set; }
+        public List<string> Options { get; set; }
+        public int SelectedOption { get; set; }
+        public TaskList(TaskItem task) {
+            Task = task;
+            var options = task.Value.Split(',');
+            Options = options.Skip(1).ToList();
+            SelectedOption = int.Parse( options.FirstOrDefault());
+        }
+    }
+
+    public class TaskDate : TaskItem {
+        public TaskItem Task { get; set; }
+        public DateTime Date { get; set; }
+        public TaskDate(TaskItem task) {
+            Task = task;
+            Date = DateTime.Parse(task.Value);
+        }
+    }
+
+    public class TaskFormula : TaskItem {
+        public TaskItem Task { get; set; }
+        public string Formula { get; set; }
+        public TaskFormula(TaskItem task) {
+            Task = task;
+            Formula = task.Value;
+        }
+    }
