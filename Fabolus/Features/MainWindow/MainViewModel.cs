@@ -48,7 +48,7 @@ namespace Fabolus.Features.MainWindow {
 
             //messages
             WeakReferenceMessenger.Default.Register<NavigateToMessage>(this, (r,m) => { NavigateTo(m.viewModel); });
-            WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r, m) => { BolusUpdated(m.bolus); });
+            WeakReferenceMessenger.Default.Register<BolusUpdatedMessage>(this, (r, m) => { Task.FromResult(BolusUpdated(m.bolus)); });
 
             InfoVisible = false;
             MeshLoaded = false;
@@ -77,35 +77,66 @@ namespace Fabolus.Features.MainWindow {
             CentreMouseLabel = viewModel.CentreMouseLabel;
         }
 
-        private void BolusUpdated(BolusModel bolus) {
-            if(bolus == null) {
+        private async Task BolusUpdated(BolusModel bolus) {
+            if(bolus is null) {
                 MeshLoaded = false;
                 return;
             }
+            
+            await UpdateMeshInfo(bolus);
+            //await Update Imported Model
 
+            MeshLoaded = true;
+        }
 
+        private Task UpdateMeshInfo(BolusModel bolus) {
             string filepath = WeakReferenceMessenger.Default.Send<BolusFilePathRequestMessage>();
             FilePath = string.Empty;
-            InfoVisible= false;
+            InfoVisible = false;
 
-            if (filepath != null && filepath != string.Empty) {
+            if (!string.IsNullOrEmpty(filepath)) {
                 var fileInfo = new FileInfo(filepath);
                 FileSize = string.Format("{0:0,0.00} KB", (fileInfo.Length / 1024));
                 FilePath = fileInfo.Name;
                 InfoVisible = true;
             }
-            else FileSize = "N/A";
+            else {
+                FileSize = "N/A";
+            }
 
-            if (bolus.Mesh != null) TriangleCount = string.Format("{0:0,0}", bolus.Mesh.TriangleCount);
-            else TriangleCount = "N/A";
+            if (bolus.Mesh is not null)
+                TriangleCount = string.Format("{0:0,0}", bolus.Mesh.TriangleCount);
+            else
+                TriangleCount = "N/A";
 
             //volumes
             if (bolus.Mesh != null) {
-                var volumeArea = MeshMeasurements.VolumeArea(bolus.Mesh, bolus.Mesh.TriangleIndices(), bolus.Mesh.GetVertex);
-                VolumeText = string.Format("{0:0,0.0} mL", (volumeArea.x / 1000));
-            } else VolumeText = "No Mesh loaded";
+                VolumeText = string.Empty;
 
-            MeshLoaded = true;
+                //original import
+                if (bolus.HasMesh(BolusModel.ORIGINAL_BOLUS_LABEL)) 
+                    VolumeText += $"Raw: {GetVolume(bolus.GetMesh(BolusModel.ORIGINAL_BOLUS_LABEL))}";
+
+                //smoothed bolus
+                if (bolus.HasMesh(BolusModel.SMOOTHED_BOLUS_LABEL)) 
+                    VolumeText += $"\r\nSmoothed: {GetVolume(bolus.GetMesh(BolusModel.SMOOTHED_BOLUS_LABEL))} ";
+
+            }
+            else {
+                VolumeText = "No Mesh loaded";
+            }
+
+            return Task.CompletedTask;
+        }
+
+        private string GetVolume(DMesh3 mesh) {
+            var volumeArea = MeshMeasurements.VolumeArea(
+                mesh, 
+                mesh.TriangleIndices(), 
+                mesh.GetVertex
+            );
+
+            return string.Format("{0:0,0.0} mL", (volumeArea.x / 1000));
         }
 
         #region Commands
